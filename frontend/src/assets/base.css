@@ -1,71 +1,67 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  /* Purple scale */
+  --purple-50:  #F4F3FF;
+  --purple-100: #E9E8FF;
+  --purple-200: #D6D4FF;
+  --purple-300: #B8B4FF;
+  --purple-400: #8F8AFF;
+  --purple-500: #5B55F3; /* PRIMARY */
+  --purple-600: #4C46E0;
+  --purple-700: #3F3ACF;
+  --purple-800: #2F2A9E;
+  --purple-900: #1F1B73;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  /* Semantic colors */
+  --color-primary: var(--purple-500);
+  --color-primary-hover: var(--purple-600);
+  --color-primary-active: var(--purple-700);
 
-  --vt-c-indigo: #2c3e50;
+  --color-bg: #ffffff;
+  --color-bg-soft: var(--purple-50);
+  --color-border: var(--purple-200);
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+/* ================================
+   Dark mode (optional, ready)
+================================ */
+.dark {
+  --color-bg: #0b0b1a;
+  --color-bg-soft: var(--purple-900);
+  --color-border: var(--purple-800);
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+  --color-text: #ffffff;
+  --color-text-muted: #c7c7ff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
-}
-
+/* ================================
+   Global Reset
+================================ */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
   margin: 0;
-  font-weight: normal;
 }
 
+/* ================================
+   Base Typography
+================================ */
 body {
   min-height: 100vh;
+  background: var(--color-bg);
   color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
   font-family:
     Inter,
     -apple-system,
@@ -75,12 +71,12 @@ body {
     Oxygen,
     Ubuntu,
     Cantarell,
-    'Fira Sans',
-    'Droid Sans',
     'Helvetica Neue',
     sans-serif;
+
+  line-height: 1.6;
   font-size: 15px;
-  text-rendering: optimizeLegibility;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
