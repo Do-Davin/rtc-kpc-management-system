@@ -1,5 +1,5 @@
 import AttendanceComponent from '@/components/admin/attendanceComponent.vue';
-import CourseComponent from '@/components/admin/CourseComponent.vue';
+import CourseComponent from '@/components/admin/courseComponent.vue';
 import DashboardAdmin from '@/components/admin/dashboardAdmin.vue';
 import DepartmentComponent from '@/components/admin/departmentComponent.vue';
 import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';

@@ -35,6 +35,9 @@
         </div>
       </div>
     </div>
+    <div class="chart-section">
+      To be Implemented...
+    </div>
   </div>
 </template>
 
@@ -66,6 +69,17 @@ p { color: #888; margin-bottom: 32px; }
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+}
+
+.chart-section {
+  border: 2px solid black;
+  width: auto;
+  height: 500px;
+  margin-top: 40px;
+  font-size: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .blue { background: #eef2ff; }
