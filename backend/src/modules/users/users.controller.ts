@@ -10,8 +10,11 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -25,12 +28,23 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  // Testing
-  @UseGuards(JwtAuthGuard)
+  // ------------------------ Testing ------------------------
+  @Get('teacher-only')
+  @Roles('TEACHER')
+  teacherOnly() {
+    return { message: 'Teacher access only' };
+  }
+
   @Get('me')
-  getMe(@Request() req) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-    return req.user;
+  @Roles('STUDENT', 'TEACHER', 'ADMIN')
+  getStudentProfile() {
+    return { message: 'Authenticated user profile' };
+  }
+
+  @Get('admin-only')
+  @Roles('ADMIN')
+  adminOnly() {
+    return { message: 'Admin access only' };
   }
 
   @Get(':id')
