@@ -6,6 +6,7 @@ import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
 import ReportsComponent from '@/components/admin/reportsComponent.vue';
 import StaffComponent from '@/components/admin/staffComponent.vue';
 import StudentCompoent from '@/components/admin/studentCompoent.vue';
+import authRoutes from '@/modules/auth/_routes/auth.routes';
 import AdminLayout from '@/views/AdminLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -15,6 +16,8 @@ const routes = [
     name: 'HomeView',
     component: () => import('@/views/HomeView.vue'),
   },
+
+  ...authRoutes,
 
   // Admin Routes
   {
