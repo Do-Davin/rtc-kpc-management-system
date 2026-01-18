@@ -3,42 +3,40 @@
     <aside class="sidebar">
       <div class="logo-section">
         <img src="../assets/logo.png" class="logo-img"/>
-        <span class="brand-name">RTC</span>
       </div>
 
       <nav class="nav-menu">
         <router-link to="/admin/dashboard" class="nav-item">
-          <img src="../assets/dashboardIcon.png" class="icon"/> Dashboard
+          <img src="../assets/dashboardIcon.png" class="icon"/> ផ្ទាំងគ្រប់គ្រង
         </router-link>
         <router-link to="/admin/students" class="nav-item">
-          <img src="../assets/studentIcon.png" class="icon"/> Students
+          <img src="../assets/studentIcon.png" class="icon"/> សិស្សានុសិស្ស
         </router-link>
         <router-link to="/admin/staff" class="nav-item">
-          <img src="../assets/staffIcon.png" class="icon"/> Staff
+          <img src="../assets/staffIcon.png" class="icon"/> បុគ្គលិក
         </router-link>
         <router-link to="/admin/departments" class="nav-item">
-          <img src="../assets/departmentIcon.png" class="icon"/> Departments
+          <img src="../assets/departmentIcon.png" class="icon"/> ដេប៉ាតឺម៉ង់
         </router-link>
         <router-link to="/admin/attendance" class="nav-item">
-          <img src="../assets/attendanceIcon.png" class="icon"/> Attendance
+          <img src="../assets/attendanceIcon.png" class="icon"/> វត្តមាន
         </router-link>
         <router-link to="/admin/reports" class="nav-item">
-          <img src="../assets/reportIcon.png" class="icon"/> Reports
+          <img src="../assets/reportIcon.png" class="icon"/> របាយការណ៍
         </router-link>
         <router-link to="/admin/courses" class="nav-item">
-          <img src="../assets/courseIcon.png" class="icon"/> Courses
+          <img src="../assets/courseIcon.png" class="icon"/> វគ្គសិក្សា
         </router-link>
         <router-link to="/admin/e-library" class="nav-item">
-          <img src="../assets/eLibraryIcon.png" class="icon"/> E-Library
+          <img src="../assets/eLibraryIcon.png" class="icon"/> បណ្ណាល័យ
         </router-link>
       </nav>
-
-      // Temporary account sections
+      <!-- Temporary Account Sections -->
       <div class="sidebar-footer">
         <div class="admin-avatar">KC</div>
         <div class="admin-meta">
           <p class="name">RTC</p>
-          <p class="role">Administrator</p>
+          <p class="role">អក្នគ្រប់គ្រង</p>
         </div>
       </div>
     </aside>
@@ -68,14 +66,13 @@
   padding: 30px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: bold;
-  color: #333;
+  justify-content: center;
 }
 
 .logo-img {
-  width: 90px;
+  width: 140px;
   height: auto;
+  display: block;
 }
 
 .nav-menu {

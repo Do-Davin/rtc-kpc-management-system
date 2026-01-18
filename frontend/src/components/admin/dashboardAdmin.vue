@@ -1,36 +1,36 @@
 <template>
   <div class="dashboard-content">
     <header class="page-header">
-      <h1>Dashboard Overview</h1>
-      <p>Welcome back! Here's what's happening today.</p>
+      <h1>ទិដ្ឋភាពទូទៅ</h1>
+      <p>សួស្ដី, សូមស្វាគមន៍សារជាថ្មី 🙏</p>
     </header>
 
     <div class="stats-grid">
       <div class="stat-card">
         <div class="icon-box blue">🎓</div>
         <div class="stat-info">
-          <p>Total Students</p>
+          <p>សិស្សសរុប</p>
           <h3>2000</h3>
         </div>
       </div>
       <div class="stat-card">
         <div class="icon-box orange">👥</div>
         <div class="stat-info">
-          <p>Total Staff</p>
+          <p>បុគ្គលិកសរុប</p>
           <h3>350</h3>
         </div>
       </div>
       <div class="stat-card">
         <div class="icon-box green">📚</div>
         <div class="stat-info">
-          <p>Active Courses</p>
+          <p>វគ្គសិក្សា</p>
           <h3>20</h3>
         </div>
       </div>
       <div class="stat-card">
         <div class="icon-box red">📊</div>
         <div class="stat-info">
-          <p>Avg Attendance</p>
+          <p>មធ្យមភាគវត្តមាន</p>
           <h3>85%</h3>
         </div>
       </div>
