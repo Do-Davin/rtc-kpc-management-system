@@ -12,7 +12,10 @@ export class UsersService {
   ) {}
 
   create(dto: CreateUserDto) {
-    const user = this.usersRepo.create(dto);
+    const user = this.usersRepo.create({
+      ...dto,
+      role: dto.role as 'STUDENT' | 'TEACHER' | 'ADMIN',
+    });
     return this.usersRepo.save(user);
   }
 
@@ -30,5 +33,25 @@ export class UsersService {
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .getOne();
+  }
+
+  findByIdWithRefreshTokenHash(userId: string) {
+    return this.usersRepo
+      .createQueryBuilder('user')
+      .addSelect('user.refreshTokenHash')
+      .where('user.id = :id', { id: userId })
+      .getOne();
+  }
+
+  async updateRefreshTokenHash(userId: string, hash: string) {
+    await this.usersRepo.update(userId, {
+      refreshTokenHash: hash,
+    });
+  }
+
+  async clearRefreshTokenHash(userId: string) {
+    await this.usersRepo.update(userId, {
+      refreshTokenHash: null,
+    });
   }
 }

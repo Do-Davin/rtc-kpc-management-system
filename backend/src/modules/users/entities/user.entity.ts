@@ -22,6 +22,18 @@ export class User {
   @Column({ default: 'STUDENT' })
   role: UserRole;
 
+  /**
+   * Hashed refresh token (NEVER store raw token)
+   * Used for refresh token rotation
+   */
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    select: false,
+  })
+  refreshTokenHash: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

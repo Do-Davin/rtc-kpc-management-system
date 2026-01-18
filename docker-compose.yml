@@ -16,11 +16,14 @@ services:
     image: node:20
     container_name: rtc_backend
     working_dir: /app
+    build:
+      context: ./backend
     ports:
       - "3000:3000"
     depends_on:
       - postgres
     env_file:
+      - .env
       - ./backend/.env
     volumes:
       - ./backend:/app
