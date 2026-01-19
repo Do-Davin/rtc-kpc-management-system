@@ -1,28 +1,28 @@
 <template>
-  <div class="admin-container">
+  <div class="student-container">
     <aside class="sidebar">
       <div class="logo-section">
         <img src="../assets/logo.png" class="logo-img"/>
       </div>
 
       <nav class="nav-menu">
-        <router-link to="/admin/dashboard" class="nav-item">
+        <router-link to="/student/dashboard" class="nav-item">
           <img src="../assets/dashboardIcon.png" class="icon"/> ផ្ទាំងគ្រប់គ្រង
         </router-link>
-        <router-link to="/admin/attendance" class="nav-item">
+        <router-link to="/student/attendance" class="nav-item">
           <img src="../assets/attendanceIcon.png" class="icon"/> វត្តមាន
         </router-link>
-        <router-link to="/admin/courses" class="nav-item">
+        <router-link to="/student/courses" class="nav-item">
           <img src="../assets/courseIcon.png" class="icon"/> វគ្គសិក្សា
         </router-link>
-        <router-link to="/admin/e-library" class="nav-item">
+        <router-link to="/student/e-library" class="nav-item">
           <img src="../assets/eLibraryIcon.png" class="icon"/> បណ្ណាល័យ
         </router-link>
       </nav>
       <!-- Temporary Account Sections -->
       <div class="sidebar-footer">
-        <div class="admin-avatar">KC</div>
-        <div class="admin-meta">
+        <div class="student-avatar">KC</div>
+        <div class="student-meta">
           <p class="name">RTC</p>
           <p class="role">អក្នគ្រប់គ្រង</p>
         </div>
@@ -36,7 +36,7 @@
 </template>
 
 <style scoped>
-.admin-container {
+.student-container {
   display: flex;
   height: 100vh;
   background-color: #f8f9fa;
@@ -99,7 +99,7 @@
   gap: 12px;
 }
 
-.admin-avatar {
+.student-avatar {
   width: 40px;
   height: 40px;
   background: #5d5fef;
@@ -111,9 +111,9 @@
   font-weight: bold;
 }
 
-.admin-meta p { margin: 0; }
-.admin-meta .name { font-weight: 600; font-size: 0.9rem; }
-.admin-meta .role { font-size: 0.75rem; color: #888; }
+.student-meta p { margin: 0; }
+.student-meta .name { font-weight: 600; font-size: 0.9rem; }
+.student-meta .role { font-size: 0.75rem; color: #888; }
 
 .main-content {
   flex: 1;
