@@ -63,6 +63,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family:
+    'Noto Sans Khmer',
     Inter,
     -apple-system,
     BlinkMacSystemFont,
@@ -72,7 +73,6 @@ body {
     Ubuntu,
     Cantarell,
     'Helvetica Neue',
-    'Noto Sans Khmer',
     sans-serif;
 
   line-height: 1.6;
