@@ -246,7 +246,7 @@ cd frontend && npm run lint
 
 ## 👥 Developers
 
-- Do Davin ID: p20230021
+- Do Davin ID: p20230018
 - Huoth Sitha ID: p20230039
 - Thy Sethasarakvath ID: p20230035
 - Tat Chansereyvong ID: p20230021

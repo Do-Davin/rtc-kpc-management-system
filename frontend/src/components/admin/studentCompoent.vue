@@ -21,6 +21,7 @@
     </div>
 
     <div class="filter-bar">
+<<<<<<< HEAD
       <input 
         type="text" 
         placeholder="Search by Name or ID..." 
@@ -28,6 +29,9 @@
         v-model="searchQuery" 
       />
       
+=======
+      <input type="text" placeholder="ស្វែងរកសិស្ស..." class="search-input" v-model="searchQuery" />
+>>>>>>> main
       <select class="filter-select" v-model="selectedDept">
         <option value="">All Departments</option>
         <option value="Computer Science">Computer Science</option>
@@ -166,6 +170,7 @@ const showModal = ref(false);
 const isEditing = ref(false); // True = Update Mode, False = Create Mode
 const editingId = ref(null);  // Stores ID of student being edited
 
+// <<<<<<< HEAD
 // --- Form Data ---
 const formData = ref({
   fullName: '',
@@ -176,6 +181,16 @@ const formData = ref({
   role: 'STUDENT',
   password: 'password123' // Default password for new users
 });
+// =======
+// const students = ref([
+//   { initials: 'TV', name: 'ធី សេដ្ឋាសារវត្រ័', id: 'STU001', dept: 'Computer Science', year: '3', email: 'thy.vath@university.edu', courses: 2, avatarColor: '#5d5fef' },
+//   { initials: 'HS', name: 'ហួត សីថា', id: 'STU002', dept: 'Engineering', year: '2', email: 'hout.sitha@university.edu', courses: 2, avatarColor: '#7c3aed' },
+//   { initials: 'DV', name: 'ដូ ដាវីន', id: 'STU003', dept: 'Business', year: '4', email: 'do.davin@university.edu', courses: 2, avatarColor: '#4f46e5' },
+//   { initials: 'SV', name: 'សេរី រង្ស', id: 'STU004', dept: 'Arts', year: '1', email: 'serey.vong@university.edu', courses: 2, avatarColor: '#4338ca' },
+//   { initials: 'SL', name: 'សាម​ សុខលៀប', id: 'STU005', dept: 'Computer Science', year: '2', email: 'sok.leap@university.edu', courses: 2, avatarColor: '#6366f1' },
+//   { initials: 'NH', name: 'ជិន ហុងនីហេង', id: 'STU006', dept: 'Science', year: '3', email: 'ny.heng@university.edu', courses: 2, avatarColor: '#3730a3' },
+// ]);
+// >>>>>>> main
 
 // --- 1. READ (Fetch Users) ---
 const fetchStudents = async () => {
