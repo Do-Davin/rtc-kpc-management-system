@@ -145,7 +145,7 @@ const resetFilters = () => {
 
 .staff-table th {
   padding: 20px;
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   color: #333;
   font-weight: 700;
   border-bottom: 1px solid #f0f0f0;
