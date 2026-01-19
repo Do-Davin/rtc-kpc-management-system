@@ -94,7 +94,7 @@ const summaryStats = [
 const students = ref([
   { initials: 'TV', name: 'ធី សេដ្ឋាសារវត្រ័', id: 'STU001', dept: 'Computer Science', year: '3', email: 'thy.vath@university.edu', courses: 2, avatarColor: '#5d5fef' },
   { initials: 'HS', name: 'ហួត សីថា', id: 'STU002', dept: 'Engineering', year: '2', email: 'hout.sitha@university.edu', courses: 2, avatarColor: '#7c3aed' },
-  { initials: 'DV', name: 'ដូ ឌាវីន', id: 'STU003', dept: 'Business', year: '4', email: 'do.davin@university.edu', courses: 2, avatarColor: '#4f46e5' },
+  { initials: 'DV', name: 'ដូ ដាវីន', id: 'STU003', dept: 'Business', year: '4', email: 'do.davin@university.edu', courses: 2, avatarColor: '#4f46e5' },
   { initials: 'SV', name: 'សេរី រង្ស', id: 'STU004', dept: 'Arts', year: '1', email: 'serey.vong@university.edu', courses: 2, avatarColor: '#4338ca' },
   { initials: 'SL', name: 'សាម​ សុខលៀប', id: 'STU005', dept: 'Computer Science', year: '2', email: 'sok.leap@university.edu', courses: 2, avatarColor: '#6366f1' },
   { initials: 'NH', name: 'ជិន ហុងនីហេង', id: 'STU006', dept: 'Science', year: '3', email: 'ny.heng@university.edu', courses: 2, avatarColor: '#3730a3' },
