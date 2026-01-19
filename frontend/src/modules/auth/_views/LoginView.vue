@@ -1,12 +1,12 @@
 <template>
-  <div class="register-page">
+  <div class="login-page">
     <!-- Left Section - Form -->
     <div class="form-section">
       <div class="form-container">
         <!-- Header -->
         <AuthHeader
-          title="Create Account"
-          subtitle="Join us by creating your account"
+          title="Welcome"
+          subtitle="Please login to your account"
         />
 
         <form class="form" @submit.prevent>
@@ -16,28 +16,29 @@
           <!-- Password Field -->
           <AuthPasswordField label="Password" />
 
-          <!-- Confirm Password Field -->
-          <AuthPasswordField label="Confirm Password" />
-
-          <!-- Terms Checkbox -->
+          <!-- Checkbox & Forgot Password -->
           <AuthCheckBoxRow>
-            I agree to the
-            <a href="#">terms & policy</a>
+            Remember for 30 days
+
+            <template #action>
+              <span class="forgot-password" @click="onForgotPassword">
+                Forgot Password?
+              </span>
+            </template>
           </AuthCheckBoxRow>
 
-
-          <!-- Sign Up Button -->
-          <AuthButton>Sign up</AuthButton>
+          <!-- Login Button -->
+          <AuthButton>Login</AuthButton>
 
           <!-- Login Link -->
           <AuthSwitchLink
-            text="Already have an account?"
-            link-text="Login"
-            to="/login"
+            text="Don't have account yet?"
+            link-text="Sign Up"
+            to="/register"
           />
 
           <!-- Divider -->
-          <AuthDivider text="Sign up with Others" />
+          <AuthDivider text="Login with Others" />
 
           <!-- Auth Social Buttons -->
           <AuthSocialButtons />
@@ -47,23 +48,26 @@
 
     <!-- Right Section - Image -->
     <AuthSideImage />
+
+    <!-- Future Different Image -->
+    <!-- <AuthSideImage src="/images/login.avif" /> -->
   </div>
 </template>
 
 <script setup>
 import AuthHeader from '../_components/AuthHeader.vue';
-import AuthEmailField from '../_components/AuthEmailField.vue';
-import AuthPasswordField from '../_components/AuthPasswordField.vue';
-import AuthDivider from '../_components/AuthDivider.vue';
 import AuthButton from '../_components/AuthButton.vue';
 import AuthSocialButtons from '../_components/AuthSocialButtons.vue';
+import AuthEmailField from '../_components/AuthEmailField.vue';
+import AuthPasswordField from '../_components/AuthPasswordField.vue';
 import AuthSwitchLink from '../_components/AuthSwitchLink.vue';
-import AuthCheckBoxRow from '../_components/AuthCheckBoxRow.vue';
 import AuthSideImage from '../_components/AuthSideImage.vue';
+import AuthDivider from '../_components/AuthDivider.vue';
+import AuthCheckBoxRow from '../_components/AuthCheckBoxRow.vue';
 </script>
 
 <style scoped>
-.register-page {
+.login-page {
   display: flex;
   height: 100vh;
   overflow: hidden;
@@ -74,9 +78,9 @@ import AuthSideImage from '../_components/AuthSideImage.vue';
   flex: 1;
   height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px 24px;
+  padding: 87.5px 24px 40px;
   overflow: hidden;
   background: linear-gradient(135deg, #f5f7fa 0%, #fdfeff 100%);
 }
