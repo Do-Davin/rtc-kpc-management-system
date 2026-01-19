@@ -1,5 +1,5 @@
 import AttendanceComponent from '@/components/admin/attendanceComponent.vue';
-import CourseComponent from '@/components/admin/courseComponent.vue';
+import CourseComponent from '@/components/admin/CourseComponent.vue';
 import DashboardAdmin from '@/components/admin/dashboardAdmin.vue';
 import DepartmentComponent from '@/components/admin/departmentComponent.vue';
 import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
@@ -8,6 +8,8 @@ import StaffComponent from '@/components/admin/staffComponent.vue';
 import StudentCompoent from '@/components/admin/studentCompoent.vue';
 import authRoutes from '@/modules/auth/_routes/auth.routes';
 import AdminLayout from '@/views/AdminLayout.vue';
+import StudentLayout from '@/views/StudentLayout.vue';
+import TeacherLayout from '@/views/TeacherLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
@@ -65,9 +67,31 @@ const routes = [
         component: ELibraryComponent
       },
     ]
+  },
+
+  {
+    path: '/teacher',
+    component: TeacherLayout,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: DashboardAdmin,
+      },
+    ]
+  },
+
+  {
+    path: '/student',
+    component: StudentLayout,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: DashboardAdmin,
+      },
+    ]
   }
-
-
 ];
 
 const router = createRouter({
