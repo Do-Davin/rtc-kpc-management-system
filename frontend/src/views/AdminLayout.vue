@@ -36,7 +36,7 @@
         <div class="admin-avatar">KC</div>
         <div class="admin-meta">
           <p class="name">RTC</p>
-          <p class="role">អក្នគ្រប់គ្រង</p>
+          <p class="role">អ្នកគ្រប់គ្រង</p>
         </div>
       </div>
     </aside>

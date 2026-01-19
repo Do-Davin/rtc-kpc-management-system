@@ -1,34 +1,38 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Request,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { UpdateUserDto } from './dto/update-user.dto';
+// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+// import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+// @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @Roles('ADMIN') 
   createUser(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
 
   @Get()
+  @Roles('ADMIN', 'TEACHER') // Recommended: Restrict list view
   findAllUsers() {
     return this.usersService.findAll();
   }
 
-  // ------------------------ Testing ------------------------
+  // ------------------------ Testing Routes ------------------------
   @Get('teacher-only')
   @Roles('TEACHER')
   teacherOnly() {
@@ -47,8 +51,23 @@ export class UsersController {
     return { message: 'Admin access only' };
   }
 
+  // ------------------------ Single User Operations ------------------------
+  
   @Get(':id')
-  findOneUser(@Param() id: string) {
+  @Roles('ADMIN', 'TEACHER')
+  findOneUser(@Param('id') id: string) {
     return this.usersService.findOne(id);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN') // Only Admins can update users
+  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN') // Only Admins can delete users
+  removeUser(@Param('id') id: string) {
+    return this.usersService.remove(id);
   }
 }

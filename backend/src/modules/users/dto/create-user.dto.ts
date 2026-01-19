@@ -17,4 +17,21 @@ export class CreateUserDto {
 
   @IsOptional()
   role?: string;
+
+  
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  year?: string;
 }

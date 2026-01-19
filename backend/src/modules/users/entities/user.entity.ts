@@ -22,10 +22,20 @@ export class User {
   @Column({ default: 'STUDENT' })
   role: UserRole;
 
-  /**
-   * Hashed refresh token (NEVER store raw token)
-   * Used for refresh token rotation
-   */
+  // --- New Fields for Student Info ---
+  @Column({ nullable: true })
+  fullName: string;
+
+  @Column({ nullable: true })
+  studentId: string; // e.g., "STU001"
+
+  @Column({ nullable: true })
+  department: string; // e.g., "Computer Science"
+
+  @Column({ nullable: true })
+  year: string; // e.g., "3"
+  // ----------------------------------
+
   @Column({
     type: 'varchar',
     length: 255,
