@@ -1,7 +1,7 @@
 <template>
   <div class="staff-view">
     <header class="page-header">
-      <h1 class="title">Staff List</h1>
+      <h1 class="title">ទិដ្ឋភាព - បុគ្គលិក</h1>
     </header>
 
     <div class="filter-container">
@@ -25,13 +25,13 @@
       <table class="staff-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>NAME</th>
-            <th>Date of Birth (MM/DD/YY)</th>
-            <th>Department</th>
-            <th>Register Date</th>
-            <th>Email</th>
-            <th>STATUS</th>
+            <th>ល.រ</th>
+            <th>ឈ្មោះ</th>
+            <th>ថ្ងៃខែឆ្នាំកំណើត</th>
+            <th>ដេប៉ាដឺម៉ង់</th>
+            <th>ថ្ងៃចុះបញ្ជី</th>
+            <th>អីមែល</th>
+            <th>ស្ថានភាព</th>
           </tr>
         </thead>
         <tbody>
@@ -61,15 +61,15 @@ const filterDate = ref('Date');
 
 // Dummy data matching the image provided
 const staffData = ref([
-  { id: '00001', name: 'គ្រីស្ទានូ រ៉ូណាល់', dob: '12/31/2005', department: 'Information Techn', registerDate: '04 Sep 2024', email: 'email@gmail.com', status: 'Active' },
-  { id: '00002', name: 'លីអូ ម៉េស៊ី', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '28 May 2025', email: 'email@gmail.com', status: 'On Leave' },
-  { id: '00003', name: 'នេយម៉ារ ជេអរ', dob: '12/31/2005', department: 'Information Techn', registerDate: '23 Nov 2025', email: 'email@gmail.com', status: 'Active' },
-  { id: '00004', name: 'ជីង ជក', dob: '12/31/2005', department: 'Computer Science', registerDate: '05 Feb 2025', email: 'email@gmail.com', status: 'Active' },
-  { id: '00005', name: 'ហួត សីថា', dob: '12/31/2005', department: 'Information Techn', registerDate: '29 Jul 2025', email: 'email@gmail.com', status: 'On Leave' },
-  { id: '00006', name: 'សេរី វង្ស', dob: '12/31/2005', department: 'Mechanical Engineering', registerDate: '15 Aug 2024', email: 'email@gmail.com', status: 'Active' },
-  { id: '00007', name: 'វត្រ័វត្រ័', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '21 Dec 2025', email: 'email@gmail.com', status: 'On Leave' },
-  { id: '00008', name: 'ទីទី', dob: '12/31/2005', department: 'Information Techn', registerDate: '30 Apr 2025', email: 'email@gmail.com', status: 'Retired' },
-  { id: '00009', name: 'ដូ ដាវីន', dob: '12/31/2005', department: 'Software Engineering', registerDate: '09 Jan 2015', email: 'email@gmail.com', status: 'Retired' },
+  { id: '00001', name: 'គ្រីស្ទានូ រ៉ូណាល់', dob: '12/31/2005', department: 'Information Techn', registerDate: '04 Sep 2024', email: 'email@gmail.com', status: 'ធ្វើការ' },
+  { id: '00002', name: 'លីអូ ម៉េស៊ី', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '28 May 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
+  { id: '00003', name: 'នេយម៉ារ ជេអរ', dob: '12/31/2005', department: 'Information Techn', registerDate: '23 Nov 2025', email: 'email@gmail.com', status: 'ធ្វើការ' },
+  { id: '00004', name: 'ជីង ជក', dob: '12/31/2005', department: 'Computer Science', registerDate: '05 Feb 2025', email: 'email@gmail.com', status: 'ធ្វើការ' },
+  { id: '00005', name: 'ហួត សីថា', dob: '12/31/2005', department: 'Information Techn', registerDate: '29 Jul 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
+  { id: '00006', name: 'សេរី វង្ស', dob: '12/31/2005', department: 'Mechanical Engineering', registerDate: '15 Aug 2024', email: 'email@gmail.com', status: 'ធ្វើការ' },
+  { id: '00007', name: 'វត្រ័វត្រ័', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '21 Dec 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
+  { id: '00008', name: 'ទីទី', dob: '12/31/2005', department: 'Information Techn', registerDate: '30 Apr 2025', email: 'email@gmail.com', status: 'ចូលនិវត្តិ' },
+  { id: '00009', name: 'ដូ ដាវីន', dob: '12/31/2005', department: 'Software Engineering', registerDate: '09 Jan 2015', email: 'email@gmail.com', status: 'ចូលនិវត្តិ' },
 ]);
 
 const resetFilters = () => {
@@ -172,17 +172,17 @@ const resetFilters = () => {
   text-align: center;
 }
 
-.active {
+.ធ្វើការ {
   background-color: #e6fffa;
   color: #38b2ac;
 }
 
-.on-leave {
+.ជិតចេញ {
   background-color: #f0f2ff;
   color: #5d5fef;
 }
 
-.retired {
+.ចូលនិវត្តិ {
   background-color: #f5f5f5;
   color: #666;
 }
