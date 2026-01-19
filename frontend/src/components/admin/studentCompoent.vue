@@ -13,7 +13,7 @@
     </div>
     <!-- Temporay -->
     <div class="filter-bar">
-      <input type="text" placeholder="Search students..." class="search-input" v-model="searchQuery" />
+      <input type="text" placeholder="ស្វែងរកសិស្ស..." class="search-input" v-model="searchQuery" />
       <select class="filter-select" v-model="selectedDept">
         <option value="">Computer Science</option>
         <option value="Engineering">Engineering</option>
