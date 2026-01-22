@@ -1,5 +1,5 @@
 import AttendanceComponent from '@/components/admin/attendanceComponent.vue';
-import CourseComponent from '@/components/admin/courseComponent.vue';
+import CourseComponent from '@/components/admin/CourseComponent.vue';
 import DashboardAdmin from '@/components/admin/dashboardAdmin.vue';
 import DepartmentComponent from '@/components/admin/departmentComponent.vue';
 import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
@@ -10,12 +10,6 @@ import AttendanceStu from '@/components/student/attendanceStu.vue';
 import CourseStu from '@/components/student/courseStu.vue';
 import DashboardStudent from '@/components/student/dashboardStudent.vue';
 import ELibraryStu from '@/components/student/e-libraryStu.vue';
-import DashboardTeacher from '@/components/teacher/dashboardTeacher.vue';
-import StudentAttendance from '@/components/teacher/studentAttendance.vue';
-import StudentManagement from '@/components/teacher/studentManagement.vue';
-import TeacherCourses from '@/components/teacher/teacherCourses.vue';
-import TeacherELibrary from '@/components/teacher/teacherE-library.vue';
-import TeacherReport from '@/components/teacher/teacherReport.vue';
 import authRoutes from '@/modules/auth/_routes/auth.routes';
 import AdminLayout from '@/views/AdminLayout.vue';
 import StudentLayout from '@/views/StudentLayout.vue';
@@ -25,8 +19,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    name: 'HomeView',
-    component: () => import('@/views/HomeView.vue'),
+    redirect: '/login',
   },
 
   ...authRoutes,
@@ -85,32 +78,32 @@ const routes = [
       {
         path: 'dashboard',
         name: 'TeacherDashboard',
-        component: DashboardTeacher,
+        component: import('@/components/teacher/_pages/DashboardTeacher.vue')
       },
       {
         path: 'students',
         name: 'TeacherStuManagement',
-        component: StudentManagement,
+        component: import('@/components/teacher/_pages/StudentAttendance.vue'),
       },
       {
         path: 'attendance',
-        name: 'StuAttendance4Teacher',
-        component: StudentAttendance,
+        name: 'TeacherStuAttendance',
+        component: import('@/components/teacher/_pages/StudentAttendance.vue'),
       },
       {
         path: 'reports',
         name: 'TeacherReports',
-        component: TeacherReport,
+        component: import('@/components/teacher/_pages/TeacherReport.vue'),
       },
       {
         path: 'courses',
         name: 'TeacherCourse',
-        component: TeacherCourses,
+        component: import('@/components/teacher/_pages/TeacherCourses.vue'),
       },
       {
         path: 'e-library',
-        name: 'TeacherELibrary',
-        component: TeacherELibrary
+        name: 'TeacherElibrary',
+        component: import('@/components/teacher/_pages/TeacherElibrary.vue'),
       },
     ]
   },
