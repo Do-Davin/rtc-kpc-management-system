@@ -9,15 +9,26 @@
           subtitle="Join us by creating your account"
         />
 
-        <form class="form" @submit.prevent>
+        <form class="form" @submit.prevent="onRegister">
           <!-- Email Field -->
-          <AuthEmailField />
+          <AuthEmailField
+            v-model="email"
+            :error="authStore.fieldErrors.email"
+          />
 
           <!-- Password Field -->
-          <AuthPasswordField label="Password" />
+          <AuthPasswordField
+            v-model="password"
+            label="Password"
+            :error="authStore.fieldErrors.password"
+          />
 
           <!-- Confirm Password Field -->
-          <AuthPasswordField label="Confirm Password" />
+          <AuthPasswordField
+            v-model="password"
+            label="Confirm Password"
+            :error="authStore.fieldErrors.password"
+          />
 
           <!-- Terms Checkbox -->
           <AuthCheckBoxRow>
@@ -27,7 +38,9 @@
 
 
           <!-- Sign Up Button -->
-          <AuthButton>Sign up</AuthButton>
+          <AuthButton :loading="authStore.loading">
+            Sign up
+          </AuthButton>
 
           <!-- Login Link -->
           <AuthSwitchLink
@@ -60,6 +73,27 @@ import AuthSocialButtons from '../_components/AuthSocialButtons.vue';
 import AuthSwitchLink from '../_components/AuthSwitchLink.vue';
 import AuthCheckBoxRow from '../_components/AuthCheckBoxRow.vue';
 import AuthSideImage from '../_components/AuthSideImage.vue';
+import { useAuthStore } from '@/stores/auth.store';
+import { ref, watch } from 'vue';
+
+const authStore = useAuthStore()
+
+const email = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+const confirmError = ref('')
+
+// clear errors on typing
+watch(email, () => delete authStore.fieldErrors.email)
+watch(password, () => delete authStore.fieldErrors.password)
+watch(confirmPassword, () => (confirmError.value = ''))
+
+const onRegister = () => {
+  authStore.register(
+    email.value,
+    password.value,
+  )
+}
 </script>
 
 <style scoped>

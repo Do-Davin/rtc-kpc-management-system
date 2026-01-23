@@ -2,14 +2,22 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import axios from 'axios'
 import App from './App.vue'
 import router from './router'
-axios.defaults.baseURL = 'http://localhost:3000'
+import { useAuthStore } from './stores/auth.store'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
+
+// Restore auth before mount
+const authStore = useAuthStore()
+const restored = authStore.restore()
+
+if (restored && authStore.user) {
+  authStore.redirectByRole()
+}
 
 app.mount('#app')

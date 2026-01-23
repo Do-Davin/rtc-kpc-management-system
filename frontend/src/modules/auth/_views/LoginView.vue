@@ -9,12 +9,17 @@
           subtitle="Please login to your account"
         />
 
-        <form class="form" @submit.prevent>
+        <form class="form" @submit.prevent="onLogin">
           <!-- Email Field -->
-          <AuthEmailField />
+          <AuthEmailField v-model="email" :error="authStore.fieldErrors.email" />
 
           <!-- Password Field -->
-          <AuthPasswordField label="Password" />
+          <AuthPasswordField v-model="password" label="Password" :error="authStore.fieldErrors.password" />
+
+          <!-- Error message -->
+          <p v-if="authStore.error" class="error-text">
+            {{ authStore.error }}
+          </p>
 
           <!-- Checkbox & Forgot Password -->
           <AuthCheckBoxRow>
@@ -28,7 +33,9 @@
           </AuthCheckBoxRow>
 
           <!-- Login Button -->
-          <AuthButton>Login</AuthButton>
+          <AuthButton :loading="authStore.loading">
+            Login
+          </AuthButton>
 
           <!-- Login Link -->
           <AuthSwitchLink
@@ -64,6 +71,24 @@ import AuthSwitchLink from '../_components/AuthSwitchLink.vue';
 import AuthSideImage from '../_components/AuthSideImage.vue';
 import AuthDivider from '../_components/AuthDivider.vue';
 import AuthCheckBoxRow from '../_components/AuthCheckBoxRow.vue';
+import { useAuthStore } from '@/stores/auth.store';
+import { ref, watch } from 'vue';
+
+const authStore = useAuthStore()
+
+const email = ref('')
+const password = ref('')
+
+// clear error when typing
+watch(email, () => delete authStore.fieldErrors.email)
+watch(password, () => delete authStore.fieldErrors.password)
+
+const onLogin = () => {
+  authStore.login({
+    email: email.value,
+    password: password.value,
+  })
+}
 </script>
 
 <style scoped>
@@ -88,6 +113,12 @@ import AuthCheckBoxRow from '../_components/AuthCheckBoxRow.vue';
 .form-container {
   width: 100%;
   max-width: 440px;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 13px;
+  margin: 8px 0;
 }
 
 @media (max-width: 480px) {

@@ -1,8 +1,24 @@
 <template>
-  <button class="auth-btn" type="submit">
+  <button
+    class="auth-btn"
+    type="submit"
+    :disabled="loading"
+  >
     <slot />
+    <AuthSpinner v-if="loading" />
   </button>
 </template>
+
+<script setup>
+import AuthSpinner from './AuthSpinner.vue';
+
+defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+})
+</script>
 
 <style scoped>
 .auth-btn {

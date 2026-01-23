@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Request,
   UseGuards,
@@ -12,43 +13,51 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { Request as ExpressRequest } from 'express';
+
+interface AuthRequest extends ExpressRequest {
+  user: {
+    sub: string;
+    email: string;
+    role: string;
+  };
+}
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // ================= CREATE =================
+
   @Post()
   createUser(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
+
+  // ================= ME (MUST BE FIRST) =================
+
+  @Get('me')
+  @Roles('STUDENT', 'TEACHER', 'ADMIN')
+  getProfile(@Request() req: AuthRequest) {
+    return {
+      id: req.user.sub,
+      email: req.user.email,
+      role: req.user.role,
+    };
+  }
+
+  // ================= FIND ALL =================
 
   @Get()
   findAllUsers() {
     return this.usersService.findAll();
   }
 
-  // ------------------------ Testing ------------------------
-  @Get('teacher-only')
-  @Roles('TEACHER')
-  teacherOnly() {
-    return { message: 'Teacher access only' };
-  }
-
-  @Get('me')
-  @Roles('STUDENT', 'TEACHER', 'ADMIN')
-  getStudentProfile() {
-    return { message: 'Authenticated user profile' };
-  }
-
-  @Get('admin-only')
-  @Roles('ADMIN')
-  adminOnly() {
-    return { message: 'Admin access only' };
-  }
+  // ================= FIND ONE =================
 
   @Get(':id')
-  findOneUser(@Param() id: string) {
+  findOneUser(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 }

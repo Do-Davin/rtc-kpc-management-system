@@ -11,6 +11,7 @@ import CourseStu from '@/components/student/courseStu.vue';
 import DashboardStudent from '@/components/student/dashboardStudent.vue';
 import ELibraryStu from '@/components/student/e-libraryStu.vue';
 import authRoutes from '@/modules/auth/_routes/auth.routes';
+import { useAuthStore } from '@/stores/auth.store';
 import AdminLayout from '@/views/AdminLayout.vue';
 import StudentLayout from '@/views/StudentLayout.vue';
 import TeacherLayout from '@/views/TeacherLayout.vue';
@@ -28,6 +29,7 @@ const routes = [
   {
     path: '/admin',
     component: AdminLayout,
+    meta: { requiresAuth: true, roles: ['ADMIN'] },
     children: [
       {
         path: 'dashboard',
@@ -74,43 +76,39 @@ const routes = [
   {
     path: '/teacher',
     component: TeacherLayout,
+    meta: { requiresAuth: true, roles: ['TEACHER'] },
     children: [
       {
         path: 'dashboard',
-        name: 'TeacherDashboard',
         component: import('@/components/teacher/_pages/DashboardTeacher.vue')
       },
       {
         path: 'students',
-        name: 'TeacherStuManagement',
         component: import('@/components/teacher/_pages/StudentAttendance.vue'),
       },
       {
         path: 'attendance',
-        name: 'TeacherStuAttendance',
         component: import('@/components/teacher/_pages/StudentAttendance.vue'),
       },
       {
         path: 'reports',
-        name: 'TeacherReports',
         component: import('@/components/teacher/_pages/TeacherReport.vue'),
       },
       {
         path: 'courses',
-        name: 'TeacherCourse',
         component: import('@/components/teacher/_pages/TeacherCourses.vue'),
       },
       {
         path: 'e-library',
-        name: 'TeacherElibrary',
         component: import('@/components/teacher/_pages/TeacherElibrary.vue'),
       },
-    ]
+    ],
   },
 
   {
     path: '/student',
     component: StudentLayout,
+    meta: { requiresAuth: true, roles: ['STUDENT'] },
     children: [
       {
         path: 'dashboard',
@@ -140,5 +138,51 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+const roleHome = (role) => {
+  if (role === 'ADMIN') return '/admin/dashboard'
+  if (role === 'TEACHER') return '/teacher/dashboard'
+  return '/student/dashboard'
+}
+
+// Global guard
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  const isLoggedIn = !!auth.accessToken && !!auth.user
+
+  // BLOCK going back to /login or /register when logged in
+  if (isLoggedIn && (to.path === '/login' || to.path === '/register')) {
+    return roleHome(auth.user.role)
+  }
+
+  // Public route
+  if (!to.meta.requiresAuth) return true
+
+  // Not logged in
+  if (!auth.accessToken | !auth.user) {
+    return '/login'
+  }
+
+  // Role check
+  if (to.meta.roles && !to.meta.roles.includes(auth.user.role)) {
+    // Redirect user to their own dashboard
+    return roleHome(auth.user.role)
+  }
+
+  // Prevent going back to login/register when logged in
+  // if (
+  //   (to.path === '/login' || to.path === '/register') &&
+  //   auth.accessToken &&
+  //   auth.user
+  // ) {
+  //   return auth.user.role === 'ADMIN'
+  //   ? '/admin/dashboard'
+  //   : auth.user.role === 'TEACHER'
+  //   ? '/teacher/dashboard'
+  //   : '/student/dashboard'
+  // }
+
+  return true
+})
 
 export default router;

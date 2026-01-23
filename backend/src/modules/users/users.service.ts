@@ -44,14 +44,34 @@ export class UsersService {
   }
 
   async updateRefreshTokenHash(userId: string, hash: string) {
-    await this.usersRepo.update(userId, {
-      refreshTokenHash: hash,
+    const user = await this.usersRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'refreshTokenHash'],
     });
+
+    if (!user) return;
+
+    user.refreshTokenHash = hash;
+    await this.usersRepo.save(user);
+
+    // await this.usersRepo.update(userId, {
+    //   refreshTokenHash: hash,
+    // });
   }
 
   async clearRefreshTokenHash(userId: string) {
-    await this.usersRepo.update(userId, {
-      refreshTokenHash: null,
+    const user = await this.usersRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'refreshTokenHash'],
     });
+
+    if (!user) return;
+
+    user.refreshTokenHash = null;
+    await this.usersRepo.save(user);
+
+    // await this.usersRepo.update(userId, {
+    //   refreshTokenHash: null,
+    // });
   }
 }
