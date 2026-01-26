@@ -1,189 +1,261 @@
-<template>
-  <div class="staff-view">
-    <header class="page-header">
-      <h1 class="title">ទិដ្ឋភាព - បុគ្គលិក</h1>
-    </header>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import adminService from '@/services/admin.service';
+import { Plus, Search, Filter, Check, Edit2, Trash2 } from 'lucide-vue-next';
 
-    <div class="filter-container">
-      <div class="filter-group">
-        <div class="filter-trigger">
-          <span class="icon">🔍</span>
-          <span>Filter By</span>
-        </div>
-        <select class="filter-select" v-model="filterDate">
-          <option value="Date">Date</option>
-          <option value="Newest">Newest First</option>
-          <option value="Oldest">Oldest First</option>
+const teachers = ref([]);
+const departments = ref([]);
+const showModal = ref(false);
+const showSuccessModal = ref(false);
+const searchQuery = ref('');
+const filterDept = ref('');
+const loading = ref(false);
+const submitting = ref(false);
+
+const isEditing = ref(false);
+const editId = ref(null);
+
+const form = ref({ fullName: '', email: '', specialization: '', departmentId: '' });
+const createdAccount = ref({ email: '', password: '' });
+
+const loadData = async () => {
+  loading.value = true;
+  try {
+    const [teaRes, deptRes] = await Promise.all([
+      adminService.getTeachers(),
+      adminService.getDepartments()
+    ]);
+    teachers.value = teaRes.data;
+    departments.value = deptRes.data;
+  } catch (err) { console.error(err); } 
+  finally { loading.value = false; }
+};
+
+const filteredTeachers = computed(() => {
+  let result = teachers.value;
+  if (filterDept.value) result = result.filter(t => t.department?.id === filterDept.value);
+  if (searchQuery.value) {
+    const lower = searchQuery.value.toLowerCase();
+    result = result.filter(t => 
+      t.user?.email.toLowerCase().includes(lower) || 
+      t.specialization.toLowerCase().includes(lower) ||
+      t.fullName.toLowerCase().includes(lower)
+    );
+  }
+  return result;
+});
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const openCreate = () => {
+  isEditing.value = false;
+  form.value = { fullName: '', email: '', specialization: '', departmentId: '' };
+  showModal.value = true;
+};
+
+const openEdit = (tea) => {
+  isEditing.value = true;
+  editId.value = tea.id;
+  form.value = {
+    fullName: tea.fullName,
+    email: tea.user?.email,
+    specialization: tea.specialization,
+    departmentId: tea.department?.id || ''
+  };
+  showModal.value = true;
+};
+
+const handleSubmit = async () => {
+  submitting.value = true;
+  try {
+    if (isEditing.value) {
+      await adminService.updateTeacher(editId.value, {
+        fullName: form.value.fullName,
+        specialization: form.value.specialization,
+        departmentId: form.value.departmentId
+      });
+      showModal.value = false;
+      alert('Teacher updated successfully');
+    } else {
+      await adminService.createTeacher(form.value);
+      createdAccount.value = { email: form.value.email, password: 'RTC@2026' };
+      showModal.value = false;
+      showSuccessModal.value = true;
+    }
+    await loadData();
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error saving teacher');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handleDelete = async (id) => {
+  if (!confirm('Are you sure? This deletes the User Account as well.')) return;
+  try {
+    await adminService.deleteTeacher(id);
+    await loadData();
+  } catch (err) { alert('Failed to delete'); }
+};
+
+onMounted(loadData);
+</script>
+
+<template>
+  <div class="page-container">
+    <div class="page-header">
+      <div><h2 class="page-title">Staff & Teachers</h2><p class="page-subtitle">Manage faculty members</p></div>
+      <div class="header-actions">
+        <span class="badge">{{ teachers.length }} Total</span>
+        <button @click="openCreate" class="btn-primary purple"><Plus size="18" /> Add Teacher</button>
+      </div>
+    </div>
+
+    <div class="controls-bar flex-row">
+      <div class="search-box">
+        <Search size="18" class="search-icon" />
+        <input v-model="searchQuery" type="text" placeholder="Search name or email..." />
+      </div>
+      <div class="filter-box">
+        <select v-model="filterDept">
+          <option value="">All Departments</option>
+          <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
         </select>
-        <button class="reset-btn" @click="resetFilters">
-          <span class="reset-icon">↺</span> Reset Filter
-        </button>
       </div>
     </div>
 
     <div class="table-card">
-      <table class="staff-table">
+      <div v-if="loading" class="loading-state">Loading staff...</div>
+      <table v-else-if="filteredTeachers.length > 0" class="custom-table">
         <thead>
           <tr>
-            <th>ល.រ</th>
-            <th>ឈ្មោះ</th>
-            <th>ថ្ងៃខែឆ្នាំកំណើត</th>
-            <th>ដេប៉ាដឺម៉ង់</th>
-            <th>ថ្ងៃចុះបញ្ជី</th>
-            <th>អីមែល</th>
-            <th>ស្ថានភាព</th>
+            <th>Staff Info</th>
+            <th>Specialization</th>
+            <th>Department</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th class="text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="staff in staffData" :key="staff.id">
-            <td class="id-col">{{ staff.id }}</td>
-            <td class="name-col">{{ staff.name }}</td>
-            <td>{{ staff.dob }}</td>
-            <td>{{ staff.department }}</td>
-            <td>{{ staff.registerDate }}</td>
-            <td>{{ staff.email }}</td>
+          <tr v-for="tea in filteredTeachers" :key="tea.id">
             <td>
-              <span :class="['status-badge', staff.status.toLowerCase().replace(' ', '-')]">
-                {{ staff.status }}
-              </span>
+              <div class="user-cell">
+                <div class="avatar purple">{{ tea.fullName?.charAt(0).toUpperCase() || '?' }}</div>
+                <div class="user-info">
+                  <span class="name">{{ tea.fullName }}</span>
+                  <span class="email">{{ tea.user?.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td>{{ tea.specialization }}</td>
+            <td><span v-if="tea.department" class="dept-badge purple">{{ tea.department.name }}</span></td>
+            <td class="text-sm text-gray-600">{{ formatDate(tea.user?.createdAt) }}</td>
+            <td><span class="status-active">Active</span></td>
+            <td class="text-right">
+              <button @click="openEdit(tea)" class="btn-icon edit"><Edit2 size="18"/></button>
+              <button @click="handleDelete(tea.id)" class="btn-icon delete"><Trash2 size="18"/></button>
             </td>
           </tr>
         </tbody>
       </table>
+      <div v-else class="empty-state">No teachers found.</div>
+    </div>
+
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ isEditing ? 'Edit Teacher' : 'Add New Teacher' }}</h3>
+        <form @submit.prevent="handleSubmit">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input v-model="form.fullName" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input v-model="form.email" type="email" :disabled="isEditing" required />
+          </div>
+          <div class="form-group">
+            <label>Specialization</label>
+            <input v-model="form.specialization" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select v-model="form.departmentId" required>
+              <option value="" disabled>Select Department</option>
+              <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="submit" :disabled="submitting" class="btn-primary purple">
+              {{ submitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Account') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content success-content">
+        <div class="success-icon purple"><Check size="32" /></div>
+        <h3>Teacher Added!</h3>
+        <div class="credential-box">
+          <div class="cred-row"><span class="label">Email:</span><span class="value">{{ createdAccount.email }}</span></div>
+          <div class="cred-row"><span class="label">Password:</span><span class="value font-mono font-bold text-purple-600">{{ createdAccount.password }}</span></div>
+        </div>
+        <button @click="showSuccessModal = false" class="btn-primary purple w-full mt-4">Done</button>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-
-const filterDate = ref('Date');
-
-// Dummy data matching the image provided
-const staffData = ref([
-  { id: '00001', name: 'គ្រីស្ទានូ រ៉ូណាល់', dob: '12/31/2005', department: 'Information Techn', registerDate: '04 Sep 2024', email: 'email@gmail.com', status: 'ធ្វើការ' },
-  { id: '00002', name: 'លីអូ ម៉េស៊ី', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '28 May 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
-  { id: '00003', name: 'នេយម៉ារ ជេអរ', dob: '12/31/2005', department: 'Information Techn', registerDate: '23 Nov 2025', email: 'email@gmail.com', status: 'ធ្វើការ' },
-  { id: '00004', name: 'ជីង ជក', dob: '12/31/2005', department: 'Computer Science', registerDate: '05 Feb 2025', email: 'email@gmail.com', status: 'ធ្វើការ' },
-  { id: '00005', name: 'ហួត សីថា', dob: '12/31/2005', department: 'Information Techn', registerDate: '29 Jul 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
-  { id: '00006', name: 'សេរី វង្ស', dob: '12/31/2005', department: 'Mechanical Engineering', registerDate: '15 Aug 2024', email: 'email@gmail.com', status: 'ធ្វើការ' },
-  { id: '00007', name: 'វត្រ័វត្រ័', dob: '12/31/2005', department: 'Network & Cybersecurity', registerDate: '21 Dec 2025', email: 'email@gmail.com', status: 'ជិតចេញ' },
-  { id: '00008', name: 'ទីទី', dob: '12/31/2005', department: 'Information Techn', registerDate: '30 Apr 2025', email: 'email@gmail.com', status: 'ចូលនិវត្តិ' },
-  { id: '00009', name: 'ដូ ដាវីន', dob: '12/31/2005', department: 'Software Engineering', registerDate: '09 Jan 2015', email: 'email@gmail.com', status: 'ចូលនិវត្តិ' },
-]);
-
-const resetFilters = () => {
-  filterDate.value = 'Date';
-};
-</script>
-
 <style scoped>
-.staff-view {
-  width: 100%;
-}
-
-.title {
-  color: #5d5fef;
-  font-size: 1.8rem;
-  margin-bottom: 25px;
-}
-
-.filter-container {
-  display: flex;
-  margin-bottom: 25px;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.filter-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  color: #333;
-}
-
-.filter-select {
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  min-width: 100px;
-}
-
-.reset-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: white;
-  color: #ff5c5c;
-  border: 1px solid #fecaca;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.table-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #eee;
-  overflow: hidden;
-}
-
-.staff-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.staff-table th {
-  padding: 20px;
-  font-size: 1.2rem;
-  color: #333;
-  font-weight: 700;
-  border-bottom: 1px solid #f0f0f0;
-  text-transform: uppercase;
-}
-
-.staff-table td {
-  padding: 18px 20px;
-  font-size: 0.9rem;
-  color: #555;
-  border-bottom: 1px solid #f9f9f9;
-}
-
-.id-col { color: #666; }
-.name-col { font-weight: 500; color: #333; }
-
-.status-badge {
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  display: inline-block;
-  min-width: 80px;
-  text-align: center;
-}
-
-.ធ្វើការ {
-  background-color: #e6fffa;
-  color: #38b2ac;
-}
-
-.ជិតចេញ {
-  background-color: #f0f2ff;
-  color: #5d5fef;
-}
-
-.ចូលនិវត្តិ {
-  background-color: #f5f5f5;
-  color: #666;
-}
+.page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.page-title { font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 0; }
+.page-subtitle { color: #64748b; margin-top: 0.25rem; }
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.badge { background: #e2e8f0; color: #475569; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem; font-weight: 600; }
+.btn-primary { background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.btn-primary.purple { background: #9333ea; }
+.btn-primary.purple:hover { background: #7e22ce; }
+.controls-bar { margin-bottom: 1.5rem; display: flex; gap: 1rem; }
+.search-box, .filter-box { position: relative; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-box input, .filter-box select { padding: 0.6rem 1rem 0.6rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; min-width: 200px; background: white; }
+.table-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table th { background: #f8fafc; text-align: left; padding: 1rem; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+.custom-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+.user-cell { display: flex; align-items: center; gap: 0.75rem; }
+.avatar { width: 40px; height: 40px; background: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+.avatar.purple { background: #faf5ff; color: #9333ea; }
+.user-info { display: flex; flex-direction: column; }
+.user-info .name { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+.user-info .email { font-size: 0.85rem; color: #64748b; }
+.dept-badge { background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.dept-badge.purple { background: #faf5ff; color: #9333ea; }
+.status-active { color: #16a34a; font-size: 0.85rem; font-weight: 500; background: #f0fdf4; padding: 2px 8px; border-radius: 99px; }
+.text-right { text-align: right; }
+.btn-icon.edit { color: #2563eb; background: none; border: none; cursor: pointer; margin-right: 0.5rem; }
+.btn-icon.delete { color: #ef4444; background: none; border: none; cursor: pointer; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 50; }
+.modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; font-weight: 500; color: #475569; }
+.form-group input, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+.btn-text { background: none; border: none; color: #64748b; cursor: pointer; font-weight: 500; }
+.loading-state, .empty-state { padding: 3rem; text-align: center; color: #94a3b8; }
+.success-content { text-align: center; }
+.success-icon { width: 64px; height: 64px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; }
+.success-icon.purple { background: #faf5ff; color: #9333ea; }
+.credential-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 1rem; border-radius: 8px; text-align: left; }
+.cred-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.label { color: #64748b; font-size: 0.9rem; }
+.value { color: #1e293b; font-weight: 500; }
+.w-full { width: 100%; }
 </style>

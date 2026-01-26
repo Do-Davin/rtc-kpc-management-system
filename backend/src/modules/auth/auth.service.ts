@@ -1,12 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { User } from '../users/entities/user.entity';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ConfigService } from '@nestjs/config';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -17,24 +17,36 @@ export class AuthService {
   ) {}
 
   async register(data: RegisterDto) {
+    // 1. Check if user already exists
+    const existingUser = await this.users.findOne(data.email).catch(() => null);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // 2. Hash the password
     const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // 3. Create the user (Including FullName and Role)
     return this.users.create({
-      ...data,
-      role: (data.role || 'STUDENT').toUpperCase(),
+      ...data, // Spreads email, fullName, etc.
+      role: (data.role || 'STUDENT') as any, // Default to STUDENT if no role provided
       password: hashedPassword,
     });
   }
 
   async login(email: string, password: string) {
+    // 1. Find user
     const user = await this.users.findByEmailWithPassword(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
+    // 2. Check password
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Invalid credentials');
 
+    // 3. Generate tokens
     const tokens = await this.issueTokens(user);
 
-    // store refresh token HASH in DB (rotation-ready)
+    // 4. Store refresh token HASH in DB
     await this.storeRefreshTokenHash(user.id, tokens.refresh_token);
 
     return tokens;
@@ -78,7 +90,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
-      jti: crypto.randomUUID(), // Unique token
+      jti: crypto.randomUUID(), // Unique token ID
     };
 
     const access_token = await this.jwt.signAsync(payload);

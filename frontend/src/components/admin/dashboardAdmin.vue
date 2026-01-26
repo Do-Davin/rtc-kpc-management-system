@@ -1,92 +1,235 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import adminService from '@/services/admin.service';
+import { Users, GraduationCap, Building2, ArrowRight } from 'lucide-vue-next';
+
+// State for counts
+const stats = ref({
+  departments: 0,
+  students: 0,
+  teachers: 0
+});
+
+const loading = ref(true);
+
+// Fetch all data to calculate totals
+const fetchStats = async () => {
+  loading.value = true;
+  try {
+    const [deptRes, stuRes, teaRes] = await Promise.all([
+      adminService.getDepartments(),
+      adminService.getStudents(),
+      adminService.getTeachers()
+    ]);
+
+    stats.value = {
+      departments: deptRes.data.length || 0,
+      students: stuRes.data.length || 0,
+      teachers: teaRes.data.length || 0
+    };
+  } catch (error) {
+    console.error("Failed to load dashboard stats", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchStats);
+</script>
+
 <template>
-  <div class="dashboard-content">
-    <header class="page-header">
-      <h1>ទិដ្ឋភាពទូទៅ</h1>
-      <p>សួស្ដី, សូមស្វាគមន៍សារជាថ្មី 🙏</p>
+  <div class="dashboard-wrapper">
+    <header class="dashboard-header">
+      <div>
+        <h1>Dashboard Overview</h1>
+        <p class="subtitle">Welcome back, Admin.</p>
+      </div>
+      <button class="refresh-btn" @click="fetchStats" :disabled="loading">
+        {{ loading ? 'Refreshing...' : 'Refresh Data' }}
+      </button>
     </header>
 
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="icon-box blue">🎓</div>
-        <div class="stat-info">
-          <p>សិស្សសរុប</p>
-          <h3>2000</h3>
+      <div class="stat-card blue">
+        <div class="card-icon">
+          <Building2 :size="32" />
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="icon-box orange">👥</div>
-        <div class="stat-info">
-          <p>បុគ្គលិកសរុប</p>
-          <h3>350</h3>
+        <div class="card-info">
+          <h3>Departments</h3>
+          <p class="count">{{ stats.departments }}</p>
         </div>
+        <router-link to="/admin/departments" class="card-link">
+          Manage Departments <ArrowRight :size="16" />
+        </router-link>
       </div>
-      <div class="stat-card">
-        <div class="icon-box green">📚</div>
-        <div class="stat-info">
-          <p>វគ្គសិក្សា</p>
-          <h3>20</h3>
+
+      <div class="stat-card green">
+        <div class="card-icon">
+          <GraduationCap :size="32" />
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="icon-box red">📊</div>
-        <div class="stat-info">
-          <p>មធ្យមភាគវត្តមាន</p>
-          <h3>85%</h3>
+        <div class="card-info">
+          <h3>Total Students</h3>
+          <p class="count">{{ stats.students }}</p>
         </div>
+        <router-link to="/admin/students" class="card-link">
+          Manage Students <ArrowRight :size="16" />
+        </router-link>
       </div>
-    </div>
-    <div class="chart-section">
-      To be Implemented...
+
+      <div class="stat-card purple">
+        <div class="card-icon">
+          <Users :size="32" />
+        </div>
+        <div class="card-info">
+          <h3>Total Staff</h3>
+          <p class="count">{{ stats.teachers }}</p>
+        </div>
+        <router-link to="/admin/staff" class="card-link">
+          Manage Staff <ArrowRight :size="16" />
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-h1 { color: #5d5fef; margin-bottom: 8px; }
-p { color: #888; margin-bottom: 32px; }
+/* --- Layout --- */
+.dashboard-wrapper {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
 
+/* --- Header --- */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.subtitle {
+  color: #64748b;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.refresh-btn {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* --- Stats Grid --- */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
 }
 
+/* --- Card Styles --- */
 .stat-card {
   background: white;
-  padding: 24px;
-  border-radius: 12px;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  justify-content: space-between;
+  min-height: 180px; /* Slightly taller for balance */
 }
 
-.icon-box {
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+.card-icon {
   width: 48px;
   height: 48px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  margin-bottom: 1rem;
 }
 
-.chart-section {
-  border: 2px solid black;
-  width: auto;
-  height: 500px;
-  margin-top: 40px;
-  font-size: 52px;
+.card-info h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.card-info .count {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0.25rem 0 1.5rem 0;
+}
+
+.card-link {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9; 
 }
 
-.blue { background: #eef2ff; }
-.orange { background: #fff7ed; }
-.green { background: #f0fdf4; }
-.red { background: #fef2f2; }
+/* --- Card Colors --- */
+/* Blue Theme (Departments) */
+.stat-card.blue .card-icon {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+.stat-card.blue .card-link {
+  color: #2563eb;
+}
 
-.stat-info p { margin: 0; font-size: 0.9rem; color: #888; }
-.stat-info h3 { margin: 4px 0 0 0; font-size: 1.5rem; }
+/* Green Theme (Students) */
+.stat-card.green .card-icon {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+.stat-card.green .card-link {
+  color: #16a34a;
+}
+
+/* Purple Theme (Teachers) */
+.stat-card.purple .card-icon {
+  background-color: #faf5ff;
+  color: #9333ea;
+}
+.stat-card.purple .card-link {
+  color: #9333ea;
+}
 </style>

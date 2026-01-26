@@ -1,234 +1,158 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import adminService from '@/services/admin.service';
+import { Trash2, Plus, Search, Building2, Edit2 } from 'lucide-vue-next';
+
+const departments = ref([]);
+const showModal = ref(false);
+const isEditing = ref(false);
+const editId = ref(null);
+const searchQuery = ref('');
+const form = ref({ name: '', code: '' });
+const loading = ref(false);
+const submitting = ref(false);
+
+const fetchDepartments = async () => {
+  loading.value = true;
+  try {
+    const res = await adminService.getDepartments();
+    departments.value = res.data;
+  } catch (err) { console.error(err); } 
+  finally { loading.value = false; }
+};
+
+const filteredDepartments = computed(() => {
+  if (!searchQuery.value) return departments.value;
+  const lower = searchQuery.value.toLowerCase();
+  return departments.value.filter(d => d.name.toLowerCase().includes(lower) || d.code.toLowerCase().includes(lower));
+});
+
+const openCreate = () => {
+  isEditing.value = false;
+  form.value = { name: '', code: '' };
+  showModal.value = true;
+};
+
+const openEdit = (dept) => {
+  isEditing.value = true;
+  editId.value = dept.id;
+  form.value = { name: dept.name, code: dept.code };
+  showModal.value = true;
+};
+
+const handleSubmit = async () => {
+  submitting.value = true;
+  try {
+    if (isEditing.value) {
+      await adminService.updateDepartment(editId.value, form.value);
+    } else {
+      await adminService.createDepartment(form.value);
+    }
+    showModal.value = false;
+    await fetchDepartments();
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error saving department');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handleDelete = async (id) => {
+  if (!confirm('Are you sure? This cannot be undone.')) return;
+  try {
+    await adminService.deleteDepartment(id);
+    await fetchDepartments();
+  } catch (err) {
+    alert('Cannot delete: Department in use');
+  }
+};
+
+onMounted(fetchDepartments);
+</script>
+
 <template>
-  <div class="department-view">
-    <header class="page-header">
-      <h1 class="title">ដេប៉ាដឺម៉ង់</h1>
-    </header>
+  <div class="page-container">
+    <div class="page-header">
+      <div><h2 class="page-title">Departments</h2><p class="page-subtitle">Manage faculties and majors</p></div>
+      <div class="header-actions">
+        <span class="badge">{{ departments.length }} Total</span>
+        <button @click="openCreate" class="btn-primary"><Plus size="18" /> Add New</button>
+      </div>
+    </div>
 
-    <div class="dept-grid">
-      <div class="dept-card" v-for="dept in departments" :key="dept.code">
-        <div class="card-top">
-          <span class="dept-tag">{{ dept.code }}</span>
-          <div class="action-buttons">
-            <button class="icon-btn edit-btn" title="Edit">
-              <span class="icon">✏️</span>
+    <div class="controls-bar">
+      <div class="search-box">
+        <Search size="18" class="search-icon" />
+        <input v-model="searchQuery" type="text" placeholder="Search departments..." />
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div v-if="loading" class="loading-state">Loading...</div>
+      <table v-else-if="filteredDepartments.length > 0" class="custom-table">
+        <thead>
+          <tr><th>Name</th><th>Code</th><th class="text-right">Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="dept in filteredDepartments" :key="dept.id">
+            <td><div class="dept-name"><div class="icon-box"><Building2 size="16"/></div><span>{{ dept.name }}</span></div></td>
+            <td><span class="code-badge">{{ dept.code }}</span></td>
+            <td class="text-right">
+              <button @click="openEdit(dept)" class="btn-icon edit" title="Edit"><Edit2 size="18" /></button>
+              <button @click="handleDelete(dept.id)" class="btn-icon delete" title="Delete"><Trash2 size="18" /></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">No departments found.</div>
+    </div>
+
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ isEditing ? 'Edit Department' : 'Add Department' }}</h3>
+        <form @submit.prevent="handleSubmit">
+          <div class="form-group"><label>Name</label><input v-model="form.name" required /></div>
+          <div class="form-group"><label>Code</label><input v-model="form.code" required /></div>
+          <div class="modal-actions">
+            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="submit" :disabled="submitting" class="btn-primary">
+              {{ submitting ? 'Saving...' : 'Save' }}
             </button>
-            <button class="icon-btn delete-btn" title="Delete">
-              <span class="icon">🗑️</span>
-            </button>
           </div>
-        </div>
-
-        <div class="dept-info">
-          <h2 class="dept-name">{{ dept.name }}</h2>
-          <p class="dept-head">{{ dept.head }}</p>
-
-          <div class="meta-info">
-            <div class="info-item">
-              <span class="icon">🏢</span>
-              <span>{{ dept.building }}</span>
-            </div>
-            <div class="info-item">
-              <span class="icon">📞</span>
-              <span>{{ dept.phone }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="dept-stats">
-          <div class="stat-item">
-            <span class="stat-icon students">👥</span>
-            <span class="stat-value">{{ dept.studentCount }}</span>
-            <span class="stat-label">សិស្សានុសិស្ស</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-icon staff">🧑‍🏫</span>
-            <span class="stat-value">{{ dept.staffCount }}</span>
-            <span class="stat-label">បុគ្គលិក</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-icon classes">📖</span>
-            <span class="stat-value">{{ dept.classCount }}</span>
-            <span class="stat-label">ថ្នាក់រៀន</span>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-
-// Dummy data matching the visual provided in your image
-const departments = ref([
-  {
-    code: 'CS',
-    name: 'វិទ្យាសាស្ត្រកុំព្យូទ័រ',
-    head: 'លោក​ វត្រ័',
-    building: 'អគារ A',
-    phone: '555-2001',
-    studentCount: 347,
-    staffCount: 12,
-    classCount: 24
-  },
-  {
-    code: 'ENG',
-    name: 'ភាសាអង់គ្លេស',
-    head: 'លោកស្រី វង្ស',
-    building: 'អគារ B',
-    phone: '555-2002',
-    studentCount: 289,
-    staffCount: 8,
-    classCount: 18
-  },
-  {
-    code: 'MATH',
-    name: 'គណិតវិទ្យា',
-    head: 'លោក ជិន',
-    building: 'អគារ C',
-    phone: '555-2003',
-    studentCount: 421,
-    staffCount: 15,
-    classCount: 32
-  },
-  {
-    code: 'PHYS',
-    name: 'រូបវិទ្យា',
-    head: 'លោក សុភា',
-    building: 'អគារ D',
-    phone: '555-2004',
-    studentCount: 234,
-    staffCount: 9,
-    classCount: 16
-  }
-]);
-</script>
-
 <style scoped>
-.department-view {
-  width: 100%;
-}
-
-.title {
-  color: #5d5fef;
-  font-size: 2rem;
-  margin-bottom: 30px;
-}
-
-.dept-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 25px;
-}
-
-.dept-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  border: 1px solid #edf2f7;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-}
-
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-}
-
-.dept-tag {
-  background: #f7fafc;
-  color: #4a5568;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  border: 1px solid #e2e8f0;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.icon-btn {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.edit-btn:hover { background-color: #ebf8ff; border-color: #bee3f8; }
-.delete-btn:hover { background-color: #fff5f5; border-color: #fed7d7; }
-
-.dept-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0 0 4px 0;
-}
-
-.dept-head {
-  color: #718096;
-  font-size: 0.95rem;
-  margin-bottom: 20px;
-}
-
-.meta-info {
-  margin-bottom: 25px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #a0aec0;
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-}
-
-.dept-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid #edf2f7;
-  padding-top: 20px;
-  text-align: center;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stat-icon {
-  font-size: 1.2rem;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #2d3748;
-}
-
-.stat-label {
-  font-size: 0.7rem;
-  color: #a0aec0;
-  text-transform: uppercase;
-}
-
-/* Icon specific colors for stats */
-.students { color: #5d5fef; }
-.staff { color: #48bb78; }
-.classes { color: #9f7aea; }
+.page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.page-title { font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 0; }
+.page-subtitle { color: #64748b; margin-top: 0.25rem; }
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.badge { background: #e2e8f0; color: #475569; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem; font-weight: 600; }
+.btn-primary { background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.controls-bar { margin-bottom: 1.5rem; }
+.search-box { position: relative; max-width: 300px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-box input { width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; }
+.table-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table th { background: #f8fafc; text-align: left; padding: 1rem; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+.custom-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; }
+.dept-name { display: flex; align-items: center; gap: 0.75rem; font-weight: 500; }
+.icon-box { width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.code-badge { background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; color: #475569; border: 1px solid #e2e8f0; }
+.text-right { text-align: right; }
+.btn-icon.edit { color: #2563eb; background: none; border: none; cursor: pointer; margin-right: 0.5rem; }
+.btn-icon.delete { color: #ef4444; background: none; border: none; cursor: pointer; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 50; }
+.modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; font-weight: 500; color: #475569; }
+.form-group input { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+.btn-text { background: none; border: none; color: #64748b; cursor: pointer; font-weight: 500; }
+.loading-state, .empty-state { padding: 3rem; text-align: center; color: #94a3b8; }
 </style>

@@ -1,10 +1,14 @@
+import { Student } from 'src/modules/students/entities/student.entity';
+import { Teacher } from 'src/modules/teachers/entities/teacher.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 
 export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
 
@@ -22,10 +26,6 @@ export class User {
   @Column({ default: 'STUDENT' })
   role: UserRole;
 
-  /**
-   * Hashed refresh token (NEVER store raw token)
-   * Used for refresh token rotation
-   */
   @Column({
     type: 'varchar',
     length: 255,
@@ -33,6 +33,13 @@ export class User {
     select: false,
   })
   refreshTokenHash: string | null;
+
+  // New Relationships
+  @OneToOne(() => Student, (student) => student.user)
+  student: Student;
+
+  @OneToOne(() => Teacher, (teacher) => teacher.user)
+  teacher: Teacher;
 
   @CreateDateColumn()
   createdAt: Date;

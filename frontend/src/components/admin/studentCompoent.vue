@@ -1,290 +1,259 @@
-<template>
-  <div class="student-management">
-    <header class="page-header">
-      <h1 class="title">ទិដ្ឋភាព - សិស្សានុសិស្ស</h1>
-      <p class="subtitle">សួស្ដី, សូមស្វាគមន៍សារជាថ្មី 🙏</p>
-    </header>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import adminService from '@/services/admin.service';
+import { Plus, Search, Filter, Check, Edit2, Trash2 } from 'lucide-vue-next';
 
-    <div class="summary-grid">
-      <div class="summary-card" v-for="stat in summaryStats" :key="stat.label">
-        <h2 class="stat-value">{{ stat.value }}</h2>
-        <p class="stat-label">{{ stat.label }}</p>
+const students = ref([]);
+const departments = ref([]);
+const showModal = ref(false);
+const showSuccessModal = ref(false);
+const searchQuery = ref('');
+const filterDept = ref('');
+const loading = ref(false);
+const submitting = ref(false);
+
+const isEditing = ref(false);
+const editId = ref(null);
+
+const form = ref({ fullName: '', email: '', studentIdCard: '', departmentId: '' });
+const createdAccount = ref({ email: '', password: '' });
+
+const loadData = async () => {
+  loading.value = true;
+  try {
+    const [stuRes, deptRes] = await Promise.all([
+      adminService.getStudents(),
+      adminService.getDepartments()
+    ]);
+    students.value = stuRes.data;
+    departments.value = deptRes.data;
+  } catch (err) { console.error(err); } 
+  finally { loading.value = false; }
+};
+
+const filteredStudents = computed(() => {
+  let result = students.value;
+  if (filterDept.value) result = result.filter(s => s.department?.id === filterDept.value);
+  if (searchQuery.value) {
+    const lower = searchQuery.value.toLowerCase();
+    result = result.filter(s => 
+      s.studentIdCard.toLowerCase().includes(lower) || 
+      s.user?.email.toLowerCase().includes(lower) ||
+      s.fullName.toLowerCase().includes(lower)
+    );
+  }
+  return result;
+});
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const openCreate = () => {
+  isEditing.value = false;
+  form.value = { fullName: '', email: '', studentIdCard: '', departmentId: '' };
+  showModal.value = true;
+};
+
+const openEdit = (stu) => {
+  isEditing.value = true;
+  editId.value = stu.id;
+  form.value = {
+    fullName: stu.fullName,
+    email: stu.user?.email,
+    studentIdCard: stu.studentIdCard,
+    departmentId: stu.department?.id || ''
+  };
+  showModal.value = true;
+};
+
+const handleSubmit = async () => {
+  submitting.value = true;
+  try {
+    if (isEditing.value) {
+      await adminService.updateStudent(editId.value, {
+        fullName: form.value.fullName,
+        studentIdCard: form.value.studentIdCard,
+        departmentId: form.value.departmentId
+      });
+      showModal.value = false;
+      alert('Student updated successfully');
+    } else {
+      await adminService.createStudent(form.value);
+      createdAccount.value = { email: form.value.email, password: 'RTC@2026' };
+      showModal.value = false;
+      showSuccessModal.value = true;
+    }
+    await loadData();
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error saving student');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handleDelete = async (id) => {
+  if (!confirm('Are you sure? This deletes the User Account as well.')) return;
+  try {
+    await adminService.deleteStudent(id);
+    await loadData();
+  } catch (err) { alert('Failed to delete'); }
+};
+
+onMounted(loadData);
+</script>
+
+<template>
+  <div class="page-container">
+    <div class="page-header">
+      <div><h2 class="page-title">Students</h2><p class="page-subtitle">Manage student accounts</p></div>
+      <div class="header-actions">
+        <span class="badge">{{ students.length }} Total</span>
+        <button @click="openCreate" class="btn-primary green"><Plus size="18" /> Register Student</button>
       </div>
     </div>
-    <!-- Temporay -->
-    <div class="filter-bar">
-      <input type="text" placeholder="ស្វែងរកសិស្ស..." class="search-input" v-model="searchQuery" />
-      <select class="filter-select" v-model="selectedDept">
-        <option value="">Computer Science</option>
-        <option value="Engineering">Engineering</option>
-        <option value="Business">Business</option>
-        <option value="Arts">Arts</option>
-      </select>
-      <select class="filter-select" v-model="selectedYear">
-        <option value="">All Years</option>
-        <option value="Year 1">1</option>
-        <option value="Year 2">2</option>
-        <option value="Year 3">3</option>
-        <option value="Year 4">4</option>
-      </select>
+
+    <div class="controls-bar flex-row">
+      <div class="search-box">
+        <Search size="18" class="search-icon" />
+        <input v-model="searchQuery" type="text" placeholder="Search Name, ID or Email..." />
+      </div>
+      <div class="filter-box">
+        <select v-model="filterDept">
+          <option value="">All Departments</option>
+          <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+        </select>
+      </div>
     </div>
 
-    <div class="student-grid">
-      <div class="student-card" v-for="student in filteredStudents" :key="student.id">
-        <div class="card-header">
-          <div class="avatar" :style="{ backgroundColor: student.avatarColor }">
-            {{ student.initials }}
-          </div>
-          <div class="name-id">
-            <h3>{{ student.name }}</h3>
-            <span>{{ student.id }}</span>
-          </div>
-        </div>
+    <div class="table-card">
+      <div v-if="loading" class="loading-state">Loading students...</div>
+      <table v-else-if="filteredStudents.length > 0" class="custom-table">
+        <thead>
+          <tr>
+            <th>Student Profile</th>
+            <th>ID Card</th>
+            <th>Department</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="stu in filteredStudents" :key="stu.id">
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ stu.fullName?.charAt(0).toUpperCase() || '?' }}</div>
+                <div class="user-info">
+                  <span class="name">{{ stu.fullName }}</span>
+                  <span class="email">{{ stu.user?.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="font-mono">{{ stu.studentIdCard }}</span></td>
+            <td><span v-if="stu.department" class="dept-badge blue">{{ stu.department.code }}</span></td>
+            <td class="text-sm text-gray-600">{{ formatDate(stu.user?.createdAt) }}</td>
+            <td><span class="status-active">Active</span></td>
+            <td class="text-right">
+              <button @click="openEdit(stu)" class="btn-icon edit"><Edit2 size="18"/></button>
+              <button @click="handleDelete(stu.id)" class="btn-icon delete"><Trash2 size="18"/></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">No students found.</div>
+    </div>
 
-        <div class="card-body">
-          <div class="info-row">
-            <span class="label">ដេប៉ាដឺម៉ង់:</span>
-            <span class="value">{{ student.dept }}</span>
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ isEditing ? 'Edit Student' : 'Register New Student' }}</h3>
+        <form @submit.prevent="handleSubmit">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input v-model="form.fullName" type="text" required />
           </div>
-          <div class="info-row">
-            <span class="label">ឆ្នាំទី:</span>
-            <span class="value">{{ student.year }}</span>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input v-model="form.email" type="email" :disabled="isEditing" required />
           </div>
-          <div class="info-row">
-            <span class="label">អុីម៉ែល:</span>
-            <span class="value">{{ student.email }}</span>
+          <div class="form-group">
+            <label>Student ID Card</label>
+            <input v-model="form.studentIdCard" type="text" required />
           </div>
-          <div class="info-row">
-            <span class="label">ចំនួនថ្នាក់:</span>
-            <span class="value">{{ student.courses }} enrolled</span>
+          <div class="form-group">
+            <label>Department</label>
+            <select v-model="form.departmentId" required>
+              <option value="" disabled>Select Department</option>
+              <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+            </select>
           </div>
-        </div>
+          <div class="modal-actions">
+            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="submit" :disabled="submitting" class="btn-primary green">
+              {{ submitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Register') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
-        <div class="card-actions">
-          <button class="btn view">
-            <img src="../../assets/view.png" class="icon" /> View
-          </button>
-          <button class="btn edit">
-            <img src="../../assets/edit.png" class="icon" /> Edit
-          </button>
-          <button class="btn delete">
-            <img src="../../assets/delete.png" class="icon" /> Delete
-          </button>
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content success-content">
+        <div class="success-icon"><Check size="32" /></div>
+        <h3>Account Created!</h3>
+        <div class="credential-box">
+          <div class="cred-row"><span class="label">Email:</span><span class="value">{{ createdAccount.email }}</span></div>
+          <div class="cred-row"><span class="label">Password:</span><span class="value font-mono font-bold text-blue-600">{{ createdAccount.password }}</span></div>
         </div>
+        <button @click="showSuccessModal = false" class="btn-primary w-full mt-4">Done</button>
       </div>
     </div>
   </div>
 </template>
 
-<!-- Temporay Student Management Sections -->
-<script setup>
-import { ref, computed } from 'vue';
-
-const searchQuery = ref('');
-const selectedDept = ref('');
-const selectedYear = ref('');
-
-const summaryStats = [
-  { label: 'សិស្សសរុប', value: '1,247' },
-  { label: 'ដេប៉ាដឺម៉ង់', value: '8' },
-  { label: 'វគ្គសិក្សាសរុប', value: '156' },
-  { label: 'ភាគវត្តមាន', value: '94%' },
-];
-
-const students = ref([
-  { initials: 'TV', name: 'ធី សេដ្ឋាសារវត្រ័', id: 'STU001', dept: 'Computer Science', year: '3', email: 'thy.vath@university.edu', courses: 2, avatarColor: '#5d5fef' },
-  { initials: 'HS', name: 'ហួត សីថា', id: 'STU002', dept: 'Engineering', year: '2', email: 'hout.sitha@university.edu', courses: 2, avatarColor: '#7c3aed' },
-  { initials: 'DV', name: 'ដូ ដាវីន', id: 'STU003', dept: 'Business', year: '4', email: 'do.davin@university.edu', courses: 2, avatarColor: '#4f46e5' },
-  { initials: 'SV', name: 'សេរី រង្ស', id: 'STU004', dept: 'Arts', year: '1', email: 'serey.vong@university.edu', courses: 2, avatarColor: '#4338ca' },
-  { initials: 'SL', name: 'សាម​ សុខលៀប', id: 'STU005', dept: 'Computer Science', year: '2', email: 'sok.leap@university.edu', courses: 2, avatarColor: '#6366f1' },
-  { initials: 'NH', name: 'ជិន ហុងនីហេង', id: 'STU006', dept: 'Science', year: '3', email: 'ny.heng@university.edu', courses: 2, avatarColor: '#3730a3' },
-]);
-
-const filteredStudents = computed(() => {
-  return students.value.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    s.id.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
-</script>
-
 <style scoped>
-.student-management {
-  padding: 10px;
-}
-
-.title {
-  color: #5d5fef;
-  font-size: 2rem;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  color: #888;
-  margin-bottom: 30px;
-}
-
-/* Summary Cards */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.summary-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #edf2f7;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.stat-label {
-  color: #a0aec0;
-  font-size: 0.85rem;
-  margin: 0;
-}
-
-/* Filter Bar */
-.filter-bar {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  max-width: 400px;
-}
-
-.filter-select {
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  min-width: 150px;
-}
-
-/* Student Cards Grid */
-.student-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.student-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  border: 1px solid #edf2f7;
-  transition: transform 0.2s;
-}
-
-.student-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.name-id h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.name-id span {
-  color: #a0aec0;
-  font-size: 0.85rem;
-}
-
-.card-body {
-  margin-bottom: 25px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.label {
-  color: #a0aec0;
-}
-
-.value {
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.card-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  border-top: 1px solid #edf2f7;
-  padding-top: 20px;
-}
-
-.btn {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  font-size: 0.8rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: background 0.2s, color 0.2s;
-}
-
-.btn:hover {
-  background: #f7fafc;
-}
-
-.btn.delete {
-  background: #fef2f2;
-  color: #e53e3e;
-  border-color: #e53e3e;
-}
-
-.btn.delete:hover {
-  background: #e53e3e;
-  color: white;
-  border-color: #e53e3e;
-}
-
-.icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-}
-
+.page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.page-title { font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 0; }
+.page-subtitle { color: #64748b; margin-top: 0.25rem; }
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.badge { background: #e2e8f0; color: #475569; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem; font-weight: 600; }
+.btn-primary { background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.btn-primary.green { background: #16a34a; }
+.btn-primary.green:hover { background: #15803d; }
+.controls-bar { margin-bottom: 1.5rem; display: flex; gap: 1rem; }
+.search-box, .filter-box { position: relative; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-box input, .filter-box select { padding: 0.6rem 1rem 0.6rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; min-width: 200px; background: white; }
+.table-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0; }
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table th { background: #f8fafc; text-align: left; padding: 1rem; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+.custom-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+.user-cell { display: flex; align-items: center; gap: 0.75rem; }
+.avatar { width: 40px; height: 40px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+.user-info { display: flex; flex-direction: column; }
+.user-info .name { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+.user-info .email { font-size: 0.85rem; color: #64748b; }
+.dept-badge { background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.status-active { color: #16a34a; font-size: 0.85rem; font-weight: 500; background: #f0fdf4; padding: 2px 8px; border-radius: 99px; }
+.font-mono { font-family: monospace; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+.text-right { text-align: right; }
+.btn-icon.edit { color: #2563eb; background: none; border: none; cursor: pointer; margin-right: 0.5rem; }
+.btn-icon.delete { color: #ef4444; background: none; border: none; cursor: pointer; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 50; }
+.modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; font-weight: 500; color: #475569; }
+.form-group input, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+.btn-text { background: none; border: none; color: #64748b; cursor: pointer; font-weight: 500; }
+.loading-state, .empty-state { padding: 3rem; text-align: center; color: #94a3b8; }
+.success-content { text-align: center; }
+.success-icon { width: 64px; height: 64px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; }
+.credential-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 1rem; border-radius: 8px; text-align: left; }
+.cred-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.label { color: #64748b; font-size: 0.9rem; }
+.value { color: #1e293b; font-weight: 500; }
+.w-full { width: 100%; }
 </style>
