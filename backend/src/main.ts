@@ -7,10 +7,10 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5137'],
-  });
+  // 1. Enable CORS (Only once, allowing everything for Dev)
+  app.enableCors();
 
+  // 2. Setup Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -19,9 +19,10 @@ async function bootstrap() {
     }),
   );
 
+  // 3. Static Assets (Optional, depends on your project structure)
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  // await app.listen(process.env.PORT ?? 3000);
-  await app.listen(3000);
+  // 4. THE FIX: Listen on '0.0.0.0' to allow Docker connections
+  await app.listen(3000, '0.0.0.0');
 }
 bootstrap();

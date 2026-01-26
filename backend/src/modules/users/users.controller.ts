@@ -1,63 +1,52 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { Request as ExpressRequest } from 'express';
 
-interface AuthRequest extends ExpressRequest {
-  user: {
-    sub: string;
-    email: string;
-    role: string;
-  };
-}
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // ================= CREATE =================
-
   @Post()
-  createUser(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  @Roles('ADMIN')
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
-  // ================= ME (MUST BE FIRST) =================
 
   @Get('me')
-  @Roles('STUDENT', 'TEACHER', 'ADMIN')
-  getProfile(@Request() req: AuthRequest) {
-    return {
-      id: req.user.sub,
-      email: req.user.email,
-      role: req.user.role,
-    };
+  getProfile(@Request() req) {
+    // req.user is added by the JWT Guard after decoding the token
+    return this.usersService.findOne(req.user.userId);
   }
 
-  // ================= FIND ALL =================
-
   @Get()
-  findAllUsers() {
+  @Roles('ADMIN')
+  findAll() {
     return this.usersService.findAll();
   }
 
-  // ================= FIND ONE =================
-
+  // This catches all other IDs (like UUIDs)
+  // If you put 'me' below this, the code thinks 'me' is an ID and crashes
   @Get(':id')
-  findOneUser(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(id);
   }
 }

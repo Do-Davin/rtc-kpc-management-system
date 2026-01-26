@@ -11,4 +11,21 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   role?: string;
+
+  // === NEW FIELDS ===
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  year?: string;
 }
