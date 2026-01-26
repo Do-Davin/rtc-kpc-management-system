@@ -1,8 +1,9 @@
-import { IsString, IsUUID } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class RefreshDto {
-  @IsUUID()
-  userId: string;
+  // Experience: [Refresh endpoint never trusts userId from body]
+  // @IsUUID()
+  // userId: string;
 
   @IsString()
   refresh_token: string;

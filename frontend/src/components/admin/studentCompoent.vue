@@ -2,7 +2,7 @@
   <div class="student-management">
     <header class="page-header">
       <h1 class="title">ទិដ្ឋភាព - សិស្សានុសិស្ស</h1>
-      <p class="subtitle">សួស្ដី, សូមស្វាគមន៍សារជាថ្មី 🙏</p>
+      <p class="subtitle">Students Management</p>
     </header>
 
     <div class="summary-grid">
@@ -21,15 +21,18 @@
     </div>
 
     <div class="filter-bar">
-
-      <input type="text" placeholder="ស្វែងរកសិស្ស..." class="search-input" v-model="searchQuery" />
-
+      <input 
+        type="text" 
+        placeholder="Search by Name or ID..." 
+        class="search-input" 
+        v-model="searchQuery" 
+      />
+      
       <select class="filter-select" v-model="selectedDept">
         <option value="">All Departments</option>
-        <option value="Computer Science">Computer Science</option>
-        <option value="Engineering">Engineering</option>
-        <option value="Business">Business</option>
-        <option value="Arts">Arts</option>
+        <option v-for="dept in departmentList" :key="dept.id" :value="dept.name">
+          {{ dept.name }}
+        </option>
       </select>
 
       <select class="filter-select" v-model="selectedYear">
@@ -49,13 +52,8 @@
       </button>
     </div>
 
-    <div v-if="loading" class="state-message">
-      Loading data from Backend...
-    </div>
-
-    <div v-else-if="filteredStudents.length === 0" class="state-message">
-      No students found.
-    </div>
+    <div v-if="loading" class="state-message">Loading data...</div>
+    <div v-else-if="filteredStudents.length === 0" class="state-message">No students found.</div>
 
     <div v-else class="student-grid">
       <div class="student-card" v-for="student in filteredStudents" :key="student.id">
@@ -86,7 +84,6 @@
 
         <div class="card-actions">
           <button class="btn edit" @click="openEditModal(student)">Edit</button>
-          
           <button class="btn delete" @click="deleteStudent(student.realDbId)">Delete</button>
         </div>
       </div>
@@ -101,12 +98,10 @@
             <label>Full Name</label>
             <input v-model="formData.fullName" required placeholder="e.g. Sok Sao" />
           </div>
-          
           <div class="form-group">
             <label>Student ID</label>
             <input v-model="formData.studentId" required placeholder="e.g. STU001" />
           </div>
-          
           <div class="form-group">
             <label>Email</label>
             <input v-model="formData.email" type="email" required placeholder="email@school.com" />
@@ -115,12 +110,15 @@
           <div class="form-row">
             <div class="form-group">
               <label>Department</label>
-              <select v-model="formData.department">
-                <option value="Computer Science">Computer Science</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Business">Business</option>
-                <option value="Arts">Arts</option>
+              <select v-model="formData.department" required>
+                <option disabled value="">Select Department</option>
+                <option v-for="dept in departmentList" :key="dept.id" :value="dept.name">
+                  {{ dept.name }}
+                </option>
               </select>
+              <p v-if="departmentList.length === 0" style="color:red; font-size: 0.8rem; margin-top:5px;">
+                ⚠️ No departments found. Please create one first!
+              </p>
             </div>
             <div class="form-group">
               <label>Year</label>
@@ -136,7 +134,7 @@
           <div class="modal-actions">
             <button type="button" class="btn cancel" @click="showModal = false">Cancel</button>
             <button type="submit" class="btn save">
-              {{ isEditing ? 'Update Changes' : 'Save Student' }}
+              {{ isEditing ? 'Update' : 'Save' }}
             </button>
           </div>
         </form>
@@ -150,37 +148,39 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
+// --- SECURITY: Auto-Inject Token ---
+const token = localStorage.getItem('access_token');
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
 // --- State Variables ---
 const students = ref([]);
+const departmentList = ref([]); // 👈 Stores real departments from DB
 const loading = ref(false);
 const searchQuery = ref('');
 const selectedDept = ref('');
 const selectedYear = ref('');
-
-// --- Modal State ---
 const showModal = ref(false);
-const isEditing = ref(false); // True = Update Mode, False = Create Mode
-const editingId = ref(null);  // Stores ID of student being edited
+const isEditing = ref(false);
+const editingId = ref(null);
 
-
+// --- Form Data ---
 const formData = ref({
   fullName: '',
   studentId: '',
   email: '',
-  department: 'Computer Science',
+  department: '', // Default empty so user must choose
   year: '1',
   role: 'STUDENT',
-  password: 'password123' // Default password for new users
+  password: 'password123' 
 });
 
-
-// --- 1. READ (Fetch Users) ---
+// --- 1. FETCH STUDENTS ---
 const fetchStudents = async () => {
   loading.value = true;
   try {
     const response = await axios.get('http://localhost:3000/users');
-    
-    // Map Backend Data to Frontend Design
     students.value = response.data.map(user => ({
       realDbId: user.id,
       name: user.fullName || user.email || 'Unknown',
@@ -192,22 +192,36 @@ const fetchStudents = async () => {
       avatarColor: getRandomColor()
     }));
   } catch (error) {
-    console.error("Error fetching:", error);
-    alert("Could not connect to Backend.");
+    console.error("Fetch Error:", error);
+    if (error.response && error.response.status === 401) {
+      alert("Session expired. Please Login.");
+    }
   } finally {
     loading.value = false;
   }
 };
 
-// --- 2. MODAL LOGIC (Switch between Add & Edit) ---
+// --- 2. FETCH DEPARTMENTS (The Missing Link) ---
+const fetchDepartments = async () => {
+  try {
+    const response = await axios.get('http://localhost:3000/departments');
+    departmentList.value = response.data;
+  } catch (error) {
+    console.error("Error loading departments:", error);
+  }
+};
+
+// --- 3. MODAL LOGIC ---
 const openAddModal = () => {
   isEditing.value = false;
   editingId.value = null;
-  // Reset Form
+  // Load departments fresh every time we open modal
+  fetchDepartments(); 
+  
   formData.value = {
     fullName: '', studentId: '', email: '',
-    department: 'Computer Science', year: '1',
-    role: 'STUDENT', password: 'password123'
+    department: '', // Reset
+    year: '1', role: 'STUDENT', password: 'password123'
   };
   showModal.value = true;
 };
@@ -215,59 +229,53 @@ const openAddModal = () => {
 const openEditModal = (student) => {
   isEditing.value = true;
   editingId.value = student.realDbId;
-  // Fill Form with Student Data
+  fetchDepartments(); // Ensure list is loaded for editing too
+
   formData.value = {
     fullName: student.name,
     studentId: student.displayId,
     email: student.email,
-    department: student.dept,
+    department: student.dept, // This will match the value in the list
     year: student.year,
     role: 'STUDENT'
-    // Note: We don't fill password here, so it won't be changed unless we add logic for it
   };
   showModal.value = true;
 };
 
-// --- 3. CREATE & UPDATE Logic ---
+// --- 4. SAVE LOGIC ---
 const saveStudent = async () => {
   try {
     if (isEditing.value) {
-      // UPDATE (PATCH)
       await axios.patch(`http://localhost:3000/users/${editingId.value}`, formData.value);
-      alert("Student Updated Successfully!");
+      alert("Updated Successfully!");
     } else {
-      // CREATE (POST)
       await axios.post('http://localhost:3000/users', formData.value);
-      alert("Student Created Successfully!");
+      alert("Created Successfully! Password is 'password123'");
     }
-    
     showModal.value = false;
-    fetchStudents(); // Refresh the list
+    fetchStudents();
   } catch (error) {
-    console.error(error);
-    alert("Failed to save. Email might be duplicate.");
+    alert("Failed to save. " + (error.response?.data?.message || error.message));
   }
 };
 
-// --- 4. DELETE Logic ---
+// --- 5. DELETE LOGIC ---
 const deleteStudent = async (id) => {
-  if(!confirm("Are you sure you want to delete this student?")) return;
+  if(!confirm("Are you sure?")) return;
   try {
     await axios.delete(`http://localhost:3000/users/${id}`);
-    // Remove from UI immediately
     students.value = students.value.filter(s => s.realDbId !== id);
   } catch (error) {
-    alert("Failed to delete student.");
+    alert("Delete failed.");
   }
 };
 
-// --- Filters & Stats ---
+// --- Helpers ---
 const filteredStudents = computed(() => {
   return students.value.filter(s => {
     const q = searchQuery.value.toLowerCase();
     const sName = (s.name || '').toLowerCase();
     const sId = (s.displayId || '').toLowerCase();
-    
     return (sName.includes(q) || sId.includes(q)) &&
            (selectedDept.value === '' || s.dept === selectedDept.value) &&
            (selectedYear.value === '' || s.year === selectedYear.value);
@@ -284,8 +292,10 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
+// --- Load on Start ---
 onMounted(() => {
   fetchStudents();
+  fetchDepartments(); // Load departments immediately
 });
 </script>
 
@@ -295,60 +305,44 @@ onMounted(() => {
 .title { color: #5d5fef; font-size: 2rem; margin-bottom: 5px; }
 .subtitle { color: #888; margin-bottom: 30px; }
 
-/* Stats Cards */
+/* Stats */
 .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
 .summary-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #edf2f7; text-align: center; }
 .stat-value { font-size: 2rem; font-weight: 700; color: #2d3748; margin: 0; }
 .stat-label { color: #a0aec0; margin: 0; font-size: 0.9rem; }
 
 /* Filter Bar */
-.filter-bar { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; }
-.search-input { flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 250px; }
-.filter-select { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; cursor: pointer; }
-.btn { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;}
+.filter-bar { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+.search-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 200px; }
+.filter-select { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; }
+.btn { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+.btn.refresh { background: #edf2f7; }
+.btn.add-btn { background: #5d5fef; color: white; margin-left: auto; }
 
-/* Buttons */
-.btn.refresh { background: #edf2f7; color: #4a5568; font-size: 1.2rem; }
-.btn.refresh:hover { background: #e2e8f0; }
-.btn.add-btn { background: #5d5fef; color: white; margin-left: auto; box-shadow: 0 4px 6px rgba(93, 95, 239, 0.2); }
-.btn.add-btn:hover { background: #4b4dce; transform: translateY(-1px); }
-
-/* Grid & Cards */
+/* Grid */
 .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.student-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; }
-.student-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-
+.student-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-.avatar { width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; }
-.name-id h3 { margin: 0; font-size: 1.1rem; color: #2d3748; }
+.avatar { width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.name-id h3 { margin: 0; font-size: 1.1rem; }
 .name-id span { color: #a0aec0; font-size: 0.85rem; }
 
 .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #4a5568; }
-.value { font-weight: 600; color: #2d3748; }
-
-.card-actions { margin-top: 15px; display: flex; gap: 10px; border-top: 1px solid #edf2f7; padding-top: 15px; }
+.value { font-weight: 600; }
+.card-actions { margin-top: 15px; display: flex; gap: 10px; }
 .btn.edit { background: #edf2f7; color: #4a5568; flex: 1; }
-.btn.edit:hover { background: #e2e8f0; color: #2d3748; }
 .btn.delete { background: #fee2e2; color: #ef4444; flex: 1; }
-.btn.delete:hover { background: #ef4444; color: white; }
+.state-message { text-align: center; color: #aaa; margin-top: 50px; }
 
-.state-message { text-align: center; color: #a0aec0; margin-top: 50px; font-size: 1.2rem; }
-
-/* Modal Styles */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
-.modal-content { background: white; padding: 30px; border-radius: 16px; width: 400px; max-width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
-.modal-content h2 { margin-top: 0; color: #2d3748; margin-bottom: 20px; }
-
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: white; padding: 30px; border-radius: 12px; width: 400px; max-width: 90%; }
 .form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; color: #4a5568; }
-.form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-.form-group input:focus, .form-group select:focus { border-color: #5d5fef; ring: 2px solid #5d5fef; }
-.form-row { display: flex; gap: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+.form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; }
+.form-row { display: flex; gap: 10px; }
 .form-row .form-group { flex: 1; }
-
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-.btn.cancel { background: white; border: 1px solid #e2e8f0; color: #4a5568; }
-.btn.cancel:hover { background: #f7fafc; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn.cancel { background: #edf2f7; color: #4a5568; }
 .btn.save { background: #5d5fef; color: white; }
-.btn.save:hover { background: #4b4dce; }
 </style>

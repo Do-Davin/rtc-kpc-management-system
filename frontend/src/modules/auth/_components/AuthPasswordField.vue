@@ -10,6 +10,9 @@
       <input
         :type="visible ? 'text' : 'password'"
         :placeholder="label"
+        :value="modelValue"
+        :class="{ error: error }"
+        @input="onInput"
       />
 
       <span class="toggle" @click="visible = !visible">
@@ -17,6 +20,10 @@
         <Eye v-else class="toggle-icon" />
       </span>
     </div>
+
+    <p v-if="error" class="error-text">
+      {{ error }}
+    </p>
   </div>
 </template>
 
@@ -29,9 +36,23 @@ defineProps({
     type: String,
     required: true,
   },
+  modelValue: {
+    type: String,
+    default: '',
+  },
+  error: {
+    type: String,
+    default: '',
+  },
 })
 
+const emit = defineEmits(['update:modelValue'])
+
 const visible = ref(false)
+
+const onInput = (event) => {
+  emit('update:modelValue', event.target.value)
+}
 </script>
 
 <style scoped>
@@ -80,6 +101,17 @@ input:focus {
   outline: none;
   background: #ede9fe;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+input.error {
+  background: #fff5f5;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 6px;
 }
 
 .toggle {

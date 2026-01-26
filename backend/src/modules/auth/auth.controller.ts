@@ -1,16 +1,17 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { AuthRequest } from '../common/types/auth-request.type';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: any) {
+  register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
@@ -20,14 +21,13 @@ export class AuthController {
   }
 
   /**
-   * Refresh token endpoint
-   * - client sends refresh_token in body
-   * - we verify it against hashed refreshTokenHash in DB
-   * - then rotate + return new tokens
+   * Refresh token (SECURE)
+   * - client sends refresh_token only
+   * - backend extracts userId from token
    */
   @Post('refresh')
   refresh(@Body() dto: RefreshDto) {
-    return this.authService.refreshTokens(dto.userId, dto.refresh_token);
+    return this.authService.refreshTokens(dto.refresh_token);
   }
 
   /**
@@ -36,7 +36,7 @@ export class AuthController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  logout(req: AuthRequest) {
+  logout(@Request() req: AuthRequest) {
     return this.authService.logout(req.user.sub);
   }
 }

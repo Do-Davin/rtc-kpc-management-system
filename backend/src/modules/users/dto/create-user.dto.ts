@@ -18,7 +18,7 @@ export class CreateUserDto {
   @IsOptional()
   role?: string;
 
-  
+  // === NEW FIELDS ===
   @IsOptional()
   @IsString()
   fullName?: string;

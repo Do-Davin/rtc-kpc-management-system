@@ -1,12 +1,10 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  TEACHER = 'TEACHER',
+  STUDENT = 'STUDENT',
+}
 
 @Entity('users')
 export class User {
@@ -16,32 +14,30 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: false })
+  @Column()
   password: string;
 
-  @Column({ default: 'STUDENT' })
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.STUDENT,
+  })
   role: UserRole;
 
-  // --- New Fields for Student Info ---
   @Column({ nullable: true })
   fullName: string;
 
   @Column({ nullable: true })
-  studentId: string; // e.g., "STU001"
+  studentId: string;
 
   @Column({ nullable: true })
-  department: string; // e.g., "Computer Science"
+  department: string;
 
   @Column({ nullable: true })
-  year: string; // e.g., "3"
-  // ----------------------------------
+  year: string;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    select: false,
-  })
+ 
+  @Column({ type: 'varchar', nullable: true, select: false }) 
   refreshTokenHash: string | null;
 
   @CreateDateColumn()

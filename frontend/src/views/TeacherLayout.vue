@@ -30,7 +30,8 @@
         <div class="teacher-avatar">KC</div>
         <div class="teacher-meta">
           <p class="name">RTC</p>
-          <p class="role">អក្នគ្រប់គ្រង</p>
+          <p class="role">គ្រូ</p>
+          <button class="logout-btn" @click="logout">Logout</button>
         </div>
       </div>
     </aside>
@@ -40,6 +41,15 @@
     </main>
   </div>
 </template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth.store'
+const authStore = useAuthStore()
+
+const logout = () => {
+  authStore.logout()
+}
+</script>
 
 <style scoped>
 .teacher-container {
@@ -125,5 +135,19 @@
   flex: 1;
   padding: 40px;
   overflow-y: auto;
+}
+
+.logout-btn {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
 }
 </style>
