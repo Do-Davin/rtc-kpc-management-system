@@ -206,6 +206,7 @@ const closeBookViewer = () => {
 <style scoped>
 .elibrary-wrapper {
   width: 100%;
+  background: #f9fafb;
   min-height: 100vh;
 }
 
@@ -216,7 +217,7 @@ const closeBookViewer = () => {
 .title {
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--purple-500);
   margin: 0 0 5px 0;
 }
 

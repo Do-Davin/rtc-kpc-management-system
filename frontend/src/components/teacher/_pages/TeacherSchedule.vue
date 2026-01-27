@@ -430,8 +430,7 @@ const handleDelete = () => {
 
 <style scoped>
 .schedule-page {
-  max-width: 100%;
-  padding: 24px;
+  width: 100%;
   background: #f9fafb;
   min-height: 100vh;
 }
@@ -451,7 +450,7 @@ const handleDelete = () => {
 .page-title {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--purple-500);
   margin: 0 0 4px 0;
 }
 

@@ -84,7 +84,7 @@ const routes = [
       },
       {
         path: 'students',
-        component: import('@/components/teacher/_pages/StudentAttendance.vue'),
+        component: import('@/components/teacher/_pages/StudentManagement.vue'),
       },
       {
         path: 'attendance',
