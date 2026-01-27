@@ -7,22 +7,32 @@
 
       <nav class="nav-menu">
         <router-link to="/teacher/dashboard" class="nav-item">
-          <img src="../assets/dashboardIcon.png" class="icon"/> ផ្ទាំងគ្រប់គ្រង
+          <img src="../assets/dashboardIcon.png" class="icon"/>
+          ផ្ទាំងគ្រប់គ្រង
         </router-link>
         <router-link to="/teacher/students" class="nav-item">
-          <img src="../assets/studentIcon.png" class="icon"/> សិស្សានុសិស្ស
+          <img src="../assets/studentIcon.png" class="icon"/>
+          សិស្សានុសិស្ស
         </router-link>
         <router-link to="/teacher/attendance" class="nav-item">
-          <img src="../assets/attendanceIcon.png" class="icon"/> វត្តមាន
+          <img src="../assets/attendanceIcon.png" class="icon"/>
+          វត្តមាន
+        </router-link>
+        <router-link to="/teacher/schedule" class="nav-item">
+          <img src="../assets/schedule.png" class="icon" />
+          កាលវិភាគ
         </router-link>
         <router-link to="/teacher/reports" class="nav-item">
-          <img src="../assets/reportIcon.png" class="icon"/> របាយការណ៍
+          <img src="../assets/reportIcon.png" class="icon"/>
+          របាយការណ៍
         </router-link>
         <router-link to="/teacher/courses" class="nav-item">
-          <img src="../assets/courseIcon.png" class="icon"/> វគ្គសិក្សា
+          <img src="../assets/courseIcon.png" class="icon"/>
+          វគ្គសិក្សា
         </router-link>
         <router-link to="/teacher/e-library" class="nav-item">
-          <img src="../assets/eLibraryIcon.png" class="icon"/> បណ្ណាល័យ
+          <img src="../assets/eLibraryIcon.png" class="icon"/>
+          បណ្ណាល័យ
         </router-link>
       </nav>
       <!-- Temporary Account Sections -->

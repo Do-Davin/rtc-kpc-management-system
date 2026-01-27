@@ -91,6 +91,10 @@ const routes = [
         component: import('@/components/teacher/_pages/StudentAttendance.vue'),
       },
       {
+        path: 'schedule',
+        component: import('@/components/teacher/_pages/TeacherSchedule.vue'),
+      },
+      {
         path: 'reports',
         component: import('@/components/teacher/_pages/TeacherReport.vue'),
       },
