@@ -117,9 +117,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <line x1="18" y1="20" x2="18" y2="10"/>
-            <line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
+            <path d="M3 3v16a2 2 0 0 0 2 2h16"/>
+            <rect x="15" y="5" width="4" height="12" rx="1"/>
+            <rect x="7" y="8" width="4" height="9" rx="1"/>
           </svg>
         </div>
         <div class="stat-info">
@@ -211,6 +211,22 @@
               </td>
               <td>
                 <div class="action-buttons">
+                  <button class="action-btn view" @click="viewStudentDetails(student)" title="មើលព័ត៌មានលម្អិត">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
                   <button class="action-btn edit" @click="openEditModal(student)" title="កែប្រែសិស្ស">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -453,6 +469,142 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Student Details Modal -->
+    <Teleport to="body">
+      <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
+        <div class="modal details-modal">
+          <div class="modal-header">
+            <h2>ព័ត៌មានលម្អិតសិស្ស</h2>
+            <button class="close-btn" @click="closeDetailsModal">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="details-content" v-if="selectedStudent">
+            <!-- Student Header -->
+            <div class="student-profile-header">
+              <div class="large-avatar">{{ getInitials(selectedStudent.fullName) }}</div>
+              <div class="student-header-info">
+                <h3>{{ selectedStudent.fullName }}</h3>
+                <span class="student-id-badge">{{ selectedStudent.studentId }}</span>
+              </div>
+              <span :class="['performance-badge', getStudentPerformanceStatus(selectedStudent).class]">
+                {{ getStudentPerformanceStatus(selectedStudent).label }}
+              </span>
+            </div>
+
+            <!-- Student Info Grid -->
+            <div class="details-grid">
+              <div class="detail-item">
+                <div class="detail-icon class-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                </div>
+                <div class="detail-info">
+                  <span class="detail-label">Class / Major</span>
+                  <span class="detail-value">{{ selectedStudent.classInfo || 'N/A' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-icon email-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                </div>
+                <div class="detail-info">
+                  <span class="detail-label">Email</span>
+                  <span class="detail-value">{{ selectedStudent.email }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-icon dob-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                    <line x1="16" x2="16" y1="2" y2="6"/>
+                    <line x1="8" x2="8" y1="2" y2="6"/>
+                    <line x1="3" x2="21" y1="10" y2="10"/>
+                  </svg>
+                </div>
+                <div class="detail-info">
+                  <span class="detail-label">Date of Birth</span>
+                  <span class="detail-value">{{ formatDate(selectedStudent.dateOfBirth) }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-icon status-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <div class="detail-info">
+                  <span class="detail-label">Status</span>
+                  <span :class="['status-badge', selectedStudent.status.toLowerCase()]">{{ selectedStudent.status }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Performance Stats -->
+            <div class="performance-section">
+              <h4>Academic Performance</h4>
+              <div class="performance-stats">
+                <div class="perf-stat">
+                  <div class="perf-circle" :class="getAttendanceClass(selectedStudent.attendance)">
+                    <span class="perf-value">{{ selectedStudent.attendance }}%</span>
+                  </div>
+                  <span class="perf-label">Attendance</span>
+                </div>
+                <div class="perf-stat">
+                  <div class="perf-circle" :class="selectedStudent.gpa >= 3.0 ? 'high' : selectedStudent.gpa >= 2.0 ? 'medium' : 'low'">
+                    <span class="perf-value">{{ selectedStudent.gpa?.toFixed(1) || '0.0' }}</span>
+                  </div>
+                  <span class="perf-label">GPA</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="details-actions">
+              <button class="btn btn-edit" @click="editFromDetails">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+              </button>
+              <button class="btn btn-delete" @click="deleteFromDetails">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -461,18 +613,18 @@ import { ref, computed } from 'vue'
 import PrimaryButton from '../_components/PrimaryButton.vue'
 
 const students = ref([
-  { id: 1, studentId: 'STU001', fullName: 'cristiano ronaldo', dateOfBirth: '2005-03-15', email: 'ronaldo@gmail.com', attendance: 100, status: 'Active' },
-  { id: 2, studentId: 'STU002', fullName: 'Leo Messi', dateOfBirth: '2005-07-22', email: 'messi@gmail.com', attendance: 0, status: 'Inactive' },
-  { id: 3, studentId: 'STU003', fullName: 'Neymar JR', dateOfBirth: '2005-11-08', email: 'neymar@gmail.com', attendance: 100, status: 'Active' },
-  { id: 4, studentId: 'STU004', fullName: 'Jing Jork', dateOfBirth: '2004-01-30', email: 'jingjork@gmail.com', attendance: 50, status: 'Active' },
-  { id: 5, studentId: 'STU005', fullName: 'Huoth Sitha', dateOfBirth: '2005-09-12', email: 'sitha@gmail.com', attendance: 50, status: 'Active' },
-  { id: 6, studentId: 'STU006', fullName: 'Sam Sokleap', dateOfBirth: '2004-05-25', email: 'daneth@gmail.com', attendance: 50, status: 'Active' },
-  { id: 7, studentId: 'STU007', fullName: 'Vathvath', dateOfBirth: '2005-12-03', email: 'vathvath@gmail.com', attendance: 0, status: 'Inactive' },
-  { id: 8, studentId: 'STU008', fullName: 'Teytey', dateOfBirth: '2004-08-19', email: 'teytey@gmail.com', attendance: 80, status: 'Active' },
-  { id: 9, studentId: 'STU009', fullName: 'Vannda', dateOfBirth: '2005-02-14', email: 'vannda@gmail.com', attendance: 100, status: 'Active' },
-  { id: 10, studentId: 'STU010', fullName: 'Sokha Meas', dateOfBirth: '2004-06-28', email: 'sokha@gmail.com', attendance: 75, status: 'Active' },
-  { id: 11, studentId: 'STU011', fullName: 'Bopha Chan', dateOfBirth: '2005-04-10', email: 'bopha@gmail.com', attendance: 90, status: 'Active' },
-  { id: 12, studentId: 'STU012', fullName: 'Dara Kim', dateOfBirth: '2004-10-05', email: 'dara@gmail.com', attendance: 25, status: 'Inactive' },
+  { id: 1, studentId: 'STU001', fullName: 'cristiano ronaldo', dateOfBirth: '2005-03-15', email: 'ronaldo@gmail.com', attendance: 100, status: 'Active', gpa: 3.9, classInfo: 'Year 3 / Computer Science' },
+  { id: 2, studentId: 'STU002', fullName: 'Leo Messi', dateOfBirth: '2005-07-22', email: 'messi@gmail.com', attendance: 0, status: 'Inactive', gpa: 2.1, classInfo: 'Year 2 / Information Technology' },
+  { id: 3, studentId: 'STU003', fullName: 'Neymar JR', dateOfBirth: '2005-11-08', email: 'neymar@gmail.com', attendance: 100, status: 'Active', gpa: 3.5, classInfo: 'Year 3 / Computer Science' },
+  { id: 4, studentId: 'STU004', fullName: 'Jing Jork', dateOfBirth: '2004-01-30', email: 'jingjork@gmail.com', attendance: 50, status: 'Active', gpa: 2.8, classInfo: 'Year 1 / Software Engineering' },
+  { id: 5, studentId: 'STU005', fullName: 'Huoth Sitha', dateOfBirth: '2005-09-12', email: 'sitha@gmail.com', attendance: 50, status: 'Active', gpa: 3.2, classInfo: 'Year 2 / Data Science' },
+  { id: 6, studentId: 'STU006', fullName: 'Sam Sokleap', dateOfBirth: '2004-05-25', email: 'daneth@gmail.com', attendance: 50, status: 'Active', gpa: 2.5, classInfo: 'Year 3 / Computer Science' },
+  { id: 7, studentId: 'STU007', fullName: 'Vathvath', dateOfBirth: '2005-12-03', email: 'vathvath@gmail.com', attendance: 0, status: 'Inactive', gpa: 1.8, classInfo: 'Year 1 / Information Technology' },
+  { id: 8, studentId: 'STU008', fullName: 'Teytey', dateOfBirth: '2004-08-19', email: 'teytey@gmail.com', attendance: 80, status: 'Active', gpa: 3.7, classInfo: 'Year 2 / Software Engineering' },
+  { id: 9, studentId: 'STU009', fullName: 'Vannda', dateOfBirth: '2005-02-14', email: 'vannda@gmail.com', attendance: 100, status: 'Active', gpa: 4.0, classInfo: 'Year 3 / Computer Science' },
+  { id: 10, studentId: 'STU010', fullName: 'Sokha Meas', dateOfBirth: '2004-06-28', email: 'sokha@gmail.com', attendance: 75, status: 'Active', gpa: 3.0, classInfo: 'Year 2 / Data Science' },
+  { id: 11, studentId: 'STU011', fullName: 'Bopha Chan', dateOfBirth: '2005-04-10', email: 'bopha@gmail.com', attendance: 90, status: 'Active', gpa: 3.8, classInfo: 'Year 1 / Computer Science' },
+  { id: 12, studentId: 'STU012', fullName: 'Dara Kim', dateOfBirth: '2004-10-05', email: 'dara@gmail.com', attendance: 25, status: 'Inactive', gpa: 2.0, classInfo: 'Year 3 / Information Technology' },
 ])
 
 const searchQuery = ref('')
@@ -481,9 +633,11 @@ const currentPage = ref(1)
 const itemsPerPage = 8
 const showModal = ref(false)
 const showDeleteModal = ref(false)
+const showDetailsModal = ref(false)
 const isEditing = ref(false)
 const studentToDelete = ref(null)
 const editingStudent = ref(null)
+const selectedStudent = ref(null)
 
 const formData = ref({
   studentId: '',
@@ -491,7 +645,9 @@ const formData = ref({
   dateOfBirth: '',
   email: '',
   attendance: 0,
-  status: 'Active'
+  status: 'Active',
+  gpa: 0,
+  classInfo: ''
 })
 
 const statusFilters = [
@@ -560,7 +716,9 @@ const openAddModal = () => {
     dateOfBirth: '',
     email: '',
     attendance: 0,
-    status: 'Active'
+    status: 'Active',
+    gpa: 0,
+    classInfo: ''
   }
   showModal.value = true
 }
@@ -608,6 +766,40 @@ const closeDeleteModal = () => {
 const deleteStudent = () => {
   students.value = students.value.filter(s => s.id !== studentToDelete.value.id)
   closeDeleteModal()
+}
+
+const viewStudentDetails = (student) => {
+  selectedStudent.value = student
+  showDetailsModal.value = true
+}
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false
+  selectedStudent.value = null
+}
+
+const getStudentPerformanceStatus = (student) => {
+  if (!student) return { label: 'Unknown', class: 'unknown' }
+  const gpa = student.gpa || 0
+  const attendance = student.attendance || 0
+
+  if (gpa >= 3.5 && attendance >= 80) {
+    return { label: 'Good', class: 'good' }
+  } else if (gpa >= 2.5 && attendance >= 50) {
+    return { label: 'Warning', class: 'warning' }
+  } else {
+    return { label: 'Risk', class: 'risk' }
+  }
+}
+
+const editFromDetails = () => {
+  closeDetailsModal()
+  openEditModal(selectedStudent.value)
+}
+
+const deleteFromDetails = () => {
+  closeDetailsModal()
+  confirmDelete(selectedStudent.value)
 }
 </script>
 
@@ -990,6 +1182,16 @@ const deleteStudent = () => {
   transition: all 0.2s ease;
 }
 
+.action-btn.view {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.action-btn.view:hover {
+  background: #16a34a;
+  color: white;
+}
+
 .action-btn.edit {
   background: #eef2ff;
   color: var(--purple-500);
@@ -1248,6 +1450,253 @@ const deleteStudent = () => {
   border-top: none;
   padding-top: 0;
   margin-top: 0;
+}
+
+/* Student Details Modal Styles */
+.details-modal {
+  max-width: 680px;
+}
+
+.details-content {
+  padding: 24px 28px;
+}
+
+.student-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 24px;
+}
+
+.large-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--purple-400) 0%, var(--purple-600) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 8px 24px rgba(91, 85, 243, 0.3);
+}
+
+.student-header-info {
+  flex: 1;
+}
+
+.student-header-info h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+  text-transform: capitalize;
+}
+
+.student-id-badge {
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--purple-600);
+  background: #eef2ff;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.performance-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-badge.good {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #059669;
+}
+
+.performance-badge.warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+
+.performance-badge.risk {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #fafbfc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detail-icon.class-icon {
+  background: #eef2ff;
+  color: var(--purple-500);
+}
+
+.detail-icon.email-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.detail-icon.dob-icon {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.detail-icon.status-icon {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performance-section {
+  background: linear-gradient(135deg, #fafbfc 0%, #f8f9fc 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #f1f5f9;
+}
+
+.performance-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.perf-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.perf-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  border: 4px solid;
+}
+
+.perf-circle.high {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #10b981;
+  color: #059669;
+}
+
+.perf-circle.medium {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+.perf-circle.low {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.perf-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.details-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-edit {
+  background: #eef2ff;
+  color: var(--purple-500);
+  border: 1px solid #c7d2fe;
+}
+
+.btn-edit:hover {
+  background: var(--purple-500);
+  color: white;
+  border-color: var(--purple-500);
+}
+
+.btn-delete {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.btn-delete:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
 }
 
 @media (max-width: 1200px) {
