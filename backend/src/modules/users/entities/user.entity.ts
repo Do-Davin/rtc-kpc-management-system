@@ -34,7 +34,7 @@ export class User {
   })
   refreshTokenHash: string | null;
 
-  // New Relationships
+  
   @OneToOne(() => Student, (student) => student.user)
   student: Student;
 

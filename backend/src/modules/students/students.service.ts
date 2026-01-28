@@ -25,13 +25,13 @@ export class StudentsService {
       const dept = await this.deptRepo.findOneBy({ id: dto.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
 
-      // FIX: Use the password from the form, or fallback to default
+      
       const plainPassword = dto.password || 'RTC@2026';
       const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
       const newUser = this.userRepo.create({
         email: dto.email,
-        password: hashedPassword, // <--- Sitha: This uses the correct password
+        password: hashedPassword, 
         role: 'STUDENT',
       });
       const savedUser = await queryRunner.manager.save(newUser);
