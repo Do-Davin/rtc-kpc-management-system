@@ -25,10 +25,13 @@ export class TeachersService {
       const dept = await this.deptRepo.findOneBy({ id: dto.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
 
-      const defaultPassword = await bcrypt.hash('RTC@2026', 10);
+      
+      const plainPassword = dto.password || 'RTC@2026';
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
       const newUser = this.userRepo.create({
         email: dto.email,
-        password: defaultPassword,
+        password: hashedPassword, 
         role: 'TEACHER',
       });
       const savedUser = await queryRunner.manager.save(newUser);
@@ -38,6 +41,7 @@ export class TeachersService {
         specialization: dto.specialization,
         user: savedUser,
         department: dept,
+        status: dto.status || 'Active',
       });
       const savedTeacher = await queryRunner.manager.save(newTeacher);
 
@@ -76,6 +80,7 @@ export class TeachersService {
     }
     if (attrs.fullName) teacher.fullName = attrs.fullName;
     if (attrs.specialization) teacher.specialization = attrs.specialization;
+    if (attrs.status) teacher.status = attrs.status;
 
     return this.teacherRepo.save(teacher);
   }

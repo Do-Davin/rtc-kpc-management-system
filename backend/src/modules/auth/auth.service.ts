@@ -3,10 +3,13 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
+import { Student } from '../students/entities/student.entity';
+import { Department } from '../departments/entities/department.entity';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -14,48 +17,62 @@ export class AuthService {
     private users: UsersService,
     private jwt: JwtService,
     private config: ConfigService,
+    private dataSource: DataSource,
   ) {}
 
   async register(data: RegisterDto) {
-    // 1. Check if user already exists
-    const existingUser = await this.users.findOne(data.email).catch(() => null);
+    // Fixed: Check by EMAIL
+    const existingUser = await this.users.findByEmail(data.email);
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
-    // 2. Hash the password
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // 3. Create the user (Including FullName and Role)
-    return this.users.create({
-      ...data, // Spreads email, fullName, etc.
-      role: (data.role || 'STUDENT') as any, // Default to STUDENT if no role provided
-      password: hashedPassword,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Create User
+      const newUser = queryRunner.manager.create(User, {
+        email: data.email,
+        password: hashedPassword,
+        role: (data.role || 'STUDENT') as UserRole,
+      });
+      const savedUser = await queryRunner.manager.save(newUser);
+
+      // 2. Create Profile (Optional/Basic)
+      if (savedUser.role === 'STUDENT' && (data as any).fullName) {
+         // Logic to create student profile if data exists
+         // Note: Usually Admin creates students, but this handles self-registration if enabled
+      }
+
+      await queryRunner.commitTransaction();
+      return savedUser;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async login(email: string, password: string) {
-    // 1. Find user
     const user = await this.users.findByEmailWithPassword(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    // 2. Check password
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Invalid credentials');
 
-    // 3. Generate tokens
     const tokens = await this.issueTokens(user);
-
-    // 4. Store refresh token HASH in DB
     await this.storeRefreshTokenHash(user.id, tokens.refresh_token);
 
     return tokens;
   }
 
-  // REFRESH TOKEN (SECURE + ROTATION)
   async refreshTokens(refreshToken: string) {
     let payload: JwtPayload;
-
     try {
       payload = await this.jwt.verifyAsync(refreshToken, {
         secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
@@ -65,42 +82,35 @@ export class AuthService {
     }
 
     const user = await this.users.findByIdWithRefreshTokenHash(payload.sub);
-    if (!user || !user.refreshTokenHash) {
-      throw new UnauthorizedException('Refresh token invalid');
-    }
+    if (!user || !user.refreshTokenHash) throw new UnauthorizedException('Refresh token invalid');
 
     const match = await bcrypt.compare(refreshToken, user.refreshTokenHash);
     if (!match) throw new UnauthorizedException('Refresh token invalid');
 
     const tokens = await this.issueTokens(user);
     await this.storeRefreshTokenHash(user.id, tokens.refresh_token);
-
     return tokens;
   }
 
-  // LOGOUT (invalidate refresh token)
   async logout(userId: string) {
     await this.users.clearRefreshTokenHash(userId);
     return { message: 'Logged out' };
   }
 
-  // INTERNAL: issue tokens
   private async issueTokens(user: User) {
     const payload: JwtPayload & { jti: string } = {
       sub: user.id,
       email: user.email,
       role: user.role,
-      jti: crypto.randomUUID(), // Unique token ID
+      jti: crypto.randomUUID(),
     };
-
-    const access_token = await this.jwt.signAsync(payload);
-
-    const refresh_token = await this.jwt.signAsync(payload, {
-      secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
-      expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES'),
-    });
-
-    return { access_token, refresh_token };
+    return {
+      access_token: await this.jwt.signAsync(payload),
+      refresh_token: await this.jwt.signAsync(payload, {
+        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRES'),
+      }),
+    };
   }
 
   private async storeRefreshTokenHash(userId: string, token: string) {

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import adminService from '@/services/admin.service';
-import { Plus, Search, Filter, Check, Edit2, Trash2 } from 'lucide-vue-next';
+import { Plus, Search, Check, Edit2, Trash2, Briefcase } from 'lucide-vue-next';
 
 const teachers = ref([]);
 const departments = ref([]);
@@ -11,11 +11,11 @@ const searchQuery = ref('');
 const filterDept = ref('');
 const loading = ref(false);
 const submitting = ref(false);
-
 const isEditing = ref(false);
 const editId = ref(null);
 
-const form = ref({ fullName: '', email: '', specialization: '', departmentId: '' });
+// FIX: Added password to form state
+const form = ref({ fullName: '', email: '', specialization: '', departmentId: '', status: 'Active', password: '' });
 const createdAccount = ref({ email: '', password: '' });
 
 const loadData = async () => {
@@ -52,7 +52,8 @@ const formatDate = (dateString) => {
 
 const openCreate = () => {
   isEditing.value = false;
-  form.value = { fullName: '', email: '', specialization: '', departmentId: '' };
+  // Reset form including password
+  form.value = { fullName: '', email: '', specialization: '', departmentId: '', status: 'Active', password: '' };
   showModal.value = true;
 };
 
@@ -63,7 +64,9 @@ const openEdit = (tea) => {
     fullName: tea.fullName,
     email: tea.user?.email,
     specialization: tea.specialization,
-    departmentId: tea.department?.id || ''
+    departmentId: tea.department?.id || '',
+    status: tea.status || 'Active',
+    password: '' // Don't load password on edit
   };
   showModal.value = true;
 };
@@ -75,13 +78,17 @@ const handleSubmit = async () => {
       await adminService.updateTeacher(editId.value, {
         fullName: form.value.fullName,
         specialization: form.value.specialization,
-        departmentId: form.value.departmentId
+        departmentId: form.value.departmentId,
+        status: form.value.status
       });
       showModal.value = false;
-      alert('Teacher updated successfully');
     } else {
       await adminService.createTeacher(form.value);
-      createdAccount.value = { email: form.value.email, password: 'RTC@2026' };
+      // Show custom password or default in success modal
+      createdAccount.value = { 
+        email: form.value.email, 
+        password: form.value.password || 'RTC@2026' 
+      };
       showModal.value = false;
       showSuccessModal.value = true;
     }
@@ -144,7 +151,7 @@ onMounted(loadData);
           <tr v-for="tea in filteredTeachers" :key="tea.id">
             <td>
               <div class="user-cell">
-                <div class="avatar purple">{{ tea.fullName?.charAt(0).toUpperCase() || '?' }}</div>
+                <div class="icon-box purple"><Briefcase size="16"/></div>
                 <div class="user-info">
                   <span class="name">{{ tea.fullName }}</span>
                   <span class="email">{{ tea.user?.email }}</span>
@@ -154,7 +161,11 @@ onMounted(loadData);
             <td>{{ tea.specialization }}</td>
             <td><span v-if="tea.department" class="dept-badge purple">{{ tea.department.name }}</span></td>
             <td class="text-sm text-gray-600">{{ formatDate(tea.user?.createdAt) }}</td>
-            <td><span class="status-active">Active</span></td>
+            <td>
+                <span :class="['status-badge', tea.status === 'Active' ? 'active' : 'inactive']">
+                    {{ tea.status || 'Active' }}
+                </span>
+            </td>
             <td class="text-right">
               <button @click="openEdit(tea)" class="btn-icon edit"><Edit2 size="18"/></button>
               <button @click="handleDelete(tea.id)" class="btn-icon delete"><Trash2 size="18"/></button>
@@ -188,6 +199,20 @@ onMounted(loadData);
               <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
             </select>
           </div>
+          
+          <div class="form-group" v-if="!isEditing">
+            <label>Password (Optional)</label>
+            <input v-model="form.password" type="password" placeholder="Default: RTC@2026" />
+          </div>
+          
+          <div class="form-group">
+            <label>Status</label>
+            <select v-model="form.status">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
           <div class="modal-actions">
             <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
             <button type="submit" :disabled="submitting" class="btn-primary purple">
@@ -213,6 +238,7 @@ onMounted(loadData);
 </template>
 
 <style scoped>
+/* Same CSS as previous */
 .page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
 .page-title { font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 0; }
@@ -231,14 +257,16 @@ onMounted(loadData);
 .custom-table th { background: #f8fafc; text-align: left; padding: 1rem; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
 .custom-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
 .user-cell { display: flex; align-items: center; gap: 0.75rem; }
-.avatar { width: 40px; height: 40px; background: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
-.avatar.purple { background: #faf5ff; color: #9333ea; }
+.icon-box { width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.icon-box.purple { background: #faf5ff; color: #9333ea; }
 .user-info { display: flex; flex-direction: column; }
 .user-info .name { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
 .user-info .email { font-size: 0.85rem; color: #64748b; }
 .dept-badge { background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
 .dept-badge.purple { background: #faf5ff; color: #9333ea; }
-.status-active { color: #16a34a; font-size: 0.85rem; font-weight: 500; background: #f0fdf4; padding: 2px 8px; border-radius: 99px; }
+.status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+.status-badge.active { background: #dcfce7; color: #15803d; }
+.status-badge.inactive { background: #f1f5f9; color: #64748b; }
 .text-right { text-align: right; }
 .btn-icon.edit { color: #2563eb; background: none; border: none; cursor: pointer; margin-right: 0.5rem; }
 .btn-icon.delete { color: #ef4444; background: none; border: none; cursor: pointer; }

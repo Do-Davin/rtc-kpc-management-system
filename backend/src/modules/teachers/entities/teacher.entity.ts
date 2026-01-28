@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Department } from '../../departments/entities/department.entity';
 
@@ -8,15 +8,19 @@ export class Teacher {
   id: string;
 
   @Column()
-  fullName: string; 
+  fullName: string;
 
   @Column()
   specialization: string;
+
+  
+  @Column({ default: 'Active' })
+  status: string;
 
   @OneToOne(() => User, (user) => user.teacher, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Department, (dept) => dept.teachers, { onDelete: 'RESTRICT', nullable: false })
+  @ManyToOne(() => Department, (dept) => dept.teachers, { onDelete: 'RESTRICT' })
   department: Department;
 }

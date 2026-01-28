@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -12,11 +11,10 @@ export class UsersService {
   ) {}
 
   async create(data: Partial<User>) {
-
+  
     const user = this.usersRepo.create({
       email: data.email,
       password: data.password,
-      fullName: data.fullName, // <--- Ensure Name is saved
       role: data.role,
     });
     return this.usersRepo.save(user);
@@ -26,17 +24,16 @@ export class UsersService {
     return this.usersRepo.find();
   }
 
-  // Find by ID (Standard)
+  // Standard find by ID
   findOne(id: string) {
     return this.usersRepo.findOneBy({ id });
   }
 
-  // Find by Email (Helper for Auth)
+  // Helper for Auth Service
   findByEmail(email: string) {
     return this.usersRepo.findOneBy({ email });
   }
 
-  // For Login: explicitly select password
   findByEmailWithPassword(email: string) {
     return this.usersRepo
       .createQueryBuilder('user')
@@ -45,7 +42,6 @@ export class UsersService {
       .getOne();
   }
 
-  // For Refresh Token: explicitly select hash
   findByIdWithRefreshTokenHash(userId: string) {
     return this.usersRepo
       .createQueryBuilder('user')
@@ -55,19 +51,13 @@ export class UsersService {
   }
 
   async updateRefreshTokenHash(userId: string, hash: string) {
-    // Using update is more efficient than find+save for a single field
-    await this.usersRepo.update(userId, {
-      refreshTokenHash: hash,
-    });
+    await this.usersRepo.update(userId, { refreshTokenHash: hash });
   }
 
   async clearRefreshTokenHash(userId: string) {
-    await this.usersRepo.update(userId, {
-      refreshTokenHash: null,
-    });
+    await this.usersRepo.update(userId, { refreshTokenHash: null });
   }
 
-  // Optional: Helper to delete user (used by Admin)
   async remove(id: string) {
     const user = await this.findOne(id);
     if (!user) throw new NotFoundException('User not found');

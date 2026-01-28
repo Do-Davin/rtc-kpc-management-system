@@ -23,8 +23,12 @@ export class DepartmentsService {
     }
   }
 
+ 
   findAll() {
-    return this.repo.find();
+    return this.repo.find({
+      relations: ['teachers'],
+      order: { name: 'ASC' }
+    });
   }
 
   findOne(id: string) {

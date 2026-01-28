@@ -25,10 +25,13 @@ export class StudentsService {
       const dept = await this.deptRepo.findOneBy({ id: dto.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
 
-      const defaultPassword = await bcrypt.hash('RTC@2026', 10);
+      // FIX: Use the password from the form, or fallback to default
+      const plainPassword = dto.password || 'RTC@2026';
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
       const newUser = this.userRepo.create({
         email: dto.email,
-        password: defaultPassword,
+        password: hashedPassword, // <--- Sitha: This uses the correct password
         role: 'STUDENT',
       });
       const savedUser = await queryRunner.manager.save(newUser);
@@ -38,6 +41,7 @@ export class StudentsService {
         studentIdCard: dto.studentIdCard,
         user: savedUser,
         department: dept,
+        status: dto.status || 'Active',
       });
       const savedStudent = await queryRunner.manager.save(newStudent);
 
@@ -77,6 +81,7 @@ export class StudentsService {
     
     if (attrs.fullName) student.fullName = attrs.fullName;
     if (attrs.studentIdCard) student.studentIdCard = attrs.studentIdCard;
+    if (attrs.status) student.status = attrs.status;
 
     return this.studentRepo.save(student);
   }
@@ -88,7 +93,6 @@ export class StudentsService {
     });
     if (!student) throw new NotFoundException('Student not found');
     
-   
     return this.userRepo.remove(student.user);
   }
 }

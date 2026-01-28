@@ -1,17 +1,28 @@
-import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 
 export class CreateStudentDto {
-  @IsEmail()
-  email: string;
-
   @IsString()
   @IsNotEmpty()
-  fullName: string; 
+  fullName: string;
 
   @IsString()
   @IsNotEmpty()
   studentIdCard: string;
 
-  @IsUUID()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
   departmentId: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

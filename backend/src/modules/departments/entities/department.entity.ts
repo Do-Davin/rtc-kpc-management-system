@@ -8,10 +8,14 @@ export class Department {
   id: string;
 
   @Column({ unique: true })
-  name: string; // e.g., "Software Engineering"
+  name: string; 
 
   @Column({ unique: true })
-  code: string; // e.g., "SE"
+  code: string; 
+
+  
+  @Column({ default: 'Active' })
+  status: string;
 
   @OneToMany(() => Student, (student) => student.department)
   students: Student[];

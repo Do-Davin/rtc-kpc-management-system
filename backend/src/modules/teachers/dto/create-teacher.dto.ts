@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID, IsOptional, MinLength } from 'class-validator';
 
 export class CreateTeacherDto {
   @IsEmail()
@@ -14,4 +14,14 @@ export class CreateTeacherDto {
 
   @IsUUID()
   departmentId: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
+
+  
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

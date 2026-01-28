@@ -32,7 +32,8 @@ export class UsersController {
 
   @Post()
   createUser(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+    // FIX: Cast 'dto' to 'any' to resolve the type mismatch (string vs UserRole)
+    return this.usersService.create(dto as any);
   }
 
   // ================= ME (MUST BE FIRST) =================
