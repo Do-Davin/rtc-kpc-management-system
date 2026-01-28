@@ -422,6 +422,8 @@ const closeModal = () => {
 <style scoped>
 .courses-container {
   width: 100%;
+  background: #f9fafb;
+  min-height: 100vh;
 }
 
 .header-section {
@@ -435,7 +437,7 @@ const closeModal = () => {
 .page-title {
   font-size: 32px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--purple-500);
   margin: 0 0 8px 0;
 }
 
