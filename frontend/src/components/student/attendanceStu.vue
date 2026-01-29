@@ -64,14 +64,19 @@
             </div>
 
             <div v-else class="upload-preview">
+              <div class="preview-badge">
+                <CheckCircle2 :size="16" />
+                QR Code Ready
+              </div>
               <img :src="qrPreview" alt="QR Preview" class="qr-preview-img" />
               <div class="file-info">
-                <FileImage :size="20" />
+                <FileImage :size="18" />
                 <span class="file-name">{{ qrFile.name }}</span>
-                <button class="remove-btn" @click.stop="clearFile">
-                  <X :size="16" />
-                </button>
               </div>
+              <button class="change-file-btn" @click.stop="clearFile">
+                <RefreshCw :size="14" />
+                Change Image
+              </button>
             </div>
           </div>
 
@@ -161,11 +166,40 @@
         <!-- Step 3: Success / Error -->
         <div v-if="currentStep === 3" class="step-content">
           <div v-if="submissionSuccess" class="result-card success">
-            <div class="result-icon">
-              <CheckCircle2 :size="48" />
+            <!-- Modern Success Animation Container -->
+            <div class="success-animation-wrapper">
+              <!-- Ripple rings -->
+              <div class="ripple-ring ripple-1"></div>
+              <div class="ripple-ring ripple-2"></div>
+              <div class="ripple-ring ripple-3"></div>
+
+              <!-- Floating particles -->
+              <div class="particle particle-1"></div>
+              <div class="particle particle-2"></div>
+              <div class="particle particle-3"></div>
+              <div class="particle particle-4"></div>
+              <div class="particle particle-5"></div>
+              <div class="particle particle-6"></div>
+              <div class="particle particle-7"></div>
+              <div class="particle particle-8"></div>
+
+              <!-- Sparkles -->
+              <div class="sparkle sparkle-1">✦</div>
+              <div class="sparkle sparkle-2">✦</div>
+              <div class="sparkle sparkle-3">✦</div>
+              <div class="sparkle sparkle-4">✦</div>
+
+              <!-- Main success badge -->
+              <div class="success-badge">
+                <div class="badge-glow"></div>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                  <path class="check-path" d="M4 12.5L9.5 18L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
             </div>
-            <h2>Attendance Marked!</h2>
-            <p>Your attendance has been successfully recorded.</p>
+
+            <h2 class="success-title">Attendance Marked!</h2>
+            <p class="success-subtitle">Your attendance has been successfully recorded.</p>
             <div class="result-details">
               <div class="detail-item">
                 <BookOpen :size="16" />
@@ -211,7 +245,14 @@
         </div>
 
         <div class="history-list">
-          <div v-if="attendanceHistory.length === 0" class="empty-state">
+          <!-- Loading Overlay -->
+          <div v-if="isLoadingHistory || isLoadingMoreHistory" class="loading-overlay">
+            <div class="loading-spinner">
+              <Loader2 :size="20" class="spinning" />
+            </div>
+          </div>
+
+          <div v-if="attendanceHistory.length === 0 && !isLoadingHistory" class="empty-state">
             <ClipboardList :size="40" />
             <p>No attendance records yet</p>
           </div>
@@ -233,6 +274,27 @@
             <span class="history-tag" :class="getStatusClass(record.status)">
               {{ formatStatus(record.status) }}
             </span>
+          </div>
+
+          <!-- Load More Button - always rendered to prevent layout shift -->
+          <div
+            class="load-more-section"
+            :class="{ 'hidden': !hasMoreHistory || attendanceHistory.length === 0 || isLoadingHistory || isLoadingMoreHistory }"
+          >
+            <button
+              class="btn-load-more"
+              @click="loadMoreHistory"
+              :disabled="isLoadingMoreHistory || isLoadingHistory"
+            >
+              <span v-if="isLoadingMoreHistory" class="flex-center">
+                <Loader2 :size="16" class="spinning" />
+                Loading...
+              </span>
+              <span v-else class="flex-center">
+                <RefreshCw :size="16" />
+                Load More
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -310,6 +372,10 @@ const submissionError = ref(null)
 // History state
 const attendanceHistory = ref([])
 const isLoadingHistory = ref(false)
+const isLoadingMoreHistory = ref(false)
+const historyPage = ref(1)
+const historyPerPage = 10
+const hasMoreHistory = ref(true)
 
 // Toast state
 const error = ref(null)
@@ -483,16 +549,44 @@ const resetForm = () => {
 }
 
 // Load attendance history
-const loadAttendanceHistory = async () => {
-  isLoadingHistory.value = true
+const loadAttendanceHistory = async (reset = true) => {
+  if (reset) {
+    isLoadingHistory.value = true
+    historyPage.value = 1
+    // Don't clear history here - keep it visible during loading
+  } else {
+    isLoadingMoreHistory.value = true
+  }
+
   try {
-    const response = await getMyAttendance(10)
-    attendanceHistory.value = response.records || []
+    const limit = historyPerPage
+    const offset = (historyPage.value - 1) * historyPerPage
+
+    const response = await getMyAttendance(limit, offset)
+    const newRecords = response.records || []
+
+    if (reset) {
+      // Replace records only after data arrives
+      attendanceHistory.value = newRecords
+    } else {
+      attendanceHistory.value = [...attendanceHistory.value, ...newRecords]
+    }
+
+    // Check if there are more records
+    hasMoreHistory.value = newRecords.length === limit
+
   } catch (err) {
     console.error('Failed to load history:', err)
   } finally {
     isLoadingHistory.value = false
+    isLoadingMoreHistory.value = false
   }
+}
+
+const loadMoreHistory = async () => {
+  if (isLoadingMoreHistory.value || !hasMoreHistory.value) return
+  historyPage.value++
+  await loadAttendanceHistory(false)
 }
 
 // Formatting helpers
@@ -523,13 +617,15 @@ const formatStatus = (status) => {
   const statusMap = {
     'PRESENT': 'Present',
     'MANUAL_PRESENT': 'Manual',
-    'ABSENT': 'Absent'
+    'ABSENT': 'Absent',
+    'LATE': 'Late'
   }
   return statusMap[status] || status
 }
 
 const getStatusClass = (status) => {
   if (status === 'PRESENT' || status === 'MANUAL_PRESENT') return 'present'
+  if (status === 'LATE') return 'late'
   return 'absent'
 }
 
@@ -746,23 +842,41 @@ watch(success, (val) => {
   white-space: nowrap;
 }
 
-.remove-btn {
-  background: #fee2e2;
-  border: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+/* Preview badge for valid QR */
+.preview-badge {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #16a34a;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* Change file button - clearer UX */
+.change-file-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  margin-top: 12px;
+  background: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  color: #dc2626;
   transition: all 0.2s;
 }
 
-.remove-btn:hover {
-  background: #dc2626;
-  color: white;
+.change-file-btn:hover {
+  background: #e2e8f0;
+  border-color: #64748b;
+  color: #475569;
 }
 
 .session-info-card {
@@ -1001,6 +1115,277 @@ watch(success, (val) => {
   color: #22c55e;
 }
 
+/* Modern Success Animation */
+.success-animation-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ripple rings */
+.ripple-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #22c55e;
+  opacity: 0;
+}
+
+.ripple-1 {
+  animation: ripple-expand 1.2s ease-out 0.2s forwards;
+}
+
+.ripple-2 {
+  animation: ripple-expand 1.2s ease-out 0.4s forwards;
+}
+
+.ripple-3 {
+  animation: ripple-expand 1.2s ease-out 0.6s forwards;
+}
+
+@keyframes ripple-expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Success badge */
+.success-badge {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0);
+  animation: badge-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+  box-shadow:
+    0 10px 40px rgba(34, 197, 94, 0.4),
+    0 0 0 0 rgba(34, 197, 94, 0.4),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.badge-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%);
+}
+
+.check-icon {
+  width: 44px;
+  height: 44px;
+  z-index: 1;
+}
+
+.check-path {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: draw-checkmark 0.5s ease-out 0.6s forwards;
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0) rotate(-10deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(3deg);
+  }
+  80% {
+    transform: scale(0.95) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes draw-checkmark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Floating particles */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.particle-1 {
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  animation: particle-float 1s ease-out 0.3s forwards;
+  --tx: -50px;
+  --ty: -45px;
+}
+
+.particle-2 {
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  animation: particle-float 1s ease-out 0.35s forwards;
+  --tx: 55px;
+  --ty: -40px;
+}
+
+.particle-3 {
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  animation: particle-float 1s ease-out 0.4s forwards;
+  --tx: -60px;
+  --ty: 35px;
+}
+
+.particle-4 {
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  animation: particle-float 1s ease-out 0.45s forwards;
+  --tx: 50px;
+  --ty: 50px;
+}
+
+.particle-5 {
+  width: 5px;
+  height: 5px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  animation: particle-float 1s ease-out 0.38s forwards;
+  --tx: -25px;
+  --ty: -60px;
+}
+
+.particle-6 {
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  animation: particle-float 1s ease-out 0.42s forwards;
+  --tx: 65px;
+  --ty: 10px;
+}
+
+.particle-7 {
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  animation: particle-float 1s ease-out 0.33s forwards;
+  --tx: 30px;
+  --ty: -55px;
+}
+
+.particle-8 {
+  width: 9px;
+  height: 9px;
+  background: linear-gradient(135deg, #a855f7, #9333ea);
+  animation: particle-float 1s ease-out 0.48s forwards;
+  --tx: -65px;
+  --ty: -10px;
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0.8);
+  }
+}
+
+/* Sparkles */
+.sparkle {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0;
+  color: #fbbf24;
+  text-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+}
+
+.sparkle-1 {
+  animation: sparkle-pop 0.8s ease-out 0.5s forwards;
+  --sx: -70px;
+  --sy: -30px;
+}
+
+.sparkle-2 {
+  animation: sparkle-pop 0.8s ease-out 0.6s forwards;
+  --sx: 70px;
+  --sy: -25px;
+  color: #ec4899;
+  text-shadow: 0 0 4px rgba(236, 72, 153, 0.6);
+}
+
+.sparkle-3 {
+  animation: sparkle-pop 0.8s ease-out 0.55s forwards;
+  --sx: 60px;
+  --sy: 45px;
+  color: #8b5cf6;
+  text-shadow: 0 0 4px rgba(139, 92, 246, 0.6);
+}
+
+.sparkle-4 {
+  animation: sparkle-pop 0.8s ease-out 0.65s forwards;
+  --sx: -60px;
+  --sy: 50px;
+  color: #3b82f6;
+  text-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
+}
+
+@keyframes sparkle-pop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(calc(var(--sx) * 0.8), calc(var(--sy) * 0.8)) scale(1.3) rotate(180deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(0.5) rotate(360deg);
+  }
+}
+
+/* Success text animations */
+.success-title {
+  animation: text-fade-up 0.5s ease-out 0.7s both;
+}
+
+.success-subtitle {
+  animation: text-fade-up 0.5s ease-out 0.8s both;
+}
+
+@keyframes text-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .result-card.error .result-icon {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #ef4444;
@@ -1026,6 +1411,16 @@ watch(success, (val) => {
   padding: 16px;
   background: #f9fafb;
   border-radius: 12px;
+  animation: fade-in 0.5s ease-out 0.9s both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .detail-item {
@@ -1044,6 +1439,7 @@ watch(success, (val) => {
 
 .history-card {
   height: fit-content;
+  min-height: 280px;
 }
 
 .card-header {
@@ -1088,6 +1484,74 @@ watch(success, (val) => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  min-height: 100px;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 10px;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: var(--color-primary);
+}
+
+.load-more-section {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  min-height: 44px;
+  transition: opacity 0.2s ease;
+}
+
+.load-more-section.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn-load-more {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e2e8f0;
+  color: var(--color-primary);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-load-more:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 85, 243, 0.2);
+}
+
+.btn-load-more:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .empty-state {
@@ -1173,6 +1637,11 @@ watch(success, (val) => {
 .history-tag.absent {
   background: #fee2e2;
   color: #dc2626;
+}
+
+.history-tag.late {
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .toast {

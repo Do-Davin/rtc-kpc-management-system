@@ -16,6 +16,7 @@ import {
 import { GenerateQrDto } from './dto/generate-qr.dto';
 import { ManualAttendanceDto } from './dto/manual-attendance.dto';
 import { SubmitAttendanceDto } from './dto/submit-attendance.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { User } from '../users/entities/user.entity';
 
 const QR_EXPIRY_MINUTES = 2;
@@ -285,6 +286,68 @@ export class AttendanceService {
     });
   }
 
+  // Get recent attendance records for teacher to review/edit
+  async getRecentRecords(
+    teacherId: string,
+    limit: number = 50,
+    offset: number = 0,
+    department?: string,
+    year?: string,
+  ): Promise<AttendanceRecord[]> {
+    const queryBuilder = this.recordRepository
+      .createQueryBuilder('record')
+      .leftJoinAndSelect('record.student', 'student')
+      .leftJoinAndSelect('record.session', 'session')
+      .where('session.teacherId = :teacherId', { teacherId });
+
+    if (department) {
+      queryBuilder.andWhere('session.department = :department', { department });
+    }
+
+    if (year) {
+      queryBuilder.andWhere('session.year = :year', { year });
+    }
+
+    return queryBuilder
+      .orderBy('record.markedAt', 'DESC')
+      .skip(offset)
+      .take(limit)
+      .getMany();
+  }
+
+  // Update an attendance record
+  async updateAttendanceRecord(
+    teacherId: string,
+    recordId: string,
+    dto: UpdateAttendanceDto,
+  ): Promise<AttendanceRecord> {
+    // Find the record and verify it belongs to teacher's session
+    const record = await this.recordRepository.findOne({
+      where: { id: recordId },
+      relations: ['session', 'student'],
+    });
+
+    if (!record) {
+      throw new NotFoundException('Attendance record not found');
+    }
+
+    if (record.session.teacherId !== teacherId) {
+      throw new ForbiddenException(
+        'You do not have permission to edit this record',
+      );
+    }
+
+    // Update the record
+    record.status = dto.status as AttendanceStatus;
+    record.remarks = dto.remarks || record.remarks;
+    record.markedBy = teacherId;
+    record.markedAt = new Date();
+
+    await this.recordRepository.save(record);
+
+    return record;
+  }
+
   private generateSecureToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }
@@ -397,12 +460,14 @@ export class AttendanceService {
   async getStudentAttendanceHistory(
     studentId: string,
     limit: number = 20,
+    skip: number = 0,
   ): Promise<AttendanceRecord[]> {
     return this.recordRepository.find({
       where: { studentId },
       relations: ['session'],
       order: { markedAt: 'DESC' },
       take: limit,
+      skip: skip,
     });
   }
 

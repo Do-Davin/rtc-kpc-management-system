@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   Request,
   UseGuards,
@@ -16,6 +17,7 @@ import { GenerateQrDto } from './dto/generate-qr.dto';
 import { StopSessionDto } from './dto/stop-session.dto';
 import { ManualAttendanceDto } from './dto/manual-attendance.dto';
 import { SubmitAttendanceDto } from './dto/submit-attendance.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import type { AuthRequest } from '../common/types/auth-request.type';
 
 @Controller('attendance')
@@ -134,6 +136,47 @@ export class AttendanceController {
     return { sessions };
   }
 
+  /**
+   * Get recent attendance records for teacher to review/edit
+   * GET /attendance/recent-records
+   */
+  @Get('recent-records')
+  @Roles('TEACHER')
+  async getRecentRecords(
+    @Request() req: AuthRequest,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+    @Query('department') department?: string,
+    @Query('year') year?: string,
+  ) {
+    const records = await this.attendanceService.getRecentRecords(
+      req.user.sub,
+      limit || 50,
+      offset || 0,
+      department,
+      year,
+    );
+    return { records };
+  }
+
+  /**
+   * Update an attendance record
+   * PUT /attendance/records/:recordId
+   */
+  @Put('records/:recordId')
+  @Roles('TEACHER')
+  async updateAttendanceRecord(
+    @Request() req: AuthRequest,
+    @Param('recordId') recordId: string,
+    @Body() dto: UpdateAttendanceDto,
+  ) {
+    return this.attendanceService.updateAttendanceRecord(
+      req.user.sub,
+      recordId,
+      dto,
+    );
+  }
+
   // ========== Student Endpoints ==========
 
   /**
@@ -178,10 +221,12 @@ export class AttendanceController {
   async getMyAttendance(
     @Request() req: AuthRequest,
     @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
   ) {
     const records = await this.attendanceService.getStudentAttendanceHistory(
       req.user.sub,
       limit || 20,
+      offset || 0,
     );
     return { records };
   }
