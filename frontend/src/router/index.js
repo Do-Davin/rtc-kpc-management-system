@@ -5,7 +5,7 @@ import DepartmentComponent from '@/components/admin/departmentComponent.vue';
 import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
 import ReportsComponent from '@/components/admin/reportsComponent.vue';
 import StaffComponent from '@/components/admin/staffComponent.vue';
-import StudentComponent from '@/components/admin/studentComponent.vue'; 
+import StudentComponent from '@/components/admin/studentComponent.vue';
 import AttendanceStu from '@/components/student/attendanceStu.vue';
 import CourseStu from '@/components/student/courseStu.vue';
 import DashboardStudent from '@/components/student/dashboardStudent.vue';
@@ -41,8 +41,9 @@ const routes = [
     meta: { requiresAuth: true, roles: ['TEACHER'] },
     children: [
       { path: 'dashboard', component: import('@/components/teacher/_pages/DashboardTeacher.vue') },
-      { path: 'students', component: import('@/components/teacher/_pages/StudentAttendance.vue') },
+      { path: 'student-management', component: import('@/components/teacher/_pages/StudentManagement.vue') },
       { path: 'attendance', component: import('@/components/teacher/_pages/StudentAttendance.vue') },
+      { path: 'schedule', component: import('@/components/teacher/_pages/TeacherSchedule.vue') },
       { path: 'reports', component: import('@/components/teacher/_pages/TeacherReport.vue') },
       { path: 'courses', component: import('@/components/teacher/_pages/TeacherCourses.vue') },
       { path: 'e-library', component: import('@/components/teacher/_pages/TeacherElibrary.vue') },
