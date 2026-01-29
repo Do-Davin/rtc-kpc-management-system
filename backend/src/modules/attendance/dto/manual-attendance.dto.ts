@@ -16,10 +16,10 @@ export class ManualAttendanceDto {
   studentId: string;
 
   @IsNotEmpty()
-  @IsEnum(['MANUAL_PRESENT', 'ABSENT'], {
-    message: 'Status must be MANUAL_PRESENT or ABSENT',
+  @IsEnum(['MANUAL_PRESENT', 'ABSENT', 'LATE'], {
+    message: 'Status must be MANUAL_PRESENT, ABSENT or LATE',
   })
-  status: 'MANUAL_PRESENT' | 'ABSENT';
+  status: 'MANUAL_PRESENT' | 'ABSENT' | 'LATE';
 
   @IsOptional()
   @IsString()

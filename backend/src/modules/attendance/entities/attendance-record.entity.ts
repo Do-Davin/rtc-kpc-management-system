@@ -11,7 +11,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { AttendanceSession } from './attendance-session.entity';
 
-export type AttendanceStatus = 'PRESENT' | 'MANUAL_PRESENT' | 'ABSENT';
+export type AttendanceStatus = 'PRESENT' | 'MANUAL_PRESENT' | 'ABSENT' | 'LATE';
 
 @Entity('attendance_records')
 @Unique(['sessionId', 'studentId'])

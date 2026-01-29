@@ -75,6 +75,27 @@ export const getSessionHistory = async (limit = 10) => {
   return response.data
 }
 
+/**
+ * Get recent attendance records for teacher to review/edit
+ */
+export const getRecentRecords = async (limit = 50, department = null, year = null, offset = 0) => {
+  const response = await api.get('/attendance/recent-records', {
+    params: { limit, department, year, offset }
+  })
+  return response.data
+}
+
+/**
+ * Update an attendance record
+ */
+export const updateAttendanceRecord = async (recordId, data) => {
+  const response = await api.put(`/attendance/records/${recordId}`, {
+    recordId,
+    ...data
+  })
+  return response.data
+}
+
 // ========== Student Endpoints ==========
 
 /**
@@ -101,9 +122,9 @@ export const getAvailableSessions = async (filters = {}) => {
 /**
  * Get student's attendance history
  */
-export const getMyAttendance = async (limit = 20) => {
+export const getMyAttendance = async (limit = 20, offset = 0) => {
   const response = await api.get('/attendance/student/my-attendance', {
-    params: { limit }
+    params: { limit, offset }
   })
   return response.data
 }
@@ -133,6 +154,8 @@ export default {
   markManualAttendance,
   getStudentsForAttendance,
   getSessionHistory,
+  getRecentRecords,
+  updateAttendanceRecord,
   submitAttendance,
   getAvailableSessions,
   getMyAttendance,

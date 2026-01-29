@@ -92,6 +92,146 @@
           <span v-else class="flex-center"><QrCode :size="20" /> Generate QR Code</span>
         </button>
       </div>
+
+      <!-- Recent Attendance Records Card -->
+      <div class="card recent-records-card">
+        <div class="card-header-row">
+          <h2>
+            <History :size="22" />
+            Recent Attendance Records
+          </h2>
+          <button class="btn-icon" @click="loadRecentRecords" :disabled="isLoadingRecords">
+            <RefreshCw :size="18" :class="{ 'spinning': isLoadingRecords }" />
+          </button>
+        </div>
+        <p class="card-description">Review and edit recent attendance records when something went wrong</p>
+
+        <!-- Filter Row -->
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Department</label>
+            <select v-model="recordsFilter.department">
+              <option value="">All Departments</option>
+              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Year</label>
+            <select v-model="recordsFilter.year">
+              <option value="">All Years</option>
+              <option v-for="yr in years" :key="yr" :value="yr">Year {{ yr }}</option>
+            </select>
+          </div>
+          <button class="btn-filter" @click="loadRecentRecords" :disabled="isLoadingRecords">
+            <span class="flex-center">
+              <Search :size="16" />
+              Apply Filter
+            </span>
+          </button>
+        </div>
+
+        <!-- Records List -->
+        <div class="recent-records-list">
+          <!-- Loading Overlay -->
+          <div v-if="isLoadingRecords || isLoadingMore" class="loading-overlay">
+            <div class="loading-spinner">
+              <Loader2 :size="24" class="spinning" />
+            </div>
+          </div>
+
+          <div v-if="recentRecords.length === 0 && !isLoadingRecords" class="empty-state">
+            <ClipboardList :size="48" />
+            <p>No recent attendance records</p>
+          </div>
+
+          <div v-if="recentRecords.length > 0" class="records-table">
+            <div class="table-header">
+              <span class="col-student">Student</span>
+              <span class="col-course">Course</span>
+              <span class="col-session">Session</span>
+              <span class="col-time">Time</span>
+              <span class="col-status">Status</span>
+              <span class="col-actions">Actions</span>
+            </div>
+            <div
+              v-for="record in recentRecords"
+              :key="record.id"
+              class="record-row"
+              :class="{ 'editing': editingRecordId === record.id }"
+            >
+              <div class="col-student">
+                <div class="student-avatar">
+                  <User :size="16" />
+                </div>
+                <span>{{ record.student?.email || 'Unknown' }}</span>
+              </div>
+              <div class="col-course">{{ record.session?.courseName || 'N/A' }}</div>
+              <div class="col-session">{{ record.session?.sessionName || 'N/A' }}</div>
+              <div class="col-time">{{ formatDateTime(record.markedAt) }}</div>
+              <div class="col-status">
+                <span v-if="editingRecordId !== record.id" :class="['status-tag', record.status.toLowerCase().replace('_', '-')]">
+                  {{ formatStatus(record.status) }}
+                </span>
+                <select
+                  v-else
+                  v-model="editForm.status"
+                  class="status-select"
+                >
+                  <option value="PRESENT">Present</option>
+                  <option value="MANUAL_PRESENT">Manual Present</option>
+                  <option value="LATE">Late</option>
+                  <option value="ABSENT">Absent</option>
+                </select>
+              </div>
+              <div class="col-actions">
+                <template v-if="editingRecordId !== record.id">
+                  <button class="btn-edit" @click="startEditRecord(record)" title="Edit">
+                    <Edit3 :size="16" />
+                  </button>
+                </template>
+                <template v-else>
+                  <button class="btn-save" @click="saveRecordEdit(record.id)" :disabled="isSavingRecord" title="Save">
+                    <Check :size="16" />
+                  </button>
+                  <button class="btn-cancel" @click="cancelEdit" title="Cancel">
+                    <X :size="16" />
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load More Button -->
+          <div v-if="hasMoreRecords && recentRecords.length > 0 && !isLoadingRecords && !isLoadingMore" class="load-more-section">
+            <button
+              class="btn-load-more"
+              @click="loadMoreRecords"
+              :disabled="isLoadingMore"
+            >
+              <span v-if="isLoadingMore" class="flex-center">
+                <Loader2 :size="16" class="spinning" />
+                Loading...
+              </span>
+              <span v-else class="flex-center">
+                <ChevronDown :size="16" />
+                Load More Records
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit Remarks (shown when editing) -->
+        <div v-if="editingRecordId" class="edit-remarks-section">
+          <label>Remarks (Optional)</label>
+          <input
+            v-model="editForm.remarks"
+            type="text"
+            placeholder="Add a note about this change..."
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Active Session Section -->
@@ -299,7 +439,13 @@ import {
   PenLine,
   X,
   Info,
-  ArrowLeft
+  ArrowLeft,
+  History,
+  Loader2,
+  Edit3,
+  Check,
+  Search,
+  ChevronDown
 } from 'lucide-vue-next'
 import {
   generateQrCode,
@@ -307,7 +453,9 @@ import {
   getActiveSession,
   getSessionAttendance,
   markManualAttendance,
-  getStudentsForAttendance
+  getStudentsForAttendance,
+  getRecentRecords,
+  updateAttendanceRecord
 } from '@/services/attendance.api'
 
 // Form state
@@ -326,6 +474,24 @@ const isRefreshing = ref(false)
 const isMarkingAttendance = ref(false)
 const error = ref(null)
 const success = ref(null)
+
+// Recent records state
+const recentRecords = ref([])
+const isLoadingRecords = ref(false)
+const isLoadingMore = ref(false)
+const recordsPage = ref(1)
+const recordsPerPage = 20
+const hasMoreRecords = ref(true)
+const recordsFilter = ref({
+  department: '',
+  year: ''
+})
+const editingRecordId = ref(null)
+const editForm = ref({
+  status: '',
+  remarks: ''
+})
+const isSavingRecord = ref(false)
 
 // Session state
 const activeSession = ref(null)
@@ -638,7 +804,9 @@ const formatTime = (seconds) => {
 
 const formatDateTime = (date) => {
   if (!date) return ''
-  return new Date(date).toLocaleTimeString('en-US', {
+  return new Date(date).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   })
@@ -648,13 +816,102 @@ const formatStatus = (status) => {
   const statusMap = {
     'PRESENT': 'Present',
     'MANUAL_PRESENT': 'Manual',
-    'ABSENT': 'Absent'
+    'ABSENT': 'Absent',
+    'LATE': 'Late'
   }
   return statusMap[status] || status
 }
 
+// Recent records methods
+const loadRecentRecords = async (reset = true) => {
+  if (reset) {
+    isLoadingRecords.value = true
+    recordsPage.value = 1
+    // Don't clear records here - keep them visible during loading
+  } else {
+    isLoadingMore.value = true
+  }
+
+  try {
+    const limit = recordsPerPage
+    const offset = (recordsPage.value - 1) * recordsPerPage
+
+    const response = await getRecentRecords(
+      limit,
+      recordsFilter.value.department || null,
+      recordsFilter.value.year || null,
+      offset
+    )
+
+    const newRecords = response.records || []
+
+    if (reset) {
+      // Replace records only after data arrives
+      recentRecords.value = newRecords
+    } else {
+      recentRecords.value = [...recentRecords.value, ...newRecords]
+    }
+
+    // Check if there are more records
+    hasMoreRecords.value = newRecords.length === limit
+
+  } catch (err) {
+    console.error('Failed to load recent records:', err)
+    error.value = 'Failed to load recent records'
+  } finally {
+    isLoadingRecords.value = false
+    isLoadingMore.value = false
+  }
+}
+
+const loadMoreRecords = async () => {
+  if (isLoadingMore.value || !hasMoreRecords.value) return
+  recordsPage.value++
+  await loadRecentRecords(false)
+}
+
+const startEditRecord = (record) => {
+  editingRecordId.value = record.id
+  editForm.value = {
+    status: record.status,
+    remarks: record.remarks || ''
+  }
+}
+
+const cancelEdit = () => {
+  editingRecordId.value = null
+  editForm.value = { status: '', remarks: '' }
+}
+
+const saveRecordEdit = async (recordId) => {
+  isSavingRecord.value = true
+  try {
+    await updateAttendanceRecord(recordId, {
+      status: editForm.value.status,
+      remarks: editForm.value.remarks || null
+    })
+
+    // Update local record
+    const index = recentRecords.value.findIndex(r => r.id === recordId)
+    if (index >= 0) {
+      recentRecords.value[index].status = editForm.value.status
+      recentRecords.value[index].remarks = editForm.value.remarks
+    }
+
+    success.value = 'Attendance record updated successfully'
+    cancelEdit()
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to update record'
+  } finally {
+    isSavingRecord.value = false
+  }
+}
+
 // Check for existing active session on mount
 onMounted(async () => {
+  // Load recent records on mount
+  loadRecentRecords()
+
   try {
     const response = await getActiveSession()
     if (response.session) {
@@ -858,6 +1115,7 @@ watch(success, (val) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 0 auto;
   gap: 8px;
 }
 
@@ -1275,6 +1533,11 @@ watch(success, (val) => {
   color: #dc2626;
 }
 
+.status-tag.late {
+  background: #fef3c7;
+  color: #d97706;
+}
+
 .btn-outline {
   width: 100%;
   background: transparent;
@@ -1469,10 +1732,328 @@ watch(success, (val) => {
   }
 }
 
+/* Recent Records Styles */
+.recent-records-card {
+  margin-top: 24px;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card-header-row h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.card-description {
+  color: #64748b;
+  margin: 0 0 20px 0;
+  font-size: 14px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  min-width: 160px;
+}
+
+.btn-filter {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filter:hover:not(:disabled) {
+  background: var(--purple-600);
+  transform: translateY(-1px);
+}
+
+.btn-filter:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.recent-records-list {
+  position: relative;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 12px;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: var(--color-primary);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #94a3b8;
+  gap: 12px;
+  min-height: 200px;
+}
+
+.records-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.load-more-section {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.btn-load-more {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e2e8f0;
+  color: var(--color-primary);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-load-more:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 85, 243, 0.2);
+}
+
+.btn-load-more:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 80px;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.record-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 80px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  align-items: center;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.record-row:hover {
+  background: #f8fafc;
+}
+
+.record-row.editing {
+  background: #eff6ff;
+  border-top-color: #bfdbfe;
+}
+
+.record-row .col-student {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.record-row .student-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.record-row .col-course,
+.record-row .col-session,
+.record-row .col-time {
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-select {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+}
+
+.col-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.btn-edit,
+.btn-save,
+.btn-cancel {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn-edit:hover {
+  background: #e5e7eb;
+  color: var(--color-primary);
+}
+
+.btn-save {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-cancel {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-cancel:hover {
+  background: #dc2626;
+  color: white;
+}
+
+.edit-remarks-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #eff6ff;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe;
+}
+
+.edit-remarks-section label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 8px;
+}
+
+.edit-remarks-section input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+}
+
+.edit-remarks-section input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .session-grid {
     grid-template-columns: 1fr;
+  }
+
+  .table-header,
+  .record-row {
+    grid-template-columns: 1.5fr 1fr 1fr 80px;
+  }
+
+  .col-session,
+  .col-time {
+    display: none;
   }
 }
 
@@ -1487,6 +2068,19 @@ watch(success, (val) => {
 
   .session-actions {
     flex-direction: column;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .table-header,
+  .record-row {
+    grid-template-columns: 1fr 1fr 80px;
+  }
+
+  .col-course {
+    display: none;
   }
 }
 </style>
