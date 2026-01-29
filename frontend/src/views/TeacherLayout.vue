@@ -10,7 +10,7 @@
           <img src="../assets/dashboardIcon.png" class="icon"/>
           ផ្ទាំងគ្រប់គ្រង
         </router-link>
-        <router-link to="/teacher/students" class="nav-item">
+        <router-link to="/teacher/student-management" class="nav-item">
           <img src="../assets/studentIcon.png" class="icon"/>
           សិស្សានុសិស្ស
         </router-link>
