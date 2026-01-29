@@ -8,7 +8,7 @@ const showModal = ref(false)
 const isEditing = ref(false)
 const editId = ref(null)
 const searchQuery = ref('')
-const form = ref({ name: '', code: '', status: 'Active' })
+const form = ref({ name: '', code: '', description: '', status: 'ACTIVE' })
 const loading = ref(false)
 const submitting = ref(false)
 
@@ -34,7 +34,7 @@ const filteredDepartments = computed(() => {
 
 const openCreate = () => {
   isEditing.value = false
-  form.value = { name: '', code: '', status: 'Active' }
+  form.value = { name: '', code: '', description: '', status: 'ACTIVE' }
   showModal.value = true
 }
 
@@ -44,7 +44,8 @@ const openEdit = (dept) => {
   form.value = {
     name: dept.name,
     code: dept.code,
-    status: dept.status || 'Active',
+    description: dept.description || '',
+    status: dept.status || 'ACTIVE',
   }
   showModal.value = true
 }
@@ -116,7 +117,10 @@ onMounted(fetchDepartments)
             <td>
               <div class="dept-name">
                 <div class="icon-box"><Building2 size="16" /></div>
-                <span>{{ dept.name }}</span>
+                <div>
+                   <span>{{ dept.name }}</span>
+                   <div class="text-xs text-gray-500 truncate max-w-[200px]">{{ dept.description }}</div>
+                </div>
               </div>
             </td>
             <td>
@@ -131,8 +135,8 @@ onMounted(fetchDepartments)
               <span v-else class="text-gray-400 text-sm">No teachers assigned</span>
             </td>
             <td>
-              <span :class="['status-badge', dept.status === 'Active' ? 'active' : 'inactive']">
-                {{ dept.status || 'Active' }}
+              <span :class="['status-badge', dept.status === 'ACTIVE' ? 'active' : 'inactive']">
+                {{ dept.status || 'ACTIVE' }}
               </span>
             </td>
             <td class="actions-cell">
@@ -157,11 +161,15 @@ onMounted(fetchDepartments)
         <form @submit.prevent="handleSubmit">
           <div class="form-group"><label>Name</label><input v-model="form.name" required /></div>
           <div class="form-group"><label>Code</label><input v-model="form.code" required /></div>
+           <div class="form-group">
+            <label>Description</label>
+            <textarea v-model="form.description" rows="3" class="w-full p-2 border rounded-md"></textarea>
+          </div>
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
           <div class="modal-actions">
@@ -177,6 +185,12 @@ onMounted(fetchDepartments)
 </template>
 
 <style scoped>
+/* Reuse existing styles */
+.w-full { width: 100%; }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.max-w-\[200px\] { max-width: 200px; }
+
+/* ... (Keep all your previous CSS here) ... */
 /* Page & Common Styles */
 .page-container {
   padding: 2rem;
@@ -322,7 +336,8 @@ onMounted(fetchDepartments)
   color: #475569;
 }
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 0.6rem;
   border: 1px solid #cbd5e1;

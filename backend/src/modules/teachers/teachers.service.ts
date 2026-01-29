@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Teacher } from './entities/teacher.entity';
+import { Teacher, TeacherStatus } from './entities/teacher.entity';
 import { User } from '../users/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
@@ -25,7 +25,6 @@ export class TeachersService {
       const dept = await this.deptRepo.findOneBy({ id: dto.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
 
-      
       const plainPassword = dto.password || 'RTC@2026';
       const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
@@ -38,10 +37,12 @@ export class TeachersService {
 
       const newTeacher = this.teacherRepo.create({
         fullName: dto.fullName,
+        employeeId: dto.employeeId,
+        phoneNumber: dto.phoneNumber,
         specialization: dto.specialization,
         user: savedUser,
         department: dept,
-        status: dto.status || 'Active',
+        status: dto.status || TeacherStatus.ACTIVE,
       });
       const savedTeacher = await queryRunner.manager.save(newTeacher);
 
@@ -49,7 +50,7 @@ export class TeachersService {
       return savedTeacher;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      if (err.code === '23505') throw new ConflictException('Email already exists');
+      if (err.code === '23505') throw new ConflictException('Email or Employee ID already exists');
       throw err;
     } finally {
       await queryRunner.release();
@@ -79,6 +80,8 @@ export class TeachersService {
       teacher.department = dept;
     }
     if (attrs.fullName) teacher.fullName = attrs.fullName;
+    if (attrs.employeeId) teacher.employeeId = attrs.employeeId;
+    if (attrs.phoneNumber) teacher.phoneNumber = attrs.phoneNumber;
     if (attrs.specialization) teacher.specialization = attrs.specialization;
     if (attrs.status) teacher.status = attrs.status;
 

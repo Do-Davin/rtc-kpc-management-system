@@ -1,6 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  OneToMany, 
+  CreateDateColumn, 
+  UpdateDateColumn 
+} from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
+
+export enum DepartmentStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
 
 @Entity('departments')
 export class Department {
@@ -13,10 +25,23 @@ export class Department {
   @Column({ unique: true })
   code: string; 
 
-  
-  @Column({ default: 'Active' })
-  status: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
+  @Column({
+    type: 'enum',
+    enum: DepartmentStatus,
+    default: DepartmentStatus.ACTIVE,
+  })
+  status: DepartmentStatus;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  
   @OneToMany(() => Student, (student) => student.department)
   students: Student[];
 

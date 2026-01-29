@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import adminService from '@/services/admin.service';
 import { Users, GraduationCap, Building2, ArrowRight } from 'lucide-vue-next';
 
-// State for counts
 const stats = ref({
   departments: 0,
   students: 0,
@@ -12,7 +11,7 @@ const stats = ref({
 
 const loading = ref(true);
 
-// Fetch all data to calculate totals
+
 const fetchStats = async () => {
   loading.value = true;
   try {
@@ -93,7 +92,7 @@ onMounted(fetchStats);
 </template>
 
 <style scoped>
-/* --- Layout --- */
+
 .dashboard-wrapper {
   padding: 2rem;
   max-width: 1200px;
@@ -101,7 +100,7 @@ onMounted(fetchStats);
   font-family: 'Inter', sans-serif;
 }
 
-/* --- Header --- */
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -138,7 +137,7 @@ h1 {
   border-color: #cbd5e1;
 }
 
-/* --- Stats Grid --- */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -146,7 +145,7 @@ h1 {
   margin-bottom: 3rem;
 }
 
-/* --- Card Styles --- */
+
 .stat-card {
   background: white;
   border-radius: 16px;
@@ -205,8 +204,7 @@ h1 {
   border-top: 1px solid #f1f5f9; 
 }
 
-/* --- Card Colors --- */
-/* Blue Theme (Departments) */
+
 .stat-card.blue .card-icon {
   background-color: #eff6ff;
   color: #2563eb;
@@ -215,7 +213,7 @@ h1 {
   color: #2563eb;
 }
 
-/* Green Theme (Students) */
+
 .stat-card.green .card-icon {
   background-color: #f0fdf4;
   color: #16a34a;
@@ -224,7 +222,6 @@ h1 {
   color: #16a34a;
 }
 
-/* Purple Theme (Teachers) */
 .stat-card.purple .card-icon {
   background-color: #faf5ff;
   color: #9333ea;

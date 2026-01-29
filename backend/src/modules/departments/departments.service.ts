@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Department } from './entities/department.entity';
+import { Department, DepartmentStatus } from './entities/department.entity';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 
 @Injectable()
@@ -13,7 +13,11 @@ export class DepartmentsService {
 
   async create(dto: CreateDepartmentDto) {
     try {
-      const dept = this.repo.create(dto);
+     
+      const dept = this.repo.create({
+        ...dto,
+        status: dto.status || DepartmentStatus.ACTIVE,
+      });
       return await this.repo.save(dept);
     } catch (error) {
       if (error.code === '23505') {
@@ -23,7 +27,6 @@ export class DepartmentsService {
     }
   }
 
- 
   findAll() {
     return this.repo.find({
       relations: ['teachers'],

@@ -18,8 +18,10 @@ const form = ref({
   fullName: '',
   email: '',
   specialization: '',
+  employeeId: '',
+  phoneNumber: '',
   departmentId: '',
-  status: 'Active',
+  status: 'ACTIVE',
   password: '',
 })
 const createdAccount = ref({ email: '', password: '' })
@@ -70,9 +72,11 @@ const openCreate = () => {
     fullName: '',
     email: '',
     specialization: '',
+    employeeId: '',
+    phoneNumber: '',
     departmentId: '',
-    status: 'Active',
-    password: '',
+    status: 'ACTIVE',
+    password: 'TCH@123',
   }
   showModal.value = true
 }
@@ -84,8 +88,10 @@ const openEdit = (tea) => {
     fullName: tea.fullName,
     email: tea.user?.email,
     specialization: tea.specialization,
+    employeeId: tea.employeeId,
+    phoneNumber: tea.phoneNumber,
     departmentId: tea.department?.id || '',
-    status: tea.status || 'Active',
+    status: tea.status || 'ACTIVE',
     password: '',
   }
   showModal.value = true
@@ -94,19 +100,27 @@ const openEdit = (tea) => {
 const handleSubmit = async () => {
   submitting.value = true
   try {
-    if (isEditing.value) {
-      await adminService.updateTeacher(editId.value, {
+    const payload = {
         fullName: form.value.fullName,
         specialization: form.value.specialization,
+        employeeId: form.value.employeeId,
+        phoneNumber: form.value.phoneNumber,
         departmentId: form.value.departmentId,
         status: form.value.status,
-      })
+    }
+    
+    if (isEditing.value) {
+      await adminService.updateTeacher(editId.value, payload)
       showModal.value = false
     } else {
-      await adminService.createTeacher(form.value)
+      await adminService.createTeacher({
+        ...payload,
+        email: form.value.email,
+        password: form.value.password || 'TCH@123',
+      })
       createdAccount.value = {
         email: form.value.email,
-        password: form.value.password || 'RTC@2026',
+        password: form.value.password || 'TCH@123',
       }
       showModal.value = false
       showSuccessModal.value = true
@@ -136,7 +150,7 @@ onMounted(loadData)
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Staff & Teachers</h2>
+        <h2 class="page-title">Teaching staff</h2>
         <p class="page-subtitle">Manage faculty members</p>
       </div>
       <div class="header-actions">
@@ -166,9 +180,9 @@ onMounted(loadData)
         <thead>
           <tr>
             <th>Staff Info</th>
+            <th>ID</th>
             <th>Specialization</th>
             <th>Department</th>
-            <th>Joined</th>
             <th>Status</th>
             <th class="actions-col">Actions</th>
           </tr>
@@ -181,17 +195,18 @@ onMounted(loadData)
                 <div class="user-info">
                   <span class="name">{{ tea.fullName }}</span>
                   <span class="email">{{ tea.user?.email }}</span>
+                  <span v-if="tea.phoneNumber" class="text-xs text-gray-500">{{ tea.phoneNumber }}</span>
                 </div>
               </div>
             </td>
+             <td>{{ tea.employeeId }}</td>
             <td>{{ tea.specialization }}</td>
             <td>
               <span v-if="tea.department" class="dept-badge purple">{{ tea.department.name }}</span>
             </td>
-            <td class="text-sm text-gray-600">{{ formatDate(tea.user?.createdAt) }}</td>
             <td>
-              <span :class="['status-badge', tea.status === 'Active' ? 'active' : 'inactive']">
-                {{ tea.status || 'Active' }}
+              <span :class="['status-badge', tea.status === 'ACTIVE' ? 'active' : 'inactive']">
+                {{ tea.status || 'ACTIVE' }}
               </span>
             </td>
             <td class="actions-cell">
@@ -212,36 +227,52 @@ onMounted(loadData)
       <div class="modal-content">
         <h3>{{ isEditing ? 'Edit Teacher' : 'Add New Teacher' }}</h3>
         <form @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input v-model="form.fullName" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input v-model="form.email" type="email" :disabled="isEditing" required />
-          </div>
-          <div class="form-group">
-            <label>Specialization</label>
-            <input v-model="form.specialization" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Department</label>
-            <select v-model="form.departmentId" required>
-              <option value="" disabled>Select Department</option>
-              <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-            </select>
+           <div class="form-row">
+              <div class="form-group half">
+                <label>Full Name</label>
+                <input v-model="form.fullName" type="text" required />
+              </div>
+              <div class="form-group half">
+                 <label>Employee ID</label>
+                 <input v-model="form.employeeId" type="text" required />
+              </div>
+           </div>
+          
+           <div class="form-row">
+             <div class="form-group half">
+                 <label>Email Address</label>
+                 <input v-model="form.email" type="email" :disabled="isEditing" required />
+             </div>
+             <div class="form-group half">
+                 <label>Phone Number</label>
+                 <input v-model="form.phoneNumber" type="text" />
+             </div>
+           </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+               <label>Specialization</label>
+                <input v-model="form.specialization" type="text" required />
+            </div>
+            <div class="form-group half">
+                <label>Department</label>
+                <select v-model="form.departmentId" required>
+                  <option value="" disabled>Select Department</option>
+                  <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+                </select>
+            </div>
           </div>
 
           <div class="form-group" v-if="!isEditing">
-            <label>Default Password (RTC@2026)</label>
-            <input v-model="form.password" type="password" placeholder="Default: RTC@2026" />
+            <label>Default Password (TCH@123)</label>
+            <input v-model="form.password" type="password" placeholder="Default: TCH@123" />
           </div>
 
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
 
@@ -279,7 +310,11 @@ onMounted(loadData)
 </template>
 
 <style scoped>
-/* Common Styles */
+
+.form-row { display: flex; gap: 1rem; }
+.form-group.half { flex: 1; }
+
+
 .page-container {
   padding: 2rem;
   max-width: 1200px;
@@ -483,7 +518,7 @@ onMounted(loadData)
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px; 
 }
 .form-group {
   margin-bottom: 1rem;

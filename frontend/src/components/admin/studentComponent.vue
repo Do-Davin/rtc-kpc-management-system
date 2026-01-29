@@ -18,8 +18,11 @@ const form = ref({
   fullName: '',
   email: '',
   studentIdCard: '',
+  year: '',
+  enrollmentYear: new Date().getFullYear(),
+  phoneNumber: '',
   departmentId: '',
-  status: 'Active',
+  status: 'ACTIVE',
   password: '',
 })
 const createdAccount = ref({ email: '', password: '' })
@@ -70,9 +73,12 @@ const openCreate = () => {
     fullName: '',
     email: '',
     studentIdCard: '',
+    year: '',
+    enrollmentYear: new Date().getFullYear(),
+    phoneNumber: '',
     departmentId: '',
-    status: 'Active',
-    password: '',
+    status: 'ACTIVE',
+    password: 'STU@123',
   }
   showModal.value = true
 }
@@ -84,8 +90,11 @@ const openEdit = (stu) => {
     fullName: stu.fullName,
     email: stu.user?.email,
     studentIdCard: stu.studentIdCard,
+    year: stu.year,
+    enrollmentYear: stu.enrollmentYear,
+    phoneNumber: stu.phoneNumber,
     departmentId: stu.department?.id || '',
-    status: stu.status || 'Active',
+    status: stu.status || 'ACTIVE',
     password: '',
   }
   showModal.value = true
@@ -98,15 +107,24 @@ const handleSubmit = async () => {
       await adminService.updateStudent(editId.value, {
         fullName: form.value.fullName,
         studentIdCard: form.value.studentIdCard,
+        year: parseInt(form.value.year),
+        enrollmentYear: parseInt(form.value.enrollmentYear),
+        phoneNumber: form.value.phoneNumber,
         departmentId: form.value.departmentId,
         status: form.value.status,
       })
       showModal.value = false
     } else {
-      await adminService.createStudent(form.value)
+      
+      const payload = { 
+        ...form.value,
+        year: parseInt(form.value.year),
+        enrollmentYear: parseInt(form.value.enrollmentYear)
+      }
+      await adminService.createStudent(payload)
       createdAccount.value = {
         email: form.value.email,
-        password: form.value.password || 'RTC@2026',
+        password: form.value.password || 'STU@123',
       }
       showModal.value = false
       showSuccessModal.value = true
@@ -167,8 +185,8 @@ onMounted(loadData)
           <tr>
             <th>Student Profile</th>
             <th>ID Card</th>
+            <th>Year</th>
             <th>Department</th>
-            <th>Joined</th>
             <th>Status</th>
             <th class="actions-col">Actions</th>
           </tr>
@@ -181,19 +199,22 @@ onMounted(loadData)
                 <div class="user-info">
                   <span class="name">{{ stu.fullName }}</span>
                   <span class="email">{{ stu.user?.email }}</span>
+                  <span v-if="stu.phoneNumber" class="text-xs text-gray-500">{{ stu.phoneNumber }}</span>
                 </div>
               </div>
             </td>
             <td>
               <span class="font-mono">{{ stu.studentIdCard }}</span>
             </td>
+             <td>
+              <span>Year {{ stu.year }}</span>
+            </td>
             <td>
               <span v-if="stu.department" class="dept-badge blue">{{ stu.department.code }}</span>
             </td>
-            <td class="text-sm text-gray-600">{{ formatDate(stu.user?.createdAt) }}</td>
             <td>
-              <span :class="['status-badge', stu.status === 'Active' ? 'active' : 'inactive']">
-                {{ stu.status || 'Active' }}
+              <span :class="['status-badge', stu.status === 'ACTIVE' ? 'active' : 'inactive']">
+                {{ stu.status || 'ACTIVE' }}
               </span>
             </td>
             <td class="actions-cell">
@@ -214,36 +235,58 @@ onMounted(loadData)
       <div class="modal-content">
         <h3>{{ isEditing ? 'Edit Student' : 'Register New Student' }}</h3>
         <form @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input v-model="form.fullName" type="text" required />
+          <div class="form-row">
+             <div class="form-group half">
+              <label>Full Name</label>
+              <input v-model="form.fullName" type="text" required />
+            </div>
+             <div class="form-group half">
+              <label>Phone Number</label>
+              <input v-model="form.phoneNumber" type="text" placeholder="012..." />
+            </div>
           </div>
+         
           <div class="form-group">
             <label>Email Address</label>
             <input v-model="form.email" type="email" :disabled="isEditing" required />
           </div>
-          <div class="form-group">
-            <label>Student ID Card</label>
-            <input v-model="form.studentIdCard" type="text" required />
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Student ID Card</label>
+              <input v-model="form.studentIdCard" type="text" required />
+            </div>
+             <div class="form-group half">
+              <label>Department</label>
+              <select v-model="form.departmentId" required>
+                <option value="" disabled>Select Department</option>
+                <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Department</label>
-            <select v-model="form.departmentId" required>
-              <option value="" disabled>Select Department</option>
-              <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-            </select>
+
+          <div class="form-row">
+             <div class="form-group half">
+              <label>Year (1-4)</label>
+              <input v-model="form.year" type="number" min="1" max="8" required />
+            </div>
+             <div class="form-group half">
+              <label>Enrollment Year</label>
+              <input v-model="form.enrollmentYear" type="number" required />
+            </div>
           </div>
 
           <div class="form-group" v-if="!isEditing">
-            <label>Default Password (RTC@2026)</label>
-            <input v-model="form.password" type="password" placeholder="Default: RTC@2026" />
+            <label>Default Password (STU@123)</label>
+            <input v-model="form.password" type="password" placeholder="Default: STU@123" />
           </div>
 
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+              <option value="GRADUATED">Graduated</option>
             </select>
           </div>
 
@@ -279,7 +322,16 @@ onMounted(loadData)
 </template>
 
 <style scoped>
-/* Common Styles */
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-group.half {
+  flex: 1;
+}
+
+
 .page-container {
   padding: 2rem;
   max-width: 1200px;
@@ -439,7 +491,7 @@ onMounted(loadData)
   color: #64748b;
 }
 
-/* NEW ACTIONS STYLING */
+
 .actions-col {
   text-align: center;
   width: 100px;
@@ -479,7 +531,7 @@ onMounted(loadData)
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px; /* Increased width slightly for form rows */
 }
 .form-group {
   margin-bottom: 1rem;

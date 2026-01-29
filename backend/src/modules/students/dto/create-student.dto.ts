@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
+import { StudentStatus } from '../entities/student.entity';
 
 export class CreateStudentDto {
   @IsString()
@@ -13,6 +14,18 @@ export class CreateStudentDto {
   @IsNotEmpty()
   email: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  year: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  enrollmentYear: number;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
   @IsString()
   @IsNotEmpty()
   departmentId: string;
@@ -21,8 +34,7 @@ export class CreateStudentDto {
   @IsString()
   password?: string;
 
-  
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(StudentStatus)
+  status?: StudentStatus;
 }

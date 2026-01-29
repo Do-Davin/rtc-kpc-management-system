@@ -1,6 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  ManyToOne, 
+  JoinColumn, 
+  OneToOne, 
+  CreateDateColumn 
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Department } from '../../departments/entities/department.entity';
+
+export enum StudentStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  GRADUATED = 'GRADUATED',
+}
 
 @Entity('students')
 export class Student {
@@ -13,14 +27,30 @@ export class Student {
   @Column({ unique: true })
   studentIdCard: string;
 
-  
-  @Column({ default: 'Active' })
-  status: string;
+  @Column('int')
+  year: number;
 
+  @Column('int')
+  enrollmentYear: number;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
+
+  @Column({
+    type: 'enum',
+    enum: StudentStatus,
+    default: StudentStatus.ACTIVE,
+  })
+  status: StudentStatus;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  
   @OneToOne(() => User, (user) => user.student, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @JoinColumn() 
   user: User;
 
   @ManyToOne(() => Department, (dept) => dept.students, { onDelete: 'RESTRICT' })
-  department: Department;
+  department: Department; 
 }

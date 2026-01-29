@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Student } from './entities/student.entity';
+import { Student, StudentStatus } from './entities/student.entity';
 import { User } from '../users/entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -25,7 +25,6 @@ export class StudentsService {
       const dept = await this.deptRepo.findOneBy({ id: dto.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
 
-      
       const plainPassword = dto.password || 'RTC@2026';
       const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
@@ -39,9 +38,12 @@ export class StudentsService {
       const newStudent = this.studentRepo.create({
         fullName: dto.fullName,
         studentIdCard: dto.studentIdCard,
+        year: dto.year,
+        enrollmentYear: dto.enrollmentYear,
+        phoneNumber: dto.phoneNumber,
         user: savedUser,
         department: dept,
-        status: dto.status || 'Active',
+        status: dto.status || StudentStatus.ACTIVE,
       });
       const savedStudent = await queryRunner.manager.save(newStudent);
 
@@ -81,6 +83,9 @@ export class StudentsService {
     
     if (attrs.fullName) student.fullName = attrs.fullName;
     if (attrs.studentIdCard) student.studentIdCard = attrs.studentIdCard;
+    if (attrs.year) student.year = attrs.year;
+    if (attrs.enrollmentYear) student.enrollmentYear = attrs.enrollmentYear;
+    if (attrs.phoneNumber) student.phoneNumber = attrs.phoneNumber;
     if (attrs.status) student.status = attrs.status;
 
     return this.studentRepo.save(student);

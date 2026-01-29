@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, IsUUID, IsOptional, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID, IsOptional, MinLength, IsEnum } from 'class-validator';
+import { TeacherStatus } from '../entities/teacher.entity';
 
 export class CreateTeacherDto {
   @IsEmail()
@@ -7,6 +8,14 @@ export class CreateTeacherDto {
   @IsString()
   @IsNotEmpty()
   fullName: string; 
+
+  @IsString()
+  @IsNotEmpty()
+  employeeId: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -20,8 +29,7 @@ export class CreateTeacherDto {
   @MinLength(6)
   password?: string;
 
-  
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(TeacherStatus)
+  status?: TeacherStatus;
 }

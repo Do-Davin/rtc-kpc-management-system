@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
+import { DepartmentStatus } from '../entities/department.entity';
 
 export class CreateDepartmentDto {
   @IsString()
@@ -9,8 +10,11 @@ export class CreateDepartmentDto {
   @IsNotEmpty()
   code: string;
 
-  
   @IsOptional()
   @IsString()
-  status?: string;
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(DepartmentStatus)
+  status?: DepartmentStatus;
 }
