@@ -474,7 +474,6 @@ const hideTooltip = () => {
   min-height: 350px;
 }
 
-/* States */
 .chart-state {
   display: flex;
   flex-direction: column;
@@ -543,7 +542,6 @@ const hideTooltip = () => {
   to { transform: rotate(360deg); }
 }
 
-/* Chart Content */
 .chart-content {
   width: 100%;
   height: 100%;
@@ -551,7 +549,6 @@ const hideTooltip = () => {
   flex-direction: column;
 }
 
-/* Legend */
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
@@ -606,7 +603,6 @@ const hideTooltip = () => {
   font-weight: 500;
 }
 
-/* SVG Chart */
 .line-chart {
   flex: 1;
   width: 100%;
@@ -642,7 +638,6 @@ const hideTooltip = () => {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
-/* Tooltip */
 .chart-tooltip {
   position: absolute;
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
@@ -706,7 +701,6 @@ const hideTooltip = () => {
   margin-top: 4px;
 }
 
-/* Transitions */
 .tooltip-enter-active,
 .tooltip-leave-active {
   transition: all 0.2s ease;
@@ -728,7 +722,6 @@ const hideTooltip = () => {
   opacity: 0;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .chart-legend {
     gap: 8px;

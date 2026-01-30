@@ -76,30 +76,18 @@ export class TeacherDashboardController {
 
   // ========== Todo CRUD ==========
 
-  /**
-   * Get all todos for the teacher
-   * GET /teacher-dashboard/todos
-   */
   @Get('todos')
   async getTodos(@Request() req: AuthRequest) {
     const todos = await this.dashboardService.getTodos(req.user.sub);
     return { todos };
   }
 
-  /**
-   * Create a new todo
-   * POST /teacher-dashboard/todos
-   */
   @Post('todos')
   async createTodo(@Request() req: AuthRequest, @Body() dto: CreateTodoDto) {
     const todo = await this.dashboardService.createTodo(req.user.sub, dto);
     return { todo };
   }
 
-  /**
-   * Update a todo
-   * PUT /teacher-dashboard/todos/:id
-   */
   @Put('todos/:id')
   async updateTodo(
     @Request() req: AuthRequest,
@@ -114,10 +102,6 @@ export class TeacherDashboardController {
     return { todo };
   }
 
-  /**
-   * Toggle todo completion status
-   * PATCH /teacher-dashboard/todos/:id/toggle
-   */
   @Patch('todos/:id/toggle')
   async toggleTodoComplete(
     @Request() req: AuthRequest,
@@ -130,10 +114,6 @@ export class TeacherDashboardController {
     return { todo };
   }
 
-  /**
-   * Delete a todo
-   * DELETE /teacher-dashboard/todos/:id
-   */
   @Delete('todos/:id')
   async deleteTodo(@Request() req: AuthRequest, @Param('id') todoId: string) {
     return this.dashboardService.deleteTodo(req.user.sub, todoId);

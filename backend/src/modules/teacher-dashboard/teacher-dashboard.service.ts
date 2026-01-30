@@ -22,8 +22,6 @@ export class TeacherDashboardService {
     private recordRepo: Repository<AttendanceRecord>,
   ) {}
 
-  // ========== Dashboard Statistics ==========
-
   /**
    * Get dashboard statistics for the authenticated teacher
    * - Present count today
@@ -118,8 +116,6 @@ export class TeacherDashboardService {
     };
   }
 
-  // ========== Attendance Trend Data ==========
-
   /**
    * Get attendance trend data for line chart
    * Aggregates attendance percentage by date
@@ -200,8 +196,6 @@ export class TeacherDashboardService {
     return trendData;
   }
 
-  // ========== Today's Sessions ==========
-
   /**
    * Get today's teaching sessions for the teacher
    */
@@ -253,8 +247,6 @@ export class TeacherDashboardService {
     });
   }
 
-  // ========== Todo CRUD ==========
-
   /**
    * Get all todos for the teacher
    */
@@ -269,9 +261,6 @@ export class TeacherDashboardService {
     });
   }
 
-  /**
-   * Create a new todo
-   */
   async createTodo(teacherId: string, dto: CreateTodoDto) {
     const todo = this.todoRepo.create({
       teacherId,
@@ -285,9 +274,6 @@ export class TeacherDashboardService {
     return this.todoRepo.save(todo);
   }
 
-  /**
-   * Update a todo
-   */
   async updateTodo(teacherId: string, todoId: string, dto: UpdateTodoDto) {
     const todo = await this.todoRepo.findOneBy({ id: todoId });
 
@@ -299,7 +285,6 @@ export class TeacherDashboardService {
       throw new ForbiddenException('You can only update your own todos');
     }
 
-    // Update fields
     if (dto.title !== undefined) todo.title = dto.title;
     if (dto.description !== undefined) todo.description = dto.description;
     if (dto.dueDate !== undefined)
@@ -315,9 +300,6 @@ export class TeacherDashboardService {
     return this.todoRepo.save(todo);
   }
 
-  /**
-   * Toggle todo completion status
-   */
   async toggleTodoComplete(teacherId: string, todoId: string) {
     const todo = await this.todoRepo.findOneBy({ id: todoId });
 
@@ -335,9 +317,6 @@ export class TeacherDashboardService {
     return this.todoRepo.save(todo);
   }
 
-  /**
-   * Delete a todo
-   */
   async deleteTodo(teacherId: string, todoId: string) {
     const todo = await this.todoRepo.findOneBy({ id: todoId });
 
