@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { StudentsModule } from './modules/students/students.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
+import { TeacherDashboardModule } from './modules/teacher-dashboard/teacher-dashboard.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,6 +22,7 @@ import { TeachersModule } from './modules/teachers/teachers.module';
     StudentsModule,
     TeachersModule,
     AttendanceModule,
+    TeacherDashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
