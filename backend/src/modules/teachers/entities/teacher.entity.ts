@@ -26,7 +26,7 @@ export class Teacher {
   @Column({ unique: true })
   employeeId: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   phoneNumber: string;
 
   @Column()
