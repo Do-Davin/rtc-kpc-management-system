@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-
 export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
 
 @Entity('users')
@@ -34,7 +33,6 @@ export class User {
   })
   refreshTokenHash: string | null;
 
-  
   @OneToOne(() => Student, (student) => student.user)
   student: Student;
 
