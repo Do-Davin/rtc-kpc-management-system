@@ -23,10 +23,10 @@ export class Course {
   @Column({ type: 'text', nullable: true })
   subtitle: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   courseCode: string;
 
-  @Column('int')
+  @Column('int', { nullable: true })
   year: number;
 
   @Column({ type: 'boolean', default: true })
@@ -44,10 +44,21 @@ export class Course {
   // Many courses belong to one department
   @ManyToOne(() => Department, (department) => department.courses, {
     onDelete: 'RESTRICT',
+    nullable: true,
   })
   @JoinColumn({ name: 'departmentId' })
   department: Department;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   departmentId: string;
+
+  // Progress checkpoints for course completion tracking
+  @Column({ type: 'boolean', default: false })
+  progress1: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  progress2: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  progress3: boolean;
 }

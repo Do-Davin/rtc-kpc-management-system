@@ -155,7 +155,8 @@
                     ឈ្មោះពេញ
                   </label>
                   <input
-                    v-model="editData.fullName"
+                    :value="isEditing ? editData.fullName : profileData.fullName"
+                    @input="editData.fullName = $event.target.value"
                     type="text"
                     class="form-input"
                     :class="{ 'editable': isEditing }"
@@ -175,7 +176,8 @@
                     ថ្ងៃខែឆ្នាំកំណើត
                   </label>
                   <input
-                    v-model="editData.dateOfBirth"
+                    :value="isEditing ? editData.dateOfBirth : profileData.dateOfBirth"
+                    @input="editData.dateOfBirth = $event.target.value"
                     type="date"
                     class="form-input"
                     :class="{ 'editable': isEditing }"

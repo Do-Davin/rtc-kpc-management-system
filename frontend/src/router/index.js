@@ -1,5 +1,5 @@
 import AttendanceComponent from '@/components/admin/attendanceComponent.vue';
-import CourseComponent from '@/components/admin/courseComponent.vue';
+import CourseComponent from '@/components/admin/CourseComponent.vue';
 import DashboardAdmin from '@/components/admin/dashboardAdmin.vue';
 import DepartmentComponent from '@/components/admin/departmentComponent.vue';
 import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
@@ -40,13 +40,13 @@ const routes = [
     component: TeacherLayout,
     meta: { requiresAuth: true, roles: ['TEACHER'] },
     children: [
-      { path: 'dashboard', component: import('@/components/teacher/_pages/DashboardTeacher.vue') },
-      { path: 'student-management', component: import('@/components/teacher/_pages/StudentManagement.vue') },
-      { path: 'attendance', component: import('@/components/teacher/_pages/StudentAttendance.vue') },
-      { path: 'schedule', component: import('@/components/teacher/_pages/TeacherSchedule.vue') },
-      { path: 'reports', component: import('@/components/teacher/_pages/TeacherReport.vue') },
-      { path: 'courses', component: import('@/components/teacher/_pages/TeacherCourses.vue') },
-      { path: 'e-library', component: import('@/components/teacher/_pages/TeacherElibrary.vue') },
+      { path: 'dashboard', component: () => import('@/components/teacher/_pages/DashboardTeacher.vue') },
+      { path: 'student-management', component: () => import('@/components/teacher/_pages/StudentManagement.vue') },
+      { path: 'attendance', component: () => import('@/components/teacher/_pages/StudentAttendance.vue') },
+      { path: 'schedule', component: () => import('@/components/teacher/_pages/TeacherSchedule.vue') },
+      { path: 'reports', component: () => import('@/components/teacher/_pages/TeacherReport.vue') },
+      { path: 'courses', component: () => import('@/components/teacher/_pages/TeacherCourses.vue') },
+      { path: 'e-library', component: () => import('@/components/teacher/_pages/TeacherElibrary.vue') },
     ],
   },
   {

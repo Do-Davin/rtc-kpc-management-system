@@ -10,7 +10,8 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { StudentsModule } from './modules/students/students.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
 import { TeacherDashboardModule } from './modules/teacher-dashboard/teacher-dashboard.module';
-import { CoursesModule } from './modules/courses/courses.module';
+import { AdminCoursesModule } from './modules/admin-courses/admin-courses.module';
+import { TeacherCoursesModule } from './modules/teacher-courses/teacher-courses.module';
 import { ElibraryModule } from './modules/elibrary/elibrary.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 
@@ -27,7 +28,8 @@ import { SchedulesModule } from './modules/schedules/schedules.module';
     TeachersModule,
     AttendanceModule,
     TeacherDashboardModule,
-    CoursesModule,
+    AdminCoursesModule, // Admin can CREATE/UPDATE/DELETE courses for departments
+    TeacherCoursesModule, // Teacher can only VIEW courses from their department
     ElibraryModule,
     SchedulesModule,
   ],

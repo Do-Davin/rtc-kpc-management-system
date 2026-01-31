@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -18,17 +14,23 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { CoursesService } from './course.service';
+import { AdminCoursesService } from './admin-courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
+/**
+ * Admin Courses Controller
+ * Handles course CRUD operations for administrators.
+ * Admins can create, update, and delete courses.
+ * Teachers can only view courses.
+ */
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('courses')
-export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+export class AdminCoursesController {
+  constructor(private readonly adminCoursesService: AdminCoursesService) {}
 
   @Roles('ADMIN')
   @Post()
@@ -62,28 +64,28 @@ export class CoursesController {
     if (file) {
       createCourseDto.image = `/uploads/courses/${file.filename}`;
     }
-    return this.coursesService.create(createCourseDto);
+    return this.adminCoursesService.create(createCourseDto);
   }
 
-  @Roles('ADMIN', 'TEACHER')
+  @Roles('ADMIN')
   @Get()
   findAll(@Query('departmentId') departmentId?: string) {
     if (departmentId) {
-      return this.coursesService.findByDepartment(departmentId);
+      return this.adminCoursesService.findByDepartment(departmentId);
     }
-    return this.coursesService.findAll();
+    return this.adminCoursesService.findAll();
   }
 
   @Roles('ADMIN', 'TEACHER', 'STUDENT')
   @Get('active')
   findAllActive() {
-    return this.coursesService.findAllActive();
+    return this.adminCoursesService.findAllActive();
   }
 
-  @Roles('ADMIN', 'TEACHER')
+  @Roles('ADMIN')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.coursesService.findOne(id);
+    return this.adminCoursesService.findOne(id);
   }
 
   @Roles('ADMIN')
@@ -116,18 +118,18 @@ export class CoursesController {
     if (file) {
       updateCourseDto.image = `/uploads/courses/${file.filename}`;
     }
-    return this.coursesService.update(id, updateCourseDto);
+    return this.adminCoursesService.update(id, updateCourseDto);
   }
 
   @Roles('ADMIN')
   @Patch(':id/toggle-status')
   toggleStatus(@Param('id') id: string) {
-    return this.coursesService.toggleStatus(id);
+    return this.adminCoursesService.toggleStatus(id);
   }
 
   @Roles('ADMIN')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.coursesService.remove(id);
+    return this.adminCoursesService.remove(id);
   }
 }

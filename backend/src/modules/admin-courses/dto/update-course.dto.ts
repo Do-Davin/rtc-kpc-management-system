@@ -29,8 +29,8 @@ export class UpdateCourseDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(2000)
-  @Max(2100)
+  @Min(1)
+  @Max(5)
   @Type(() => Number)
   @Transform(({ value }) => parseInt(value, 10))
   year?: number;

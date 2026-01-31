@@ -72,7 +72,7 @@ export class ElibraryController {
     }
     // Return the URL path to access the uploaded file
     return {
-      url: `/covers/${file.filename}`,
+      url: `/public/covers/${file.filename}`,
       filename: file.filename,
     };
   }

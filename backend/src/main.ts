@@ -19,8 +19,14 @@ async function bootstrap() {
     }),
   );
 
+  // Serve uploaded files from /uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
+  });
+
+  // Serve public files (book covers, etc.) from /public
+  app.useStaticAssets(join(__dirname, '..', 'public'), {
+    prefix: '/public/',
   });
 
   // await app.listen(process.env.PORT ?? 3000);

@@ -2,30 +2,18 @@
   <div class="courses-container">
     <!-- Header Section -->
     <div class="header-section">
-      <div class="header-top">
-        <h1 class="page-title">វគ្គសិក្សា</h1>
-        <p class="page-subtitle">ស្វាគមន៍! ចូលរួមក្នុងដំណើរសិក្សារបស់អ្នក។</p>
-      </div>
-
-      <div class="header-actions">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="page-title">វគ្គសិក្សា</h1>
+          <p class="page-subtitle">មើលវគ្គសិក្សាដែលបានកំណត់សម្រាប់ផ្នែករបស់អ្នក។</p>
+        </div>
         <div class="search-box">
-          <svg
-            class="search-icon"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
-          <input type="text" placeholder="Search courses..." v-model="searchQuery" class="search-input"/>
+          <input type="text" placeholder="ស្វែងរកវគ្គសិក្សា..." v-model="searchQuery" class="search-input"/>
         </div>
-        <button class="btn-primary" @click="openAddModal">
-          <span class="plus-icon">+</span> Create Course
-        </button>
       </div>
     </div>
 
@@ -33,59 +21,49 @@
     <div class="stats-section">
       <div class="stat-card">
         <div class="stat-icon total">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
           </svg>
         </div>
         <div class="stat-content">
-          <p class="stat-label">Total Courses</p>
-          <p class="stat-value">{{ filteredCourses.length }}</p>
+          <p class="stat-label">វគ្គសិក្សាសរុប</p>
+          <p class="stat-value">{{ stats.totalCourses }}</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon active">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 6v6l4 2"></path>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
         </div>
         <div class="stat-content">
-          <p class="stat-label">Average Progress</p>
-          <p class="stat-value">{{ averageProgress }}%</p>
+          <p class="stat-label">វគ្គសិក្សាសកម្ម</p>
+          <p class="stat-value">{{ stats.activeCourses }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon inactive">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">វគ្គសិក្សាអសកម្ម</p>
+          <p class="stat-value">{{ stats.inactiveCourses }}</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon progress">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20v-6M6 20V10M18 20V4"></path>
           </svg>
         </div>
         <div class="stat-content">
-          <p class="stat-label">Total Hours</p>
-          <p class="stat-value">{{ totalHours }}</p>
+          <p class="stat-label">វឌ្ឍនភាពជាមធ្យម</p>
+          <p class="stat-value">{{ progressStats.averageProgress }}%</p>
         </div>
       </div>
     </div>
@@ -93,20 +71,22 @@
     <!-- Filters Section -->
     <div class="filters-section">
       <div class="filter-group">
-        <label class="filter-label">Level</label>
-        <select v-model="selectedLevel" class="filter-select">
-          <option value="">All</option>
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
+        <label class="filter-label">ឆ្នាំសិក្សា</label>
+        <select v-model="selectedYear" class="filter-select">
+          <option value="">ទាំងអស់</option>
+          <option value="1">ឆ្នាំទី ១</option>
+          <option value="2">ឆ្នាំទី ២</option>
+          <option value="3">ឆ្នាំទី ៣</option>
+          <option value="4">ឆ្នាំទី ៤</option>
+          <option value="5">ឆ្នាំទី ៥</option>
         </select>
       </div>
       <div class="filter-group">
-        <label class="filter-label">Status</label>
+        <label class="filter-label">ស្ថានភាព</label>
         <select v-model="selectedStatus" class="filter-select">
-          <option value="">All</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="">ទាំងអស់</option>
+          <option value="true">សកម្ម</option>
+          <option value="false">អសកម្ម</option>
         </select>
       </div>
     </div>
@@ -115,91 +95,136 @@
     <div class="courses-grid">
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">
-        <p>Loading courses...</p>
+        <div class="loading-spinner"></div>
+        <p>កំពុងផ្ទុកវគ្គសិក្សា...</p>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="error-state">
+        <div class="error-icon">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
         <p>{{ error }}</p>
-        <button @click="fetchCourses" class="btn-retry">Retry</button>
+        <button @click="fetchCourses" class="btn-retry">ព្យាយាមម្តងទៀត</button>
       </div>
 
       <!-- Courses List -->
       <div v-else-if="filteredCourses.length > 0" class="courses-list">
-        <div v-for="course in filteredCourses" :key="course.id" class="course-card">
+        <div v-for="course in filteredCourses" :key="course.id" class="course-card" @click="viewCourse(course)">
           <!-- Course Image -->
           <div class="course-image-wrapper">
-            <img :src="course.image || '/public/courses/default.jpg'" :alt="course.title" class="course-image"/>
-            <div class="course-badge" :class="course.status">{{ course.status === 'active' ? 'Active' : 'Inactive' }}</div>
-            <div class="course-overlay">
-              <button class="btn-view" @click="viewCourse(course)">View</button>
-              <button class="btn-edit" @click="editCourse(course)">Edit</button>
-              <button class="btn-delete" @click="deleteCourseHandler(course.id)">Delete</button>
+            <img :src="getCourseImage(course)" :alt="course.title" class="course-image" @error="handleImageError"/>
+            <div class="course-status-badge" :class="{ active: course.status, inactive: !course.status }">
+              {{ course.status ? 'សកម្ម' : 'អសកម្ម' }}
+            </div>
+            <div class="course-year-badge" v-if="course.year">
+              ឆ្នាំទី {{ course.year }}
             </div>
           </div>
 
           <!-- Course Content -->
           <div class="course-content">
+            <div class="course-header">
+              <span class="course-code">{{ course.courseCode || 'N/A' }}</span>
+            </div>
             <h3 class="course-title">{{ course.title }}</h3>
-            <p class="course-description">{{ course.description }}</p>
+            <p class="course-subtitle">{{ course.subtitle || 'មិនមានពិពណ៌នា' }}</p>
 
             <!-- Course Metadata -->
             <div class="course-meta">
-              <div class="meta-item">
-                <svg
-                  class="meta-icon"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
+              <div class="meta-item" v-if="course.professorName">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span class="meta-text">{{ course.students }} Students</span>
+                <span class="meta-text">{{ course.professorName }}</span>
               </div>
-              <div class="meta-item">
-                <svg
-                  class="meta-icon"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
+              <div class="meta-item" v-if="course.departmentName">
+                <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
-                <span class="meta-text">{{ course.duration }} Hours</span>
-              </div>
-              <div class="meta-item">
-                <svg
-                  class="meta-icon"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M3 3v18h18"></path>
-                  <rect x="7" y="13" width="4" height="8"></rect>
-                  <rect x="15" y="8" width="4" height="13"></rect>
-                  <rect x="11" y="13" width="4" height="8"></rect>
-                </svg>
-                <span class="meta-text">{{ course.level }}</span>
+                <span class="meta-text">{{ course.departmentName }}</span>
               </div>
             </div>
 
-            <!-- Course Footer -->
-            <div class="course-footer">
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: course.progress + '%' }"></div>
+            <!-- Progress Checkmarks -->
+            <div class="course-progress">
+              <div class="progress-header">
+                <span class="progress-label">វឌ្ឍនភាព</span>
+                <span class="progress-percent">{{ getProgressPercent(course) }}%</span>
               </div>
-              <span class="progress-text">{{ course.progress }}% Complete</span>
+              <div class="progress-steps">
+                <div
+                  class="progress-step"
+                  :class="{ completed: course.progress1 }"
+                  @click.stop="toggleProgress(course, 'progress1')"
+                >
+                  <div class="step-checkbox" :class="{ checked: course.progress1 }">
+                    <svg v-if="course.progress1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <div class="step-info">
+                    <span class="step-title">រៀបចំមេរៀន</span>
+                    <span class="step-desc">រៀបចំសម្ភារៈបង្រៀន</span>
+                  </div>
+                </div>
+                <div
+                  class="progress-step"
+                  :class="{ completed: course.progress2, disabled: !course.progress1 }"
+                  @click.stop="canToggleProgress(course, 'progress2') && toggleProgress(course, 'progress2')"
+                >
+                  <div class="step-checkbox" :class="{ checked: course.progress2, disabled: !course.progress1 }">
+                    <svg v-if="course.progress2" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <svg v-else-if="!course.progress1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                  <div class="step-info">
+                    <span class="step-title">បង្រៀនបាន ៥០%</span>
+                    <span class="step-desc">កំពុងបង្រៀន</span>
+                  </div>
+                </div>
+                <div
+                  class="progress-step"
+                  :class="{ completed: course.progress3, disabled: !course.progress1 || !course.progress2 }"
+                  @click.stop="canToggleProgress(course, 'progress3') && toggleProgress(course, 'progress3')"
+                >
+                  <div class="step-checkbox" :class="{ checked: course.progress3, disabled: !course.progress1 || !course.progress2 }">
+                    <svg v-if="course.progress3" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <svg v-else-if="!course.progress1 || !course.progress2" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                  <div class="step-info">
+                    <span class="step-title">បញ្ចប់វគ្គសិក្សា</span>
+                    <span class="step-desc">បង្រៀនបានគ្រប់មេរៀន</span>
+                  </div>
+                </div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill" :style="{ width: getProgressPercent(course) + '%' }"></div>
+              </div>
+            </div>
+
+            <!-- View Button -->
+            <div class="course-footer">
+              <button class="btn-view-details">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                មើលព័ត៌មានលម្អិត
+              </button>
             </div>
           </div>
         </div>
@@ -207,209 +232,80 @@
 
       <!-- Empty State -->
       <div v-else class="empty-state">
-        <div class="empty-icon">📚</div>
-        <p class="empty-title">No Courses</p>
-        <p class="empty-subtitle">Get started by creating your first course</p>
-        <button class="btn-primary" @click="openAddModal">
-          <span class="plus-icon">+</span> Create Course
-        </button>
-      </div>
-    </div>
-
-    <!-- Add/Edit Course Modal -->
-    <div v-if="showAddCourseModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ editingCourse ? 'Edit Course' : 'Create New Course' }}</h2>
-          <button class="btn-close" @click="closeModal">&times;</button>
+        <div class="empty-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="10" x2="14" y2="10"></line>
+          </svg>
         </div>
-
-        <form @submit.prevent="saveCourse" class="form">
-          <div class="form-group">
-            <label class="form-label">Course Name</label>
-            <input v-model="formData.title" type="text" class="form-input" placeholder="e.g. Web Development"/>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Description</label>
-            <textarea v-model="formData.description" class="form-textarea" placeholder="Detailed description about the course"></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Level</label>
-              <select v-model="formData.level" class="form-input">
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Duration (Hours)</label>
-              <input v-model.number="formData.duration" type="number" class="form-input" placeholder="0"/>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Status</label>
-              <select v-model="formData.status" class="form-input">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Course Image</label>
-            <div class="image-upload-container">
-              <div class="image-preview-wrapper" v-if="imagePreview">
-                <img :src="imagePreview" alt="Preview" class="image-preview" />
-                <button type="button" class="btn-remove-image" @click="removeImage">&times;</button>
-              </div>
-              <div class="upload-area" v-else>
-                <input
-                  type="file"
-                  ref="fileInput"
-                  @change="handleImageUpload"
-                  accept="image/*"
-                  class="file-input"
-                  id="image-upload"
-                />
-                <label for="image-upload" class="upload-label">
-                  <svg class="upload-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                  <span class="upload-text">Click to upload image</span>
-                  <span class="upload-hint">PNG, JPG, GIF up to 5MB</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" @click="closeModal">Close</button>
-            <button type="submit" class="btn-primary" :disabled="isSaving">
-              {{ isSaving ? 'Saving...' : (editingCourse ? 'Update' : 'Create') }}
-            </button>
-          </div>
-        </form>
+        <p class="empty-title">មិនមានវគ្គសិក្សា</p>
+        <p class="empty-subtitle">មិនមានវគ្គសិក្សាសម្រាប់ផ្នែករបស់អ្នកនៅឡើយទេ។</p>
       </div>
     </div>
 
     <!-- Course View Modal -->
     <div v-if="showViewCourseModal" class="modal-overlay" @click.self="closeViewModal">
-      <div class="modal-content view-modal">
+      <div class="modal-content">
         <div class="modal-header">
-          <h2 class="modal-title">{{ viewingCourse?.title }}</h2>
+          <h2 class="modal-title">ព័ត៌មានវគ្គសិក្សា</h2>
           <button class="btn-close" @click="closeViewModal">&times;</button>
         </div>
 
-        <div class="view-modal-body">
+        <div class="modal-body">
+          <!-- Course Image -->
+          <div class="modal-image-wrapper">
+            <img :src="getCourseImage(viewingCourse)" :alt="viewingCourse?.title" class="modal-image" @error="handleImageError"/>
+            <div class="modal-status-badge" :class="{ active: viewingCourse?.status, inactive: !viewingCourse?.status }">
+              {{ viewingCourse?.status ? 'សកម្ម' : 'អសកម្ម' }}
+            </div>
+          </div>
+
           <!-- Course Info -->
-          <div class="course-info-section">
-            <img :src="viewingCourse?.image || '/public/courses/default.jpg'" :alt="viewingCourse?.title" class="view-course-image"/>
-            <p class="view-course-description">{{ viewingCourse?.description }}</p>
-            <div class="course-info-meta">
-              <span class="info-badge level">{{ viewingCourse?.level }}</span>
-              <span class="info-badge duration">{{ viewingCourse?.duration }} Hours</span>
-              <span class="info-badge" :class="viewingCourse?.status">{{ viewingCourse?.status === 'active' ? 'Active' : 'Inactive' }}</span>
-            </div>
-          </div>
-
-          <!-- Course Pages Section -->
-          <div class="pages-section">
-            <div class="pages-header">
-              <h3>Course Pages</h3>
-              <div class="overall-progress">
-                <span>Overall Progress: </span>
-                <strong>{{ calculateOverallProgress() }}%</strong>
-              </div>
+          <div class="modal-info">
+            <div class="info-header">
+              <span class="info-code">{{ viewingCourse?.courseCode || 'N/A' }}</span>
+              <span class="info-year" v-if="viewingCourse?.year">ឆ្នាំទី {{ viewingCourse.year }}</span>
             </div>
 
-            <div class="pages-list">
-              <div
-                v-for="(page, index) in coursePages"
-                :key="page.id"
-                class="page-item"
-                :class="{ 'completed': page.completed }"
-              >
-                <div class="page-number">{{ index + 1 }}</div>
-                <div class="page-content">
-                  <h4 class="page-title">{{ page.title }}</h4>
-                  <p class="page-description">{{ page.description }}</p>
-                </div>
-                <div class="page-status">
-                  <button
-                    class="status-icon-btn"
-                    :class="{ 'completed': page.completed }"
-                    @click="togglePageComplete(page.id)"
-                    title="Click to toggle completion"
-                  >
-                    <svg v-if="page.completed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <h3 class="info-title">{{ viewingCourse?.title }}</h3>
+            <p class="info-subtitle">{{ viewingCourse?.subtitle || 'មិនមានពិពណ៌នា' }}</p>
 
-            <!-- Progress Bar -->
-            <div class="pages-progress">
-              <div class="pages-progress-bar">
-                <div
-                  class="pages-progress-fill"
-                  :style="{ width: calculateOverallProgress() + '%' }"
-                ></div>
+            <!-- Details Grid -->
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">កូដវគ្គសិក្សា</span>
+                <span class="info-value">{{ viewingCourse?.courseCode || 'N/A' }}</span>
               </div>
-              <div class="pages-progress-text">
-                {{ completedPagesCount }} / {{ coursePages.length }} pages completed
+              <div class="info-item">
+                <span class="info-label">ឆ្នាំសិក្សា</span>
+                <span class="info-value">{{ viewingCourse?.year ? 'ឆ្នាំទី ' + viewingCourse.year : 'N/A' }}</span>
               </div>
-            </div>
-          </div>
-
-          <!-- Enrolled Students Progress -->
-          <div class="students-progress-section">
-            <h3>Student Progress Overview</h3>
-            <div v-if="isLoadingStudents" class="students-loading">
-              <p>Loading students...</p>
-            </div>
-            <div v-else-if="enrolledStudents.length === 0" class="students-empty">
-              <p>No students enrolled yet</p>
-            </div>
-            <div v-else class="students-list">
-              <div
-                v-for="student in enrolledStudents"
-                :key="student.id"
-                class="student-progress-item"
-              >
-                <div class="student-avatar">{{ student.name.charAt(0) }}</div>
-                <div class="student-info">
-                  <span class="student-name">{{ student.name }}</span>
-                  <div class="student-progress-bar">
-                    <div
-                      class="student-progress-fill"
-                      :style="{ width: student.progress + '%' }"
-                      :class="getProgressClass(student.progress)"
-                    ></div>
-                  </div>
-                </div>
-                <div class="student-progress-value" :class="getProgressClass(student.progress)">
-                  {{ student.progress }}%
-                </div>
+              <div class="info-item">
+                <span class="info-label">សាស្រ្តាចារ្យ</span>
+                <span class="info-value">{{ viewingCourse?.professorName || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">ផ្នែក</span>
+                <span class="info-value">{{ viewingCourse?.departmentName || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">ស្ថានភាព</span>
+                <span class="info-value status-value" :class="{ active: viewingCourse?.status, inactive: !viewingCourse?.status }">
+                  {{ viewingCourse?.status ? 'សកម្ម' : 'អសកម្ម' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">បង្កើតនៅ</span>
+                <span class="info-value">{{ formatDate(viewingCourse?.createdAt) }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" @click="closeViewModal">Close</button>
+        <div class="modal-footer">
+          <button type="button" class="btn-close-modal" @click="closeViewModal">បិទ</button>
         </div>
       </div>
     </div>
@@ -419,132 +315,102 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import {
-  getCourses,
-  getCourseStats,
-  createCourse,
-  updateCourse,
-  deleteCourse as deleteCourseApi
-} from '@/services/courses.api'
-import { getStudents } from '@/services/teacher-dashboard.api'
+  getTeacherCourses,
+  getTeacherCourseStats,
+  updateCourseProgress,
+} from '@/services/teacher-courses.api'
 
 const searchQuery = ref('')
-const selectedLevel = ref('')
+const selectedYear = ref('')
 const selectedStatus = ref('')
-const showAddCourseModal = ref(false)
 const showViewCourseModal = ref(false)
-const editingCourse = ref(null)
 const viewingCourse = ref(null)
 const isLoading = ref(false)
-const isSaving = ref(false)
+const isUpdatingProgress = ref(false)
 const error = ref(null)
-const imagePreview = ref(null)
-const fileInput = ref(null)
-
-// Course pages data (simulated - each course has pages)
-const coursePages = ref([
-  { id: 1, title: 'Introduction to the Course', description: 'Overview of course objectives and structure', completed: false },
-  { id: 2, title: 'Core Concepts', description: 'Fundamental concepts and principles', completed: false },
-  { id: 3, title: 'Practical Applications', description: 'Hands-on exercises and real-world examples', completed: false }
-])
-
-// Enrolled students fetched from API
-const enrolledStudents = ref([])
-const isLoadingStudents = ref(false)
 
 // Courses data from API
 const courses = ref([])
 const stats = ref({
   totalCourses: 0,
   activeCourses: 0,
-  totalStudents: 0,
-  totalHours: 0
+  inactiveCourses: 0,
 })
 
-const formData = ref({
-  title: '',
-  description: '',
-  level: 'Beginner',
-  duration: 0
+// Progress stats computed from courses
+const progressStats = computed(() => {
+  if (courses.value.length === 0) {
+    return { averageProgress: 0, completedCourses: 0 }
+  }
+
+  let totalProgress = 0
+  let completedCourses = 0
+
+  courses.value.forEach(course => {
+    const courseProgress = getProgressPercent(course)
+    totalProgress += courseProgress
+    if (courseProgress === 100) completedCourses++
+  })
+
+  return {
+    averageProgress: Math.round(totalProgress / courses.value.length),
+    completedCourses,
+  }
 })
 
 const filteredCourses = computed(() => {
-  return courses.value.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          course.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesLevel = !selectedLevel.value || course.level === selectedLevel.value
-    const matchesStatus = !selectedStatus.value || course.status === selectedStatus.value
-    return matchesSearch && matchesLevel && matchesStatus
+  return courses.value.filter((course) => {
+    const matchesSearch =
+      course.title?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      course.subtitle?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      course.courseCode?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      course.professorName?.toLowerCase().includes(searchQuery.value.toLowerCase())
+
+    // Year filter - empty string means show all, convert to number for comparison
+    let matchesYear = true
+    if (selectedYear.value !== '') {
+      matchesYear = Number(course.year) === Number(selectedYear.value)
+    }
+
+    // Status filter - convert string to boolean for comparison
+    let matchesStatus = true
+    if (selectedStatus.value !== '') {
+      const filterStatus = selectedStatus.value === 'true'
+      matchesStatus = course.status === filterStatus
+    }
+
+    return matchesSearch && matchesYear && matchesStatus
   })
 })
 
-const averageProgress = computed(() => {
-  if (courses.value.length === 0) return 0
-  const total = courses.value.reduce((sum, c) => sum + (c.progress || 0), 0)
-  return Math.round(total / courses.value.length)
-})
-const totalHours = computed(() => stats.value.totalHours)
+// Helper functions
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-const completedPagesCount = computed(() => {
-  return coursePages.value.filter(p => p.completed).length
-})
-
-const calculateOverallProgress = () => {
-  if (coursePages.value.length === 0) return 0
-  return Math.round((completedPagesCount.value / coursePages.value.length) * 100)
-}
-
-const getProgressClass = (progress) => {
-  if (progress >= 100) return 'complete'
-  if (progress >= 50) return 'in-progress'
-  return 'started'
-}
-
-// Toggle page completion status (teacher can check/uncheck)
-const togglePageComplete = (pageId) => {
-  const page = coursePages.value.find(p => p.id === pageId)
-  if (page) {
-    page.completed = !page.completed
-    // Update course progress based on pages completed
-    updateCourseProgress()
+const getCourseImage = (course) => {
+  if (!course) return '/courses/default.jpg'
+  if (course.image) {
+    // If image starts with http, use as is
+    if (course.image.startsWith('http')) return course.image
+    // If it's a relative path like /uploads/courses/xxx.jpg, prepend the API base URL
+    if (course.image.startsWith('/')) return `${API_BASE_URL}${course.image}`
+    // Otherwise just return the path
+    return `${API_BASE_URL}/uploads/courses/${course.image}`
   }
+  return '/courses/default.jpg'
 }
 
-// Update course progress when pages are toggled
-const updateCourseProgress = async () => {
-  if (!viewingCourse.value) return
-  const progress = calculateOverallProgress()
-  try {
-    await updateCourse(viewingCourse.value.id, { progress })
-    // Update local course data
-    const courseIndex = courses.value.findIndex(c => c.id === viewingCourse.value.id)
-    if (courseIndex !== -1) {
-      courses.value[courseIndex].progress = progress
-    }
-    viewingCourse.value.progress = progress
-  } catch (err) {
-    console.error('Error updating course progress:', err)
-  }
+const handleImageError = (e) => {
+  e.target.src = '/courses/default.jpg'
 }
 
-// Fetch students from API
-const fetchEnrolledStudents = async () => {
-  isLoadingStudents.value = true
-  try {
-    const response = await getStudents({ status: 'ACTIVE' })
-    // Map students with simulated progress based on course progress
-    const courseProgress = viewingCourse.value?.progress || 0
-    enrolledStudents.value = (response.students || response || []).map((student, index) => ({
-      id: student.id,
-      name: student.fullName,
-      // Calculate varied progress for each student based on course progress
-      progress: Math.min(100, Math.max(0, courseProgress + (index % 3 - 1) * 20))
-    }))
-  } catch (err) {
-    console.error('Error fetching students:', err)
-    enrolledStudents.value = []
-  } finally {
-    isLoadingStudents.value = false
-  }
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('km-KH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 // Fetch courses and stats from API
@@ -553,42 +419,26 @@ const fetchCourses = async () => {
   error.value = null
   try {
     const [coursesResponse, statsResponse] = await Promise.all([
-      getCourses(),
-      getCourseStats()
+      getTeacherCourses(),
+      getTeacherCourseStats(),
     ])
-    courses.value = coursesResponse
-    stats.value = statsResponse
+    courses.value = Array.isArray(coursesResponse) ? coursesResponse : []
+    stats.value = statsResponse || {
+      totalCourses: 0,
+      activeCourses: 0,
+      inactiveCourses: 0,
+    }
   } catch (err) {
     console.error('Error fetching courses:', err)
-    error.value = 'Failed to load courses'
+    error.value = 'មិនអាចផ្ទុកវគ្គសិក្សាបានទេ។ សូមព្យាយាមម្តងទៀត។'
   } finally {
     isLoading.value = false
   }
 }
 
-const viewCourse = async (course) => {
+const viewCourse = (course) => {
   viewingCourse.value = course
-  // Initialize pages based on course (3 pages per course)
-  const totalPages = 3
-  const completedPages = Math.floor((course.progress / 100) * totalPages)
-
-  const pageTemplates = [
-    { title: 'Introduction', description: 'Overview of course objectives and structure' },
-    { title: 'Core Concepts', description: 'Fundamental concepts and principles' },
-    { title: 'Practical Applications', description: 'Hands-on exercises and real-world examples' }
-  ]
-
-  coursePages.value = pageTemplates.map((page, index) => ({
-    id: index + 1,
-    title: page.title,
-    description: page.description,
-    completed: index < completedPages
-  }))
-
   showViewCourseModal.value = true
-
-  // Fetch real students from API
-  await fetchEnrolledStudents()
 }
 
 const closeViewModal = () => {
@@ -596,111 +446,61 @@ const closeViewModal = () => {
   viewingCourse.value = null
 }
 
-const editCourse = (course) => {
-  editingCourse.value = course
-  formData.value = {
-    title: course.title,
-    description: course.description,
-    level: course.level,
-    duration: course.duration,
-    image: course.image || '',
-    status: course.status
-  }
-  // Set preview if editing and has existing image
-  imagePreview.value = course.image || null
-  showAddCourseModal.value = true
+// Progress helper functions
+const getProgressPercent = (course) => {
+  if (!course) return 0
+  let count = 0
+  if (course.progress1) count++
+  if (course.progress2) count++
+  if (course.progress3) count++
+  return Math.round((count / 3) * 100)
 }
 
-const deleteCourseHandler = async (id) => {
-  if (confirm('Are you sure you want to delete this course?')) {
-    try {
-      await deleteCourseApi(id)
-      await fetchCourses()
-    } catch (err) {
-      console.error('Error deleting course:', err)
-      alert('Failed to delete course')
+// Check if a progress step can be toggled (enforce sequential order)
+const canToggleProgress = (course, progressKey) => {
+  if (progressKey === 'progress1') {
+    return true // Can always toggle progress 1
+  }
+  if (progressKey === 'progress2') {
+    return course.progress1 // Can only toggle progress 2 if progress 1 is checked
+  }
+  if (progressKey === 'progress3') {
+    return course.progress1 && course.progress2 // Can only toggle progress 3 if 1 and 2 are checked
+  }
+  return false
+}
+
+const toggleProgress = async (course, progressKey) => {
+  if (isUpdatingProgress.value) return
+
+  // Check if this step can be toggled based on previous steps
+  if (!canToggleProgress(course, progressKey)) {
+    return
+  }
+
+  isUpdatingProgress.value = true
+  const newValue = !course[progressKey]
+
+  // If unchecking, also uncheck subsequent steps
+  const updates = { [progressKey]: newValue }
+  if (!newValue) {
+    if (progressKey === 'progress1') {
+      updates.progress2 = false
+      updates.progress3 = false
+    } else if (progressKey === 'progress2') {
+      updates.progress3 = false
     }
   }
-}
 
-const openAddModal = () => {
-  editingCourse.value = null
-  formData.value = {
-    title: '',
-    description: '',
-    level: 'Beginner',
-    duration: 0,
-    image: '',
-    status: 'active'
-  }
-  imagePreview.value = null
-  showAddCourseModal.value = true
-}
-
-const saveCourse = async () => {
-  isSaving.value = true
   try {
-    if (editingCourse.value) {
-      // Update existing course
-      await updateCourse(editingCourse.value.id, formData.value)
-    } else {
-      // Create new course
-      await createCourse(formData.value)
-    }
-    await fetchCourses()
-    closeModal()
+    await updateCourseProgress(course.id, updates)
+    // Update local state
+    Object.assign(course, updates)
   } catch (err) {
-    console.error('Error saving course:', err)
-    alert('Failed to save course')
+    console.error('Error updating progress:', err)
+    // Could add a toast notification here
   } finally {
-    isSaving.value = false
-  }
-}
-
-const closeModal = () => {
-  showAddCourseModal.value = false
-  editingCourse.value = null
-  formData.value = {
-    title: '',
-    description: '',
-    level: 'Beginner',
-    duration: 0,
-    image: '',
-    status: 'active'
-  }
-  imagePreview.value = null
-}
-
-const handleImageUpload = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB')
-      return
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file')
-      return
-    }
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target.result
-      formData.value.image = e.target.result // Store base64 for now
-    }
-    reader.readAsDataURL(file)
-  }
-}
-
-const removeImage = () => {
-  imagePreview.value = null
-  formData.value.image = ''
-  if (fileInput.value) {
-    fileInput.value.value = ''
+    isUpdatingProgress.value = false
   }
 }
 
@@ -713,984 +513,775 @@ onMounted(() => {
 <style scoped>
 .courses-container {
   width: 100%;
-  background: #f9fafb;
-  min-height: 100vh;
+  height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
+/* Header Section */
 .header-section {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
-.header-top {
-  margin-bottom: 30px;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.header-text {
+  flex: 1;
 }
 
 .page-title {
   font-size: 32px;
-  font-weight: 700;
-  color: var(--purple-500);
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0 0 8px 0;
 }
 
 .page-subtitle {
-  font-size: 14px;
-  color: #718096;
+  font-size: 15px;
+  color: #64748b;
   margin: 0;
 }
 
-.header-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .search-box {
-  flex: 1;
   position: relative;
-  max-width: 300px;
+  min-width: 300px;
 }
 
 .search-icon {
   position: absolute;
-  left: 12px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  opacity: 0.6;
+  color: #94a3b8;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 12px 10px 40px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 14px 16px 14px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 14px;
-  outline: none;
-  transition: all 0.3s;
+  background: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .search-input:focus {
-  border-color: #5d5fef;
-  box-shadow: 0 0 0 3px rgba(93, 95, 239, 0.1);
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
-.btn-primary {
-  background-color: #5d5fef;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.btn-primary:hover {
-  background-color: #4c4edb;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(93, 95, 239, 0.3);
-}
-
-.plus-icon {
-  font-size: 18px;
-}
-
-.btn-secondary {
-  background-color: #e2e8f0;
-  color: #2d3748;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-secondary:hover {
-  background-color: #cbd5e0;
-}
-
+/* Stats Section */
 .stats-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .stat-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 24px;
   display: flex;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  flex-shrink: 0;
 }
 
 .stat-icon.total {
-  background-color: #f0f1ff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .stat-icon.active {
-  background-color: #f0fdf4;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.stat-icon.inactive {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
 }
 
 .stat-icon.progress {
-  background-color: #fef3c7;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.stat-content {
+  flex: 1;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #718096;
+  color: #64748b;
   margin: 0 0 4px 0;
+  font-weight: 500;
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1a202c;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
   margin: 0;
 }
 
+/* Filters Section */
 .filters-section {
   display: flex;
   gap: 16px;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .filter-label {
   font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
+  color: #475569;
 }
 
 .filter-select {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
   font-size: 14px;
-  background-color: white;
+  background: white;
+  min-width: 160px;
   cursor: pointer;
-  transition: all 0.3s;
-  min-width: 140px;
+  transition: all 0.2s ease;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #5d5fef;
-  box-shadow: 0 0 0 3px rgba(93, 95, 239, 0.1);
+  border-color: #667eea;
 }
 
+/* Courses Grid */
 .courses-grid {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 400px;
 }
 
 .courses-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 28px;
 }
 
 .course-card {
-  border-radius: 12px;
-  overflow: hidden;
   background: white;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .course-card:hover {
-  border-color: #5d5fef;
-  box-shadow: 0 8px 24px rgba(93, 95, 239, 0.15);
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 .course-image-wrapper {
   position: relative;
-  width: 100%;
-  height: 180px;
+  height: 200px;
   overflow: hidden;
-  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .course-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-.course-badge {
+.course-card:hover .course-image {
+  transform: scale(1.05);
+}
+
+.course-status-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 6px 12px;
-  border-radius: 6px;
+  top: 16px;
+  right: 16px;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: white;
-  background-color: #22c55e;
+  backdrop-filter: blur(8px);
 }
 
-.course-badge.inactive {
-  background-color: #ef4444;
-}
-
-.course-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.course-card:hover .course-overlay {
-  opacity: 1;
-}
-
-.btn-view,
-.btn-edit,
-.btn-delete {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.course-status-badge.active {
+  background: rgba(16, 185, 129, 0.9);
   color: white;
 }
 
-.btn-view {
-  background-color: #3b82f6;
+.course-status-badge.inactive {
+  background: rgba(107, 114, 128, 0.9);
+  color: white;
 }
 
-.btn-view:hover {
-  background-color: #2563eb;
-}
-
-.btn-edit {
-  background-color: #10b981;
-}
-
-.btn-edit:hover {
-  background-color: #059669;
-}
-
-.btn-delete {
-  background-color: #ef4444;
-}
-
-.btn-delete:hover {
-  background-color: #dc2626;
+.course-year-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  color: #667eea;
+  backdrop-filter: blur(8px);
 }
 
 .course-content {
-  padding: 16px;
+  padding: 24px;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.course-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Consolas', monospace;
 }
 
 .course-title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1a202c;
+  color: #1e293b;
   margin: 0 0 8px 0;
-  line-height: 1.4;
-}
-
-.course-description {
-  font-size: 13px;
-  color: #718096;
-  margin: 0 0 12px 0;
+  line-height: 1.3;
   display: -webkit-box;
-  line-clamp: 2;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+.course-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 42px;
+}
+
 .course-meta {
   display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #718096;
+  gap: 10px;
 }
 
 .meta-icon {
-  font-size: 14px;
+  color: #94a3b8;
+  flex-shrink: 0;
 }
 
 .meta-text {
+  font-size: 13px;
+  color: #475569;
   font-weight: 500;
 }
 
-.course-footer {
+/* Progress Section */
+.course-progress {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.progress-percent {
+  font-size: 13px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-step {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-step:hover {
+  border-color: #667eea;
+  background: #f8fafc;
+}
+
+.progress-step.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background: #f1f5f9;
+}
+
+.progress-step.disabled:hover {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+}
+
+.progress-step.completed {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.step-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid #d1d5db;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.step-checkbox.checked {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+  color: white;
+}
+
+.step-checkbox.disabled {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.step-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.step-desc {
+  font-size: 10px;
+  color: #64748b;
 }
 
 .progress-bar {
-  flex: 1;
   height: 6px;
-  background-color: #e2e8f0;
+  background: #e2e8f0;
   border-radius: 3px;
   overflow: hidden;
 }
 
-.progress-fill {
+.progress-bar-fill {
   height: 100%;
-  background-color: #5d5fef;
-  transition: width 0.3s;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
 
-.progress-text {
-  font-size: 12px;
-  color: #718096;
-  font-weight: 600;
-  white-space: nowrap;
+.course-footer {
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 8px 0;
-}
-
-.empty-subtitle {
+.btn-view-details {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
   font-size: 14px;
-  color: #718096;
-  margin: 0 0 24px 0;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.loading-state,
+.btn-view-details:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
 .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
   text-align: center;
-  padding: 60px 20px;
-  color: #718096;
 }
 
-.error-state {
-  color: #e53e3e;
+.error-icon {
+  font-size: 56px;
+  margin-bottom: 20px;
 }
 
 .btn-retry {
-  margin-top: 16px;
-  padding: 8px 20px;
-  background: var(--purple-500);
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  border-radius: 10px;
   font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-retry:hover {
-  background: var(--purple-600);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+}
+
+.empty-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.empty-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background: white;
-  border-radius: 12px;
+  border-radius: 24px;
   width: 100%;
-  max-width: 500px;
+  max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 24px 28px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .modal-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: #1a202c;
+  color: #1e293b;
   margin: 0;
 }
 
 .btn-close {
-  background: none;
+  width: 40px;
+  height: 40px;
   border: none;
-  font-size: 28px;
-  color: #718096;
+  background: #f1f5f9;
+  border-radius: 10px;
+  font-size: 24px;
+  color: #64748b;
   cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-close:hover {
-  color: #1a202c;
-  transform: scale(1.1);
+  background: #e2e8f0;
+  color: #1e293b;
 }
 
-.form {
-  padding: 24px;
+.modal-body {
+  padding: 0;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 8px;
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: all 0.3s;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #5d5fef;
-  box-shadow: 0 0 0 3px rgba(93, 95, 239, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.image-upload-container {
-  width: 100%;
-}
-
-.image-preview-wrapper {
+.modal-image-wrapper {
   position: relative;
-  width: 100%;
-  height: 200px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid #e2e8f0;
+  height: 220px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.image-preview {
+.modal-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.btn-remove-image {
+.modal-status-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-remove-image:hover {
-  background-color: #dc2626;
-  transform: scale(1.1);
-}
-
-.upload-area {
-  position: relative;
-  width: 100%;
-  min-height: 200px;
-  border: 2px dashed #cbd5e0;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  background-color: #f7fafc;
-}
-
-.upload-area:hover {
-  border-color: #5d5fef;
-  background-color: #f0f1ff;
-}
-
-.file-input {
-  display: none;
-}
-
-.upload-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 20px;
-  text-align: center;
-}
-
-.upload-icon {
-  color: #5d5fef;
-}
-
-.upload-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.upload-hint {
-  font-size: 12px;
-  color: #718096;
-}
-
-/* View Course Modal Styles */
-.view-modal {
-  max-width: 700px;
-}
-
-.view-modal-body {
-  padding: 24px;
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-.course-info-section {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.view-course-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.view-course-description {
-  font-size: 14px;
-  color: #4a5568;
-  line-height: 1.6;
-  margin: 0 0 16px 0;
-}
-
-.course-info-meta {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.info-badge {
-  padding: 6px 14px;
+  bottom: 16px;
+  right: 16px;
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.info-badge.level {
-  background-color: #f0f1ff;
-  color: #5d5fef;
+.modal-status-badge.active {
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
 }
 
-.info-badge.duration {
-  background-color: #fef3c7;
-  color: #d97706;
+.modal-status-badge.inactive {
+  background: rgba(107, 114, 128, 0.95);
+  color: white;
 }
 
-.info-badge.active {
-  background-color: #d1fae5;
-  color: #059669;
+.modal-info {
+  padding: 28px;
 }
 
-.info-badge.inactive {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-/* Pages Section */
-.pages-section {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.pages-header {
+.info-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
-.pages-header h3 {
-  font-size: 16px;
+.info-code {
+  font-size: 13px;
   font-weight: 700;
-  color: #1a202c;
-  margin: 0;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Consolas', monospace;
 }
 
-.overall-progress {
-  font-size: 14px;
-  color: #4a5568;
-}
-
-.overall-progress strong {
-  color: #5d5fef;
-  font-weight: 700;
-}
-
-.pages-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.page-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s;
-}
-
-.page-item.completed {
-  background: #f0fdf4;
-  border-color: #86efac;
-}
-
-.page-number {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: #4a5568;
-  flex-shrink: 0;
-}
-
-.page-item.completed .page-number {
-  background: #22c55e;
-  color: white;
-}
-
-.page-content {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 14px;
+.info-year {
+  font-size: 13px;
   font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 4px 0;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 6px 12px;
+  border-radius: 8px;
 }
 
-.page-description {
-  font-size: 12px;
-  color: #718096;
-  margin: 0;
+.info-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
 }
 
-.page-status {
-  flex-shrink: 0;
+.info-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 28px 0;
+  line-height: 1.6;
 }
 
-.status-icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  border: 2px solid #cbd5e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.status-icon-btn:hover {
-  background: #d1fae5;
-  border-color: #86efac;
-  color: #22c55e;
-  transform: scale(1.1);
-}
-
-.status-icon-btn.completed {
-  background: #22c55e;
-  border-color: #16a34a;
-  color: white;
-}
-
-.status-icon-btn.completed:hover {
-  background: #ef4444;
-  border-color: #dc2626;
-  color: white;
-}
-
-.status-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #a0aec0;
-}
-
-.status-icon.completed {
-  background: #22c55e;
-  color: white;
-}
-
-/* Students loading and empty states */
-.students-loading,
-.students-empty {
-  text-align: center;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   padding: 24px;
-  color: #718096;
-  font-size: 14px;
+  background: #f8fafc;
+  border-radius: 16px;
 }
 
-.pages-progress {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.pages-progress-bar {
-  flex: 1;
-  height: 10px;
-  background: #e2e8f0;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.pages-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #5d5fef, #7c3aed);
-  border-radius: 5px;
-  transition: width 0.5s ease;
-}
-
-.pages-progress-text {
-  font-size: 14px;
-  color: #4a5568;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Students Progress Section */
-.students-progress-section h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 16px 0;
-}
-
-.students-list {
+.info-item {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
-.student-progress-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-radius: 10px;
-}
-
-.student-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #5d5fef, #7c3aed);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.student-info {
-  flex: 1;
-}
-
-.student-name {
-  font-size: 14px;
+.info-label {
+  font-size: 12px;
+  color: #94a3b8;
   font-weight: 600;
-  color: #1a202c;
-  display: block;
-  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.student-progress-bar {
-  height: 8px;
+.info-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.status-value.active {
+  color: #10b981;
+}
+
+.status-value.inactive {
+  color: #6b7280;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 28px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-close-modal {
+  padding: 12px 32px;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-close-modal:hover {
   background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
 }
 
-.student-progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-}
-
-.student-progress-fill.complete {
-  background: linear-gradient(90deg, #22c55e, #16a34a);
-}
-
-.student-progress-fill.in-progress {
-  background: linear-gradient(90deg, #f59e0b, #d97706);
-}
-
-.student-progress-fill.started {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-}
-
-.student-progress-value {
-  font-size: 14px;
-  font-weight: 700;
-  min-width: 50px;
-  text-align: right;
-}
-
-.student-progress-value.complete {
-  color: #22c55e;
-}
-
-.student-progress-value.in-progress {
-  color: #f59e0b;
-}
-
-.student-progress-value.started {
-  color: #ef4444;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .header-actions {
+  .courses-container {
+    padding: 20px;
+  }
+
+  .header-content {
     flex-direction: column;
-    align-items: stretch;
   }
 
   .search-box {
-    max-width: 100%;
-  }
-
-  .btn-primary {
-    justify-content: center;
+    width: 100%;
+    min-width: unset;
   }
 
   .stats-section {
@@ -1698,32 +1289,11 @@ onMounted(() => {
   }
 
   .courses-list {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  }
-
-  .form-row {
     grid-template-columns: 1fr;
   }
 
-  .filters-section {
-    flex-direction: column;
-  }
-
-  .filter-select {
-    min-width: 100%;
-  }
-
-  .view-modal {
-    max-width: 100%;
-  }
-
-  .pages-progress {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .pages-progress-text {
-    text-align: center;
+  .info-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

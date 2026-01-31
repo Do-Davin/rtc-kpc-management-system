@@ -10,8 +10,14 @@ import { Department } from '../departments/entities/department.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
+/**
+ * Admin Courses Service
+ * Handles course CRUD operations for administrators.
+ * Admins can create, update, and delete courses.
+ * Courses are linked to departments.
+ */
 @Injectable()
-export class CoursesService {
+export class AdminCoursesService {
   constructor(
     @InjectRepository(Course)
     private courseRepo: Repository<Course>,
@@ -31,15 +37,17 @@ export class CoursesService {
       );
     }
 
-    // Check if course code already exists
-    const existingCourse = await this.courseRepo.findOneBy({
-      courseCode: dto.courseCode,
-    });
+    // Check if course code already exists (if provided)
+    if (dto.courseCode) {
+      const existingCourse = await this.courseRepo.findOneBy({
+        courseCode: dto.courseCode,
+      });
 
-    if (existingCourse) {
-      throw new ConflictException(
-        `Course with code ${dto.courseCode} already exists`,
-      );
+      if (existingCourse) {
+        throw new ConflictException(
+          `Course with code ${dto.courseCode} already exists`,
+        );
+      }
     }
 
     const newCourse = this.courseRepo.create({

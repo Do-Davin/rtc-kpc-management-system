@@ -446,7 +446,7 @@ import {
 } from '@/services/attendance.api'
 import adminService from '@/services/admin.service'
 import { getStudents } from '@/services/teacher-dashboard.api'
-import { getCourses } from '@/services/courses.api'
+import { getTeacherCourses } from '@/services/teacher-courses.api'
 
 // Form state
 const form = ref({
@@ -560,7 +560,7 @@ const generateQR = async () => {
   // Get selected course details
   const selectedCourse = courses.value.find(c => c.id === form.value.courseId)
   const department = selectedCourse?.department || ''
-  const year = selectedCourse?.year || 1
+  const year = String(selectedCourse?.year || 1)
 
   // Auto-generate session name if not provided
   const sessionName = form.value.sessionName || `Session ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
@@ -941,13 +941,13 @@ const loadDepartments = async () => {
 const loadCourses = async () => {
   isLoadingCourses.value = true
   try {
-    const coursesData = await getCourses()
+    const coursesData = await getTeacherCourses()
     // Map courses to expected format for the attendance form
     courses.value = (coursesData || []).map(course => ({
       id: course.id,
       name: course.title || course.name,
       department: course.departmentId,
-      year: course.level || 1
+      year: course.year || 1
     }))
   } catch (err) {
     console.error('Failed to load courses:', err)

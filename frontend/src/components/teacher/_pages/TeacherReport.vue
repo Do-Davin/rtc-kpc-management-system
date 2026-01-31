@@ -454,7 +454,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { getDashboardStats, getStudents, getAttendanceTrend } from '@/services/teacher-dashboard.api';
-import { getCourseStats } from '@/services/courses.api';
+import { getTeacherCourseStats } from '@/services/teacher-courses.api';
 
 const disableTransitions = ref(false);
 const isLoading = ref(true);
@@ -805,7 +805,7 @@ const fetchReportData = async () => {
     // Fetch all data in parallel
     const [dashboardStats, courseStats, students, trendData] = await Promise.all([
       getDashboardStats(30),
-      getCourseStats(),
+      getTeacherCourseStats(),
       getStudents({ status: 'ACTIVE' }),
       getAttendanceTrend(30)
     ]);

@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
-import { Course } from '../../course/entity/course.entity';
+import { Course } from '../../admin-courses/entity/course.entity';
 
 export enum DepartmentStatus {
   ACTIVE = 'ACTIVE',

@@ -34,7 +34,7 @@ const form = ref({
   title: '',
   courseCode: '',
   subtitle: '',
-  year: new Date().getFullYear(),
+  year: 1,
   status: true,
   departmentId: '',
   professorName: '',
@@ -97,7 +97,7 @@ const openCreate = () => {
     title: '',
     courseCode: '',
     subtitle: '',
-    year: new Date().getFullYear(),
+    year: 1,
     status: true,
     departmentId: '',
     professorName: '',
@@ -361,7 +361,13 @@ onMounted(fetchData)
           <div class="form-row">
             <div class="form-group half">
               <label>Year *</label>
-              <input v-model="form.year" type="number" min="2000" max="2100" required />
+              <select v-model="form.year" required>
+                <option :value="1">Year 1</option>
+                <option :value="2">Year 2</option>
+                <option :value="3">Year 3</option>
+                <option :value="4">Year 4</option>
+                <option :value="5">Year 5</option>
+              </select>
             </div>
             <div class="form-group half">
               <label>Status</label>
