@@ -1,3 +1,4 @@
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import adminService from '@/services/admin.service'
@@ -108,7 +109,7 @@ const handleSubmit = async () => {
         departmentId: form.value.departmentId,
         status: form.value.status,
     }
-    
+
     if (isEditing.value) {
       await adminService.updateTeacher(editId.value, payload)
       showModal.value = false
@@ -237,7 +238,7 @@ onMounted(loadData)
                  <input v-model="form.employeeId" type="text" required />
               </div>
            </div>
-          
+
            <div class="form-row">
              <div class="form-group half">
                  <label>Email Address</label>
@@ -518,7 +519,7 @@ onMounted(loadData)
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 500px; 
+  max-width: 500px;
 }
 .form-group {
   margin-bottom: 1rem;
