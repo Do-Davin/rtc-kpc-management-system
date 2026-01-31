@@ -19,7 +19,7 @@
         <!-- Book Details Sidebar -->
         <div class="book-details">
           <div class="book-cover-large">
-            <img :src="book.cover" :alt="book.title" />
+            <img :src="getCoverUrl(book.cover)" :alt="book.title" />
           </div>
           <h2 class="book-title-large">{{ book.title }}</h2>
           <p class="book-author-large">By {{ book.author }}</p>
@@ -39,10 +39,15 @@
           </div>
           <div class="book-description">
             <h3>Description</h3>
-            <p>{{ book.description }}</p>
+            <p>{{ book.description || 'No description available' }}</p>
           </div>
           <div class="action-buttons">
-            <button class="btn-primary">
+            <a
+              v-if="book.bookUrl"
+              :href="book.bookUrl"
+              target="_blank"
+              class="btn-primary"
+            >
               <svg
                 width="18"
                 height="18"
@@ -51,13 +56,27 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
               </svg>
-              Download PDF
+              Buy Book
+            </a>
+            <span v-else class="no-url-text">No book URL available</span>
+            <button class="btn-edit" @click="$emit('edit', book)">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit
             </button>
-            <button class="btn-secondary">
+            <button class="btn-danger" @click="$emit('delete', book)">
               <svg
                 width="18"
                 height="18"
@@ -66,9 +85,10 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
-              Bookmark
+              Delete
             </button>
           </div>
         </div>
@@ -134,7 +154,18 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'edit', 'delete']);
+
+// Get the full cover image URL for display
+const getCoverUrl = (cover) => {
+  if (!cover) return '/images/default-book.svg';
+  // If it's already a full URL or data URL, return as is
+  if (cover.startsWith('http') || cover.startsWith('data:')) {
+    return cover;
+  }
+  // Otherwise, prepend the API base URL
+  return `http://localhost:3000${cover}`;
+};
 
 const currentPage = ref(1);
 const totalPages = ref(3);
@@ -370,7 +401,7 @@ watch(() => props.book, (newBook) => {
   gap: 12px;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary, .btn-secondary, .btn-edit, .btn-danger {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -382,6 +413,7 @@ watch(() => props.book, (newBook) => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .btn-primary {
@@ -393,6 +425,33 @@ watch(() => props.book, (newBook) => {
   background: #4a4cd4;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(93, 95, 239, 0.3);
+}
+
+.btn-edit {
+  background: #f0f2ff;
+  color: #5d5fef;
+}
+
+.btn-edit:hover {
+  background: #e0e3ff;
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: #fee2e2;
+  transform: translateY(-2px);
+}
+
+.no-url-text {
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
 }
 
 .btn-secondary {

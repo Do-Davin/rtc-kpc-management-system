@@ -1,7 +1,7 @@
 <template>
   <div class="book-card">
     <div class="book-cover">
-      <img :src="book.cover" :alt="book.title" />
+      <img :src="getCoverUrl(book.cover)" :alt="book.title" />
       <div class="book-overlay">
         <button @click="$emit('view', book)" class="view-btn">
           View Book
@@ -30,6 +30,17 @@ defineProps({
 });
 
 defineEmits(['view']);
+
+// Get the full cover image URL for display
+const getCoverUrl = (cover) => {
+  if (!cover) return '/images/default-book.svg';
+  // If it's already a full URL or data URL, return as is
+  if (cover.startsWith('http') || cover.startsWith('data:')) {
+    return cover;
+  }
+  // Otherwise, prepend the API base URL
+  return `http://localhost:3000${cover}`;
+};
 </script>
 
 <style scoped>

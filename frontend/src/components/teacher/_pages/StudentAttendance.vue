@@ -12,37 +12,19 @@
         <h2>Start Attendance Session</h2>
 
         <div class="form-grid">
-          <!-- Department Select -->
-          <div class="form-group">
-            <label for="department">Department <span class="required">*</span></label>
-            <select id="department" v-model="form.department" @change="onDepartmentChange">
-              <option value="">Select Department</option>
-              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                {{ dept.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Year Select -->
-          <div class="form-group">
-            <label for="year">Year <span class="required">*</span></label>
-            <select id="year" v-model="form.year" @change="onYearChange">
-              <option value="">Select Year</option>
-              <option v-for="yr in years" :key="yr" :value="yr">
-                Year {{ yr }}
-              </option>
-            </select>
-          </div>
-
           <!-- Course Select -->
-          <div class="form-group">
+          <div class="form-group full-width">
             <label for="course">Course <span class="required">*</span></label>
-            <select id="course" v-model="form.courseId" @change="onCourseChange">
-              <option value="">Select Course</option>
+            <select id="course" v-model="form.courseId" @change="onCourseChange" :disabled="isLoadingCourses">
+              <option value="">{{ isLoadingCourses ? 'Loading courses...' : 'Select Course' }}</option>
               <option v-for="course in filteredCourses" :key="course.id" :value="course.id">
                 {{ course.name }}
               </option>
             </select>
+            <small v-if="filteredCourses.length === 0 && !isLoadingCourses" class="hint warning">
+              <Info :size="14" />
+              No courses found. Please add courses first.
+            </small>
           </div>
 
           <!-- Session Name -->
@@ -61,7 +43,7 @@
           </div>
 
           <!-- Session Password -->
-          <div class="form-group full-width">
+          <div class="form-group">
             <label for="password">Session Password <span class="required">*</span></label>
             <div class="password-input">
               <input
@@ -165,7 +147,9 @@
                 <div class="student-avatar">
                   <User :size="16" />
                 </div>
-                <span>{{ record.student?.email || 'Unknown' }}</span>
+                <div class="student-details-col">
+                  <span class="student-name">{{ record.student?.fullName || record.student?.email || 'Unknown' }}</span>
+                </div>
               </div>
               <div class="col-course">{{ record.session?.courseName || 'N/A' }}</div>
               <div class="col-session">{{ record.session?.sessionName || 'N/A' }}</div>
@@ -364,7 +348,7 @@
               id="studentSearch"
               v-model="studentSearch"
               type="text"
-              placeholder="Search by email..."
+              placeholder="Search by name, email, or ID..."
             />
           </div>
 
@@ -378,7 +362,10 @@
                 <div class="student-avatar">
                   <User :size="16" />
                 </div>
-                <span class="student-email">{{ student.email }}</span>
+                <div class="student-details">
+                  <span class="student-name">{{ student.fullName }}</span>
+                  <span class="student-email">{{ student.email }} · {{ student.studentId }}</span>
+                </div>
               </div>
               <div class="attendance-buttons">
                 <button
@@ -457,11 +444,12 @@ import {
   getRecentRecords,
   updateAttendanceRecord
 } from '@/services/attendance.api'
+import adminService from '@/services/admin.service'
+import { getStudents } from '@/services/teacher-dashboard.api'
+import { getCourses } from '@/services/courses.api'
 
 // Form state
 const form = ref({
-  department: '',
-  year: '',
   courseId: '',
   courseName: '',
   sessionName: '',
@@ -507,38 +495,24 @@ const students = ref([])
 const showManualModal = ref(false)
 const studentSearch = ref('')
 
-// Mock data (replace with API calls in production)
-const departments = ref([
-  { id: 'CS', name: 'Computer Science' },
-  { id: 'IT', name: 'Information Technology' },
-  { id: 'EE', name: 'Electrical Engineering' },
-  { id: 'ME', name: 'Mechanical Engineering' }
-])
+// Data from API (fetched on mount)
+const departments = ref([])
+const isLoadingDepartments = ref(false)
+const isLoadingCourses = ref(false)
 
-const years = ref(['1', '2', '3', '4'])
+const years = ref([1, 2, 3, 4, 5])
 
-const courses = ref([
-  { id: 'CS101', name: 'Introduction to Programming', department: 'CS', year: '1' },
-  { id: 'CS201', name: 'Data Structures', department: 'CS', year: '2' },
-  { id: 'CS301', name: 'Algorithms', department: 'CS', year: '3' },
-  { id: 'IT101', name: 'Web Development', department: 'IT', year: '1' },
-  { id: 'IT201', name: 'Database Systems', department: 'IT', year: '2' },
-  { id: 'EE101', name: 'Circuit Analysis', department: 'EE', year: '1' },
-  { id: 'ME101', name: 'Engineering Mechanics', department: 'ME', year: '1' }
-])
+// Courses fetched from backend API
+const courses = ref([])
 
 // Computed
 const filteredCourses = computed(() => {
-  return courses.value.filter(c =>
-    c.department === form.value.department &&
-    c.year === form.value.year
-  )
+  // Return all courses from the teacher - they are already filtered by teacher's department
+  return courses.value
 })
 
 const isFormValid = computed(() => {
-  return form.value.department &&
-    form.value.year &&
-    form.value.courseId &&
+  return form.value.courseId &&
     form.value.sessionPassword.length >= 4
 })
 
@@ -557,7 +531,9 @@ const absentCount = computed(() =>
 const filteredStudents = computed(() => {
   const search = studentSearch.value.toLowerCase()
   return students.value.filter(s =>
-    s.email.toLowerCase().includes(search)
+    (s.fullName?.toLowerCase().includes(search)) ||
+    (s.email?.toLowerCase().includes(search)) ||
+    (s.studentId?.toLowerCase().includes(search))
   )
 })
 
@@ -570,16 +546,6 @@ const timerStyle = computed(() => {
 })
 
 // Methods
-const onDepartmentChange = () => {
-  form.value.courseId = ''
-  form.value.courseName = ''
-}
-
-const onYearChange = () => {
-  form.value.courseId = ''
-  form.value.courseName = ''
-}
-
 const onCourseChange = () => {
   const course = courses.value.find(c => c.id === form.value.courseId)
   form.value.courseName = course?.name || ''
@@ -591,6 +557,11 @@ const generateQR = async () => {
   isLoading.value = true
   error.value = null
 
+  // Get selected course details
+  const selectedCourse = courses.value.find(c => c.id === form.value.courseId)
+  const department = selectedCourse?.department || ''
+  const year = selectedCourse?.year || 1
+
   // Auto-generate session name if not provided
   const sessionName = form.value.sessionName || `Session ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
 
@@ -598,8 +569,8 @@ const generateQR = async () => {
     const response = await generateQrCode({
       courseId: form.value.courseId,
       courseName: form.value.courseName,
-      department: form.value.department,
-      year: form.value.year,
+      department: department,
+      year: year,
       sessionName: sessionName,
       sessionPassword: form.value.sessionPassword
     })
@@ -611,8 +582,8 @@ const generateQR = async () => {
     activeSession.value = {
       id: response.sessionId,
       courseName: form.value.courseName,
-      department: getDepartmentName(form.value.department),
-      year: form.value.year,
+      department: getDepartmentName(department),
+      year: year,
       sessionName: sessionName,
       status: 'ACTIVE',
       qrToken: response.qrToken,
@@ -720,8 +691,6 @@ const clearSession = () => {
 
   // Reset form
   form.value = {
-    department: '',
-    year: '',
     courseId: '',
     courseName: '',
     sessionName: '',
@@ -745,13 +714,24 @@ const refreshAttendance = async () => {
 
 const loadStudents = async () => {
   try {
-    const response = await getStudentsForAttendance(
-      form.value.department,
-      form.value.year
-    )
+    // Use teacher-dashboard API to get students from teacher's department
+    const response = await getStudents({
+      status: 'ACTIVE', // Only get active students for attendance
+      limit: 100
+    })
     students.value = response.students || []
   } catch (err) {
     console.error('Failed to load students:', err)
+    // Fallback to attendance API if teacher-dashboard fails
+    try {
+      const fallbackResponse = await getStudentsForAttendance(
+        form.value.department,
+        form.value.year
+      )
+      students.value = fallbackResponse.students || []
+    } catch (fallbackErr) {
+      console.error('Fallback also failed:', fallbackErr)
+    }
   }
 }
 
@@ -909,6 +889,12 @@ const saveRecordEdit = async (recordId) => {
 
 // Check for existing active session on mount
 onMounted(async () => {
+  // Load departments and courses from API
+  await Promise.all([
+    loadDepartments(),
+    loadCourses()
+  ])
+
   // Load recent records on mount
   loadRecentRecords()
 
@@ -937,6 +923,40 @@ onMounted(async () => {
   }
 })
 
+// Load departments from API
+const loadDepartments = async () => {
+  isLoadingDepartments.value = true
+  try {
+    const response = await adminService.getDepartments()
+    departments.value = response.data || []
+  } catch (err) {
+    console.error('Failed to load departments:', err)
+    error.value = 'Failed to load departments'
+  } finally {
+    isLoadingDepartments.value = false
+  }
+}
+
+// Load courses from API (teacher's courses)
+const loadCourses = async () => {
+  isLoadingCourses.value = true
+  try {
+    const coursesData = await getCourses()
+    // Map courses to expected format for the attendance form
+    courses.value = (coursesData || []).map(course => ({
+      id: course.id,
+      name: course.title || course.name,
+      department: course.departmentId,
+      year: course.level || 1
+    }))
+  } catch (err) {
+    console.error('Failed to load courses:', err)
+    error.value = 'Failed to load courses'
+  } finally {
+    isLoadingCourses.value = false
+  }
+}
+
 // Cleanup on unmount
 onUnmounted(() => {
   if (countdownInterval) clearInterval(countdownInterval)
@@ -955,10 +975,8 @@ watch(success, (val) => {
 
 <style scoped>
 .attendance-container {
-  padding: 32px;
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
@@ -1109,6 +1127,10 @@ watch(success, (val) => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.hint.warning {
+  color: #f59e0b;
 }
 
 .flex-center {
@@ -1628,8 +1650,31 @@ watch(success, (val) => {
   margin-bottom: 8px;
 }
 
-.student-email {
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-name {
   font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.student-email {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.student-details-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-details-col .student-name {
+  font-size: 13px;
+  font-weight: 500;
   color: #1f2937;
 }
 

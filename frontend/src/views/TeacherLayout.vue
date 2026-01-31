@@ -39,11 +39,12 @@
       <div class="sidebar-footer">
         <div class="profile-card" @click="openProfile">
           <div class="teacher-avatar">
-            <span>KC</span>
+            <img v-if="teacherProfile.imageUrl" :src="teacherProfile.imageUrl" alt="Profile" class="avatar-img" />
+            <span v-else>{{ getInitials }}</span>
           </div>
           <div class="teacher-info">
-            <p class="name">RTC</p>
-            <p class="role">គ្រូបង្រៀន</p>
+            <p class="name">{{ teacherProfile.fullName || 'គ្រូបង្រៀន' }}</p>
+            <p class="role">{{ teacherProfile.department || 'គ្រូបង្រៀន' }}</p>
           </div>
           <div class="profile-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -76,12 +77,45 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.store'
+import { getTeacherProfile } from '@/services/teacher-dashboard.api'
 import TeacherProfile from '@/components/teacher/_pages/TeacherProfile.vue'
 
 const authStore = useAuthStore()
 const isProfileOpen = ref(false)
+
+// Teacher profile data
+const teacherProfile = reactive({
+  fullName: '',
+  imageUrl: '',
+  department: ''
+})
+
+// Fetch profile on mount
+onMounted(async () => {
+  await fetchProfile()
+})
+
+const fetchProfile = async () => {
+  try {
+    const profile = await getTeacherProfile()
+    teacherProfile.fullName = profile.fullName || ''
+    teacherProfile.imageUrl = profile.imageUrl || ''
+    teacherProfile.department = profile.department || ''
+  } catch (err) {
+    console.error('Failed to fetch teacher profile:', err)
+  }
+}
+
+const getInitials = computed(() => {
+  const name = teacherProfile.fullName || ''
+  const words = name.split(' ').filter(w => w.length > 0)
+  if (words.length >= 2) {
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase() || 'TC'
+})
 
 const openProfile = () => {
   isProfileOpen.value = true
@@ -92,8 +126,10 @@ const closeProfile = () => {
 }
 
 const handleProfileUpdate = (updatedData) => {
-  // TODO: Update user data in store or backend
-  console.log('Profile updated:', updatedData)
+  // Update local profile data when profile is updated
+  if (updatedData.fullName) teacherProfile.fullName = updatedData.fullName
+  if (updatedData.imageUrl !== undefined) teacherProfile.imageUrl = updatedData.imageUrl
+  if (updatedData.department) teacherProfile.department = updatedData.department
 }
 
 const logout = () => {
@@ -197,6 +233,13 @@ const logout = () => {
   font-size: 0.9rem;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  overflow: hidden;
+}
+
+.teacher-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .teacher-info {

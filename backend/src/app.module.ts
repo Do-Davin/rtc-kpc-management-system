@@ -10,7 +10,9 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { StudentsModule } from './modules/students/students.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
 import { TeacherDashboardModule } from './modules/teacher-dashboard/teacher-dashboard.module';
-import { CoursesModule } from './modules/course/course.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import { ElibraryModule } from './modules/elibrary/elibrary.module';
+import { SchedulesModule } from './modules/schedules/schedules.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { CoursesModule } from './modules/course/course.module';
     AttendanceModule,
     TeacherDashboardModule,
     CoursesModule,
+    ElibraryModule,
+    SchedulesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

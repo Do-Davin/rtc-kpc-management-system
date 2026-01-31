@@ -3,6 +3,13 @@
     <Transition name="modal">
       <div v-if="isOpen" class="modal-overlay" @click.self="close">
         <div class="modal-container">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>កំពុងផ្ទុក...</p>
+          </div>
+
+          <template v-else>
           <!-- Hero Header with Gradient -->
           <div class="profile-hero">
             <button class="close-btn" @click="close">
@@ -27,14 +34,23 @@
                   <span class="placeholder-initials">{{ getInitials }}</span>
                 </div>
                 <label v-if="isEditing" class="image-upload-overlay">
-                  <input type="file" accept="image/*" @change="handleImageUpload" hidden />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
+                  <input type="file" accept="image/*" @change="handleImageUpload" hidden ref="fileInput" />
+                  <div class="upload-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                      <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span class="upload-text">ជ្រើសរើសរូបភាព</span>
+                  </div>
                 </label>
               </div>
               <div class="online-status"></div>
+              <button v-if="isEditing && editData.imageUrl" class="remove-image-btn" @click="removeImage" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
 
             <!-- Name & Role -->
@@ -64,7 +80,7 @@
                   </svg>
                 </div>
                 <div class="stat-info">
-                  <span class="stat-value">156</span>
+                  <span class="stat-value">{{ profileData.studentCount }}</span>
                   <span class="stat-label">សិស្ស</span>
                 </div>
               </div>
@@ -76,20 +92,22 @@
                   </svg>
                 </div>
                 <div class="stat-info">
-                  <span class="stat-value">8</span>
-                  <span class="stat-label">វគ្គសិក្សា</span>
+                  <span class="stat-value">{{ profileData.departmentCode || '-' }}</span>
+                  <span class="stat-label">កូដផ្នែក</span>
                 </div>
               </div>
               <div class="stat-card">
                 <div class="stat-icon experience">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="8" r="7"></circle>
-                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                 </div>
                 <div class="stat-info">
-                  <span class="stat-value">5+</span>
-                  <span class="stat-label">ឆ្នាំបទពិសោធន៍</span>
+                  <span class="stat-value" :class="{ 'active': profileData.status === 'ACTIVE', 'inactive': profileData.status === 'INACTIVE' }">
+                    {{ profileData.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
+                  </span>
+                  <span class="stat-label">ស្ថានភាព</span>
                 </div>
               </div>
             </div>
@@ -266,6 +284,7 @@
               </div>
             </div>
           </div>
+        </template>
         </div>
       </div>
     </Transition>
@@ -273,9 +292,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
+import { getTeacherProfile, updateTeacherProfile } from '@/services/teacher-dashboard.api'
 
-defineProps({
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
@@ -285,23 +305,66 @@ defineProps({
 const emit = defineEmits(['close', 'update'])
 
 const isEditing = ref(false)
+const isLoading = ref(false)
+const isSaving = ref(false)
+const error = ref(null)
 
-// Mock data - replace with actual data from your store/API
+// Profile data from API
 const profileData = reactive({
+  id: '',
   imageUrl: '',
-  fullName: 'គ្រូ ដូ​ ដាវីន',
-  dateOfBirth: '1990-05-15',
-  email: 'teacher@rtc.edu.kh',
-  teacherId: 'T-2024-001',
-  department: 'ផ្នែកបច្ចេកវិទ្យាព័ត៌មាន',
-  specialization: 'កម្មវិធី និង Web Development'
+  fullName: '',
+  dateOfBirth: '',
+  email: '',
+  teacherId: '',
+  department: '',
+  departmentCode: '',
+  specialization: '',
+  phoneNumber: '',
+  studentCount: 0,
+  status: ''
 })
 
 const editData = reactive({
   fullName: '',
   dateOfBirth: '',
+  phoneNumber: '',
   imageUrl: ''
 })
+
+// Fetch profile when modal opens
+watch(() => props.isOpen, async (isOpen) => {
+  if (isOpen) {
+    await fetchProfile()
+  }
+})
+
+const fetchProfile = async () => {
+  isLoading.value = true
+  error.value = null
+  try {
+    const profile = await getTeacherProfile()
+    Object.assign(profileData, {
+      id: profile.id,
+      imageUrl: profile.imageUrl || '',
+      fullName: profile.fullName || '',
+      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
+      email: profile.email || '',
+      teacherId: profile.employeeId || '',
+      department: profile.department || '',
+      departmentCode: profile.departmentCode || '',
+      specialization: profile.specialization || '',
+      phoneNumber: profile.phoneNumber || '',
+      studentCount: profile.studentCount || 0,
+      status: profile.status || ''
+    })
+  } catch (err) {
+    console.error('Failed to fetch profile:', err)
+    error.value = err.response?.data?.message || 'Failed to load profile'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const getInitials = computed(() => {
   const name = profileData.fullName || ''
@@ -309,7 +372,7 @@ const getInitials = computed(() => {
   if (words.length >= 2) {
     return (words[0][0] + words[words.length - 1][0]).toUpperCase()
   }
-  return name.substring(0, 2).toUpperCase()
+  return name.substring(0, 2).toUpperCase() || '??'
 })
 
 const close = () => {
@@ -326,7 +389,8 @@ const close = () => {
 const startEdit = () => {
   editData.fullName = profileData.fullName
   editData.dateOfBirth = profileData.dateOfBirth
-  editData.imageUrl = '' // Clear to show placeholder, user can upload new image
+  editData.phoneNumber = profileData.phoneNumber
+  editData.imageUrl = profileData.imageUrl
   isEditing.value = true
 }
 
@@ -334,34 +398,56 @@ const cancelEdit = () => {
   isEditing.value = false
 }
 
-const saveChanges = () => {
+const saveChanges = async () => {
   // Validate
   if (!editData.fullName.trim()) {
     alert('សូមបញ្ចូលឈ្មោះពេញ')
     return
   }
 
-  // Update profile data
-  profileData.fullName = editData.fullName
-  profileData.dateOfBirth = editData.dateOfBirth
-  profileData.imageUrl = editData.imageUrl
+  isSaving.value = true
+  error.value = null
 
-  // TODO: Call API to save changes
-  emit('update', {
-    fullName: profileData.fullName,
-    dateOfBirth: profileData.dateOfBirth,
-    imageUrl: profileData.imageUrl
-  })
+  try {
+    const updatedProfile = await updateTeacherProfile({
+      fullName: editData.fullName,
+      dateOfBirth: editData.dateOfBirth || undefined,
+      phoneNumber: editData.phoneNumber || undefined,
+      imageUrl: editData.imageUrl || undefined
+    })
 
-  isEditing.value = false
-  alert('រក្សាទុកព័ត៌មានបានជោគជ័យ!')
+    // Update local profile data
+    Object.assign(profileData, {
+      fullName: updatedProfile.fullName,
+      dateOfBirth: updatedProfile.dateOfBirth ? updatedProfile.dateOfBirth.split('T')[0] : '',
+      phoneNumber: updatedProfile.phoneNumber || '',
+      imageUrl: updatedProfile.imageUrl || ''
+    })
+
+    emit('update', updatedProfile)
+    isEditing.value = false
+    alert('រក្សាទុកព័ត៌មានបានជោគជ័យ!')
+  } catch (err) {
+    console.error('Failed to save profile:', err)
+    error.value = err.response?.data?.message || 'Failed to save profile'
+    alert(error.value)
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const handleImageUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('ទំហំរូបភាពធំពេក! សូមជ្រើសរើសរូបភាពតូចជាង 5MB')
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('សូមជ្រើសរើសឯកសាររូបភាពប៉ុណ្ណោះ!')
       return
     }
 
@@ -369,12 +455,61 @@ const handleImageUpload = (event) => {
     reader.onload = (e) => {
       editData.imageUrl = e.target.result
     }
+    reader.onerror = () => {
+      alert('មានបញ្ហាក្នុងការអានឯកសារ!')
+    }
     reader.readAsDataURL(file)
+  }
+}
+
+const removeImage = () => {
+  editData.imageUrl = ''
+  // Reset file input
+  const fileInput = document.querySelector('input[type="file"]')
+  if (fileInput) {
+    fileInput.value = ''
   }
 }
 </script>
 
 <style scoped>
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.loading-container p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status colors */
+.stat-value.active {
+  color: #16a34a;
+}
+
+.stat-value.inactive {
+  color: #ef4444;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -502,7 +637,7 @@ const handleImageUpload = (event) => {
 .image-upload-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -515,6 +650,45 @@ const handleImageUpload = (event) => {
 
 .image-wrapper:hover .image-upload-overlay {
   opacity: 1;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.upload-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.remove-image-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
 }
 
 .online-status {

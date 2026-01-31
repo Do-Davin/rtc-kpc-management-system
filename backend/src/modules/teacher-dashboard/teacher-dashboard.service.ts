@@ -2,14 +2,26 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, MoreThanOrEqual } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, DataSource } from 'typeorm';
 import { TeacherTodo } from './entities/teacher-todo.entity';
 import { AttendanceSession } from '../attendance/entities/attendance-session.entity';
 import { AttendanceRecord } from '../attendance/entities/attendance-record.entity';
+import { Student, StudentStatus } from '../students/entities/student.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { User } from '../users/entities/user.entity';
+import { Department } from '../departments/entities/department.entity';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import {
+  TeacherStudentQueryDto,
+  AddStudentToClassDto,
+  UpdateStudentByTeacherDto,
+} from './dto/student-management.dto';
+import { UpdateTeacherProfileDto } from './dto/update-teacher-profile.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class TeacherDashboardService {
@@ -20,6 +32,15 @@ export class TeacherDashboardService {
     private sessionRepo: Repository<AttendanceSession>,
     @InjectRepository(AttendanceRecord)
     private recordRepo: Repository<AttendanceRecord>,
+    @InjectRepository(Student)
+    private studentRepo: Repository<Student>,
+    @InjectRepository(Teacher)
+    private teacherRepo: Repository<Teacher>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+    @InjectRepository(Department)
+    private deptRepo: Repository<Department>,
+    private dataSource: DataSource,
   ) {}
 
   /**
@@ -330,5 +351,465 @@ export class TeacherDashboardService {
 
     await this.todoRepo.remove(todo);
     return { message: 'Todo deleted successfully' };
+  }
+
+  // ========== Teacher Profile Methods ==========
+
+  /**
+   * Get the logged-in teacher's profile
+   */
+  async getTeacherProfile(userId: string) {
+    const teacher = await this.teacherRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['user', 'department'],
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    // Count students in department
+    const studentCount = teacher.department
+      ? await this.studentRepo.count({
+          where: { department: { id: teacher.department.id } },
+        })
+      : 0;
+
+    return {
+      id: teacher.id,
+      fullName: teacher.fullName,
+      employeeId: teacher.employeeId,
+      email: teacher.user?.email,
+      phoneNumber: teacher.phoneNumber,
+      specialization: teacher.specialization,
+      dateOfBirth: teacher.dateOfBirth,
+      imageUrl: teacher.imageUrl,
+      status: teacher.status,
+      department: teacher.department?.name,
+      departmentId: teacher.department?.id,
+      departmentCode: teacher.department?.code,
+      studentCount,
+      createdAt: teacher.createdAt,
+    };
+  }
+
+  /**
+   * Update the logged-in teacher's profile
+   */
+  async updateTeacherProfile(userId: string, dto: UpdateTeacherProfileDto) {
+    const teacher = await this.teacherRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['user', 'department'],
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    // Update allowed fields
+    if (dto.fullName !== undefined) teacher.fullName = dto.fullName;
+    if (dto.phoneNumber !== undefined) teacher.phoneNumber = dto.phoneNumber;
+    if (dto.dateOfBirth !== undefined)
+      teacher.dateOfBirth = new Date(dto.dateOfBirth);
+    if (dto.imageUrl !== undefined) teacher.imageUrl = dto.imageUrl;
+
+    const updatedTeacher = await this.teacherRepo.save(teacher);
+
+    // Count students in department
+    const studentCount = teacher.department
+      ? await this.studentRepo.count({
+          where: { department: { id: teacher.department.id } },
+        })
+      : 0;
+
+    return {
+      id: updatedTeacher.id,
+      fullName: updatedTeacher.fullName,
+      employeeId: updatedTeacher.employeeId,
+      email: teacher.user?.email,
+      phoneNumber: updatedTeacher.phoneNumber,
+      specialization: updatedTeacher.specialization,
+      dateOfBirth: updatedTeacher.dateOfBirth,
+      imageUrl: updatedTeacher.imageUrl,
+      status: updatedTeacher.status,
+      department: teacher.department?.name,
+      departmentId: teacher.department?.id,
+      departmentCode: teacher.department?.code,
+      studentCount,
+      createdAt: updatedTeacher.createdAt,
+    };
+  }
+
+  // ========== Student Management Methods ==========
+
+  /**
+   * Get the teacher's department
+   */
+  private async getTeacherDepartment(userId: string): Promise<Department> {
+    const teacher = await this.teacherRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['department'],
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    if (!teacher.department) {
+      throw new NotFoundException('Teacher is not assigned to any department');
+    }
+
+    return teacher.department;
+  }
+
+  /**
+   * Get students in the teacher's department with filtering and pagination
+   */
+  async getStudentsInDepartment(userId: string, query: TeacherStudentQueryDto) {
+    const department = await this.getTeacherDepartment(userId);
+
+    const { search, status, page = 1, limit = 50 } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.studentRepo
+      .createQueryBuilder('student')
+      .leftJoinAndSelect('student.user', 'user')
+      .leftJoinAndSelect('student.department', 'department')
+      .where('department.id = :departmentId', { departmentId: department.id });
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(student.fullName ILIKE :search OR student.studentIdCard ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      queryBuilder.andWhere('student.status = :status', { status });
+    }
+
+    const [students, total] = await queryBuilder
+      .orderBy('student.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    // Calculate attendance for each student
+    const studentsWithAttendance = await Promise.all(
+      students.map(async (student) => {
+        const attendance = await this.calculateStudentAttendance(
+          student.user?.id,
+        );
+        return {
+          id: student.id,
+          studentId: student.studentIdCard,
+          studentNumber: student.studentNumber,
+          fullName: student.fullName,
+          email: student.user?.email,
+          year: student.year,
+          enrollmentYear: student.enrollmentYear,
+          phoneNumber: student.phoneNumber,
+          status: student.status,
+          departmentName: student.department?.name,
+          departmentCode: student.department?.code,
+          attendance,
+          classInfo: `Year ${student.year} / ${student.department?.name || 'N/A'}`,
+          createdAt: student.createdAt,
+        };
+      }),
+    );
+
+    // Calculate statistics
+    const allStudentsInDept = await this.studentRepo.count({
+      where: { department: { id: department.id } },
+    });
+
+    const activeStudentsCount = await this.studentRepo.count({
+      where: {
+        department: { id: department.id },
+        status: StudentStatus.ACTIVE,
+      },
+    });
+
+    const inactiveStudentsCount = await this.studentRepo.count({
+      where: {
+        department: { id: department.id },
+        status: StudentStatus.INACTIVE,
+      },
+    });
+
+    // Calculate average attendance
+    let totalAttendance = 0;
+    studentsWithAttendance.forEach((s) => (totalAttendance += s.attendance));
+    const averageAttendance =
+      studentsWithAttendance.length > 0
+        ? Math.round(totalAttendance / studentsWithAttendance.length)
+        : 0;
+
+    return {
+      students: studentsWithAttendance,
+      stats: {
+        total: allStudentsInDept,
+        active: activeStudentsCount,
+        inactive: inactiveStudentsCount,
+        averageAttendance,
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Calculate attendance percentage for a student
+   */
+  private async calculateStudentAttendance(
+    studentUserId: string,
+  ): Promise<number> {
+    if (!studentUserId) return 0;
+
+    const records = await this.recordRepo.find({
+      where: { studentId: studentUserId },
+    });
+
+    if (records.length === 0) return 0;
+
+    const presentRecords = records.filter(
+      (r) =>
+        r.status === 'PRESENT' ||
+        r.status === 'MANUAL_PRESENT' ||
+        r.status === 'LATE',
+    );
+
+    return Math.round((presentRecords.length / records.length) * 100);
+  }
+
+  /**
+   * Get a single student's details
+   */
+  async getStudentDetails(userId: string, studentId: string) {
+    const department = await this.getTeacherDepartment(userId);
+
+    const student = await this.studentRepo.findOne({
+      where: { id: studentId },
+      relations: ['user', 'department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (student.department?.id !== department.id) {
+      throw new ForbiddenException(
+        'You can only view students in your department',
+      );
+    }
+
+    const attendance = await this.calculateStudentAttendance(student.user?.id);
+
+    return {
+      id: student.id,
+      studentId: student.studentIdCard,
+      studentNumber: student.studentNumber,
+      fullName: student.fullName,
+      email: student.user?.email,
+      year: student.year,
+      enrollmentYear: student.enrollmentYear,
+      phoneNumber: student.phoneNumber,
+      status: student.status,
+      departmentName: student.department?.name,
+      departmentCode: student.department?.code,
+      attendance,
+      classInfo: `Year ${student.year} / ${student.department?.name || 'N/A'}`,
+      createdAt: student.createdAt,
+    };
+  }
+
+  /**
+   * Generate email from fullName in format: name@rtc.com
+   * Converts spaces to dots, removes special chars, makes lowercase
+   */
+  private generateEmailFromName(fullName: string): string {
+    const emailName = fullName
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '.') // Replace spaces with dots
+      .replace(/[^a-z0-9.]/g, '') // Remove non-alphanumeric except dots
+      .replace(/\.+/g, '.') // Replace multiple dots with single dot
+      .replace(/^\.+|\.+$/g, ''); // Remove leading/trailing dots
+
+    return `${emailName}@rtc.com`;
+  }
+
+  /**
+   * Add a new student to the teacher's department
+   */
+  async addStudentToDepartment(userId: string, dto: AddStudentToClassDto) {
+    const department = await this.getTeacherDepartment(userId);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Generate email from fullName
+      let email = this.generateEmailFromName(dto.fullName);
+
+      // Check for duplicate email and make unique if needed
+      let existingUser = await this.userRepo.findOneBy({ email });
+      let emailCounter = 1;
+      while (existingUser) {
+        const baseName = dto.fullName
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, '.')
+          .replace(/[^a-z0-9.]/g, '')
+          .replace(/\.+/g, '.')
+          .replace(/^\.+|\.+$/g, '');
+        email = `${baseName}${emailCounter}@rtc.com`;
+        existingUser = await this.userRepo.findOneBy({ email });
+        emailCounter++;
+      }
+
+      // Create user account
+      const plainPassword = 'RTC@2026';
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+      const newUser = this.userRepo.create({
+        email,
+        password: hashedPassword,
+        role: 'STUDENT',
+      });
+      const savedUser = await queryRunner.manager.save(newUser);
+
+      // Create student record - studentNumber will be auto-generated
+      // We'll set studentIdCard after getting the studentNumber
+      const newStudent = this.studentRepo.create({
+        fullName: dto.fullName,
+        studentIdCard: 'temp', // Will be updated after save
+        year: dto.year,
+        enrollmentYear: dto.enrollmentYear,
+        phoneNumber: dto.phoneNumber,
+        user: savedUser,
+        department: department,
+        status: dto.status || StudentStatus.ACTIVE,
+      });
+
+      const savedStudent = await queryRunner.manager.save(newStudent);
+
+      // Update studentIdCard with auto-generated format: rtc[studentNumber]
+      savedStudent.studentIdCard = `rtc${savedStudent.studentNumber}`;
+      await queryRunner.manager.save(savedStudent);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        id: savedStudent.id,
+        studentId: savedStudent.studentIdCard,
+        studentNumber: savedStudent.studentNumber,
+        fullName: savedStudent.fullName,
+        email: savedUser.email,
+        year: savedStudent.year,
+        enrollmentYear: savedStudent.enrollmentYear,
+        phoneNumber: savedStudent.phoneNumber,
+        status: savedStudent.status,
+        departmentName: department.name,
+        departmentCode: department.code,
+        attendance: 0,
+        classInfo: `Year ${savedStudent.year} / ${department.name}`,
+        createdAt: savedStudent.createdAt,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      const err = error as { code?: string };
+      if (err.code === '23505') {
+        throw new ConflictException('Email or Student ID already exists');
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Update a student in the teacher's department
+   */
+  async updateStudentInDepartment(
+    userId: string,
+    studentId: string,
+    dto: UpdateStudentByTeacherDto,
+  ) {
+    const department = await this.getTeacherDepartment(userId);
+
+    const student = await this.studentRepo.findOne({
+      where: { id: studentId },
+      relations: ['user', 'department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (student.department?.id !== department.id) {
+      throw new ForbiddenException(
+        'You can only update students in your department',
+      );
+    }
+
+    // Update allowed fields
+    if (dto.fullName !== undefined) student.fullName = dto.fullName;
+    if (dto.phoneNumber !== undefined) student.phoneNumber = dto.phoneNumber;
+    if (dto.year !== undefined) student.year = dto.year;
+    if (dto.status !== undefined) student.status = dto.status;
+
+    const updatedStudent = await this.studentRepo.save(student);
+    const attendance = await this.calculateStudentAttendance(student.user?.id);
+
+    return {
+      id: updatedStudent.id,
+      studentId: updatedStudent.studentIdCard,
+      fullName: updatedStudent.fullName,
+      email: student.user?.email,
+      year: updatedStudent.year,
+      enrollmentYear: updatedStudent.enrollmentYear,
+      phoneNumber: updatedStudent.phoneNumber,
+      status: updatedStudent.status,
+      departmentName: department.name,
+      departmentCode: department.code,
+      attendance,
+      classInfo: `Year ${updatedStudent.year} / ${department.name}`,
+      createdAt: updatedStudent.createdAt,
+    };
+  }
+
+  /**
+   * Remove a student from the teacher's department (soft delete - set to INACTIVE)
+   */
+  async removeStudentFromDepartment(userId: string, studentId: string) {
+    const department = await this.getTeacherDepartment(userId);
+
+    const student = await this.studentRepo.findOne({
+      where: { id: studentId },
+      relations: ['department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (student.department?.id !== department.id) {
+      throw new ForbiddenException(
+        'You can only remove students in your department',
+      );
+    }
+
+    // Soft delete - set status to INACTIVE
+    student.status = StudentStatus.INACTIVE;
+    await this.studentRepo.save(student);
+
+    return { message: 'Student removed successfully' };
   }
 }
