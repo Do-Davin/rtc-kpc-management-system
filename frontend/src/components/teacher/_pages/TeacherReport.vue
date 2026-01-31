@@ -26,7 +26,7 @@
           <p class="report-subtitle">Insights and observations for your classes</p>
         </div>
       </div>
-      <button class="download-btn">
+      <button class="download-btn" @click="downloadCSV">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="18"
@@ -42,10 +42,23 @@
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        Download Report
+        Download CSV
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading report data...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-state">
+      <p>{{ error }}</p>
+      <button @click="fetchReportData" class="btn-retry">Retry</button>
+    </div>
+
+    <template v-else>
     <!-- Class Insights Section with Pie Charts -->
     <section class="report-section insights-section">
       <div class="section-header">
@@ -69,7 +82,10 @@
         </h2>
         <span class="section-badge">Live Data</span>
       </div>
-      <div class="insights-grid">
+      <div v-if="classInsights.length === 0" class="empty-insights">
+        <p>No insights data available</p>
+      </div>
+      <div v-else class="insights-grid">
         <div class="insight-card" v-for="insight in classInsights" :key="insight.id">
           <div class="pie-chart-container">
             <svg class="pie-chart" viewBox="0 0 36 36">
@@ -400,12 +416,12 @@
         <textarea
           v-model="teachingNotes"
           class="notes-textarea"
-          placeholder="Record your observations, reflections, and insights here...&#10;&#10;
-          Example:&#10;
-          • Students showed strong understanding of conditional statements&#10;
-          • Need to revisit loop concepts next week&#10;
-          • Group activities were particularly effective today&#10;
-          • Consider pairing struggling students with high performers"
+          placeholder="កត់ត្រាការសង្កេត ការឆ្លុះបញ្ចាំង និងចំណេះដឹងដែលសិស្សទទួលបាននៅទីនេះ...&#10;
+          ឧទាហរណ៍៖
+          • សិស្សបង្ហាញការយល់ដឹងល្អអំពី conditional statements
+          • ត្រូវពិនិត្យឡើងវិញអំពី loop concepts នៅសប្តាហ៍ក្រោយ
+          • សកម្មភាពជាក្រុមមានប្រសិទ្ធភាពខ្លាំងនៅថ្ងៃនេះ
+          • គួរតែដាក់សិស្សដែលត្រូវការការគាំទ្របន្ថែមធ្វើការជាមួយសិស្សដែលមានសមត្ថភាពខ្ពស់"
         ></textarea>
         <div class="notes-footer">
           <div class="notes-meta">
@@ -431,65 +447,28 @@
         </div>
       </div>
     </section>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { getDashboardStats, getStudents, getAttendanceTrend } from '@/services/teacher-dashboard.api';
+import { getCourseStats } from '@/services/courses.api';
 
 const disableTransitions = ref(false);
+const isLoading = ref(true);
+const error = ref(null);
 
-const classInsights = ref([
-  {
-    id: 1,
-    label: 'Learning Pace',
-    value: 'Steady Progress',
-    percentage: 72,
-    description: 'Most students keeping up with curriculum',
-    color: '#4c6ef5',
-    trend: 'up',
-    trendText: '+5% from last week'
-  },
-  {
-    id: 2,
-    label: 'Engagement Level',
-    value: 'High',
-    percentage: 85,
-    description: 'Active participation in discussions',
-    color: '#40c057',
-    trend: 'up',
-    trendText: '+12% improvement'
-  },
-  {
-    id: 3,
-    label: 'Class Difficulty',
-    value: 'Moderate',
-    percentage: 58,
-    description: 'Appropriately challenging content',
-    color: '#fab005',
-    trend: 'stable',
-    trendText: 'Stable level'
-  }
-]);
+// Class insights data - populated from API
+const classInsights = ref([]);
 
-const atRiskStudents = ref([
-  { id: 1, name: 'Do Davin', initials: 'DD', status: 'Low attendance', gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)' },
-  { id: 2, name: 'Chan Dara', initials: 'CD', status: 'Struggling', gradient: 'linear-gradient(135deg, #ff8787, #fa5252)' },
-  { id: 3, name: 'Bun Ra', initials: 'BR', status: 'Missed assignments', gradient: 'linear-gradient(135deg, #ffa8a8, #ff6b6b)' }
-]);
+// Student signal groups - populated from API based on attendance
+const atRiskStudents = ref([]);
 
-const inconsistentStudents = ref([
-  { id: 4, name: 'Van Na', initials: 'VN', status: 'Variable performance', gradient: 'linear-gradient(135deg, #ffd43b, #fab005)' },
-  { id: 5, name: 'Sok Leng', initials: 'SL', status: 'Irregular attendance', gradient: 'linear-gradient(135deg, #ffe066, #fcc419)' },
-  { id: 6, name: 'Meng Houy', initials: 'MH', status: 'Fluctuating grades', gradient: 'linear-gradient(135deg, #ffec99, #ffd43b)' }
-]);
+const inconsistentStudents = ref([]);
 
-const excellingStudents = ref([
-  { id: 7, name: 'Mong Kol', initials: 'MK', status: 'Outstanding work', gradient: 'linear-gradient(135deg, #40c057, #2f9e44)' },
-  { id: 8, name: 'Dara Rith', initials: 'DR', status: 'High achiever', gradient: 'linear-gradient(135deg, #51cf66, #40c057)' },
-  { id: 9, name: 'Bun Leng', initials: 'BL', status: 'Consistent excellence', gradient: 'linear-gradient(135deg, #69db7c, #51cf66)' },
-  { id: 10, name: 'Meng Kong', initials: 'MK', status: 'Top performer', gradient: 'linear-gradient(135deg, #8ce99a, #69db7c)' }
-]);
+const excellingStudents = ref([]);
 
 const draggedStudent = ref(null);
 const dragSourceGroup = ref(null);
@@ -586,6 +565,274 @@ const saveNotes = () => {
   const now = new Date();
   lastSaved.value = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };
+
+// Get current date for filename
+const getFormattedDate = () => {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+};
+
+// Generate CSV content
+const generateCSVContent = () => {
+  const lines = [];
+
+  // Header
+  lines.push('Teaching Report - ' + getFormattedDate());
+  lines.push('');
+
+  // Class Insights Section
+  lines.push('=== CLASS INSIGHTS ===');
+  lines.push('Metric,Value,Percentage,Description,Trend');
+  classInsights.value.forEach(insight => {
+    lines.push(`"${insight.label}","${insight.value}",${insight.percentage}%,"${insight.description}","${insight.trendText}"`);
+  });
+  lines.push('');
+
+  // Student Signals Section
+  lines.push('=== STUDENT SIGNALS ===');
+  lines.push('');
+
+  // At Risk Students
+  lines.push('--- At Risk Students ---');
+  lines.push('Name,Status,Attendance');
+  if (atRiskStudents.value.length === 0) {
+    lines.push('No students at risk');
+  } else {
+    atRiskStudents.value.forEach(student => {
+      lines.push(`"${student.name}","${student.status}",${student.attendance || 0}%`);
+    });
+  }
+  lines.push('');
+
+  // Inconsistent Students
+  lines.push('--- Inconsistent Students ---');
+  lines.push('Name,Status,Attendance');
+  if (inconsistentStudents.value.length === 0) {
+    lines.push('No inconsistent students');
+  } else {
+    inconsistentStudents.value.forEach(student => {
+      lines.push(`"${student.name}","${student.status}",${student.attendance || 0}%`);
+    });
+  }
+  lines.push('');
+
+  // Excelling Students
+  lines.push('--- Excelling Students ---');
+  lines.push('Name,Status,Attendance');
+  if (excellingStudents.value.length === 0) {
+    lines.push('No excelling students');
+  } else {
+    excellingStudents.value.forEach(student => {
+      lines.push(`"${student.name}","${student.status}",${student.attendance || 0}%`);
+    });
+  }
+  lines.push('');
+
+  // Summary
+  lines.push('=== SUMMARY ===');
+  lines.push(`Total At Risk,${atRiskStudents.value.length}`);
+  lines.push(`Total Inconsistent,${inconsistentStudents.value.length}`);
+  lines.push(`Total Excelling,${excellingStudents.value.length}`);
+  lines.push(`Total Students,${atRiskStudents.value.length + inconsistentStudents.value.length + excellingStudents.value.length}`);
+  lines.push('');
+
+  // Teaching Notes
+  if (teachingNotes.value.trim()) {
+    lines.push('=== TEACHING NOTES ===');
+    lines.push(`"${teachingNotes.value.replace(/"/g, '""')}"`);
+  }
+
+  return lines.join('\n');
+};
+
+// Download as CSV
+const downloadCSV = () => {
+  const csvContent = generateCSVContent();
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', `teaching-report-${getFormattedDate()}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+};
+
+// Helper function to get initials from name
+const getInitials = (name) => {
+  if (!name) return '??';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+// Helper function to get gradient based on category
+const getGradient = (category, index = 0) => {
+  const gradients = {
+    atRisk: [
+      'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
+      'linear-gradient(135deg, #ff8787, #fa5252)',
+      'linear-gradient(135deg, #ffa8a8, #ff6b6b)'
+    ],
+    inconsistent: [
+      'linear-gradient(135deg, #ffd43b, #fab005)',
+      'linear-gradient(135deg, #ffe066, #fcc419)',
+      'linear-gradient(135deg, #ffec99, #ffd43b)'
+    ],
+    excelling: [
+      'linear-gradient(135deg, #40c057, #2f9e44)',
+      'linear-gradient(135deg, #51cf66, #40c057)',
+      'linear-gradient(135deg, #69db7c, #51cf66)',
+      'linear-gradient(135deg, #8ce99a, #69db7c)'
+    ]
+  };
+  const arr = gradients[category] || gradients.inconsistent;
+  return arr[index % arr.length];
+};
+
+// Categorize students based on attendance percentage
+const categorizeStudents = (students) => {
+  const atRisk = [];
+  const inconsistent = [];
+  const excelling = [];
+
+  students.forEach((student) => {
+    const attendance = student.attendance || 0;
+    const studentData = {
+      id: student.id,
+      name: student.fullName,
+      initials: getInitials(student.fullName),
+      attendance
+    };
+
+    if (attendance < 50) {
+      // At Risk: attendance below 50%
+      studentData.status = `${attendance}% attendance`;
+      studentData.gradient = getGradient('atRisk', atRisk.length);
+      atRisk.push(studentData);
+    } else if (attendance < 80) {
+      // Inconsistent: attendance between 50-79%
+      studentData.status = `${attendance}% attendance`;
+      studentData.gradient = getGradient('inconsistent', inconsistent.length);
+      inconsistent.push(studentData);
+    } else {
+      // Excelling: attendance 80% and above
+      studentData.status = `${attendance}% attendance`;
+      studentData.gradient = getGradient('excelling', excelling.length);
+      excelling.push(studentData);
+    }
+  });
+
+  return { atRisk, inconsistent, excelling };
+};
+
+// Build class insights from dashboard stats
+const buildClassInsights = (dashboardStats, courseStats, trendData) => {
+  // Calculate attendance trend
+  let attendanceTrend = 'stable';
+  let attendanceTrendText = 'រក្សាស្ថិរភាព';
+
+  if (trendData && trendData.length >= 2) {
+    const recentWeek = trendData.slice(-7);
+    const previousWeek = trendData.slice(-14, -7);
+
+    if (recentWeek.length > 0 && previousWeek.length > 0) {
+      const recentAvg = recentWeek.reduce((sum, d) => sum + d.percentage, 0) / recentWeek.length;
+      const prevAvg = previousWeek.reduce((sum, d) => sum + d.percentage, 0) / previousWeek.length;
+      const diff = Math.round(recentAvg - prevAvg);
+
+      if (diff > 2) {
+        attendanceTrend = 'up';
+        attendanceTrendText = `កើនឡើង ${diff}% ពីសប្តាហ៍មុន`;
+      } else if (diff < -2) {
+        attendanceTrend = 'down';
+        attendanceTrendText = `ថយចុះ ${Math.abs(diff)}% ពីសប្តាហ៍មុន`;
+      }
+    }
+  }
+
+  const attendancePercentage = dashboardStats?.attendancePercentage || 0;
+  const courseCompletion = dashboardStats?.courseCompletion || courseStats?.totalCourses ? Math.round((courseStats?.activeCourses / courseStats?.totalCourses) * 100) : 0;
+
+  return [
+    {
+      id: 1,
+      label: 'អត្រាវត្តមាន',
+      value: attendancePercentage >= 80 ? 'ល្អ' : attendancePercentage >= 60 ? 'មធ្យម' : 'ត្រូវកែប្រែ',
+      percentage: attendancePercentage,
+      description: `សិស្សចូលរួមក្នុងថ្នាក់ ${attendancePercentage}%`,
+      color: attendancePercentage >= 80 ? '#40c057' : attendancePercentage >= 60 ? '#fab005' : '#ff6b6b',
+      trend: attendanceTrend,
+      trendText: attendanceTrendText
+    },
+    {
+      id: 2,
+      label: 'វត្តមានថ្ងៃនេះ',
+      value: `${dashboardStats?.presentToday || 0} សិស្ស`,
+      percentage: dashboardStats?.totalStudentsToday > 0
+        ? Math.round((dashboardStats.presentToday / dashboardStats.totalStudentsToday) * 100)
+        : 0,
+      description: `មកវត្តមាន ${dashboardStats?.presentToday || 0} / ${dashboardStats?.totalStudentsToday || 0} សិស្ស`,
+      color: '#4c6ef5',
+      trend: 'stable',
+      trendText: `អវត្តមាន ${dashboardStats?.absentToday || 0} សិស្ស`
+    },
+    {
+      id: 3,
+      label: 'វគ្គសិក្សាសកម្ម',
+      value: `${courseStats?.activeCourses || 0} វគ្គ`,
+      percentage: courseCompletion,
+      description: `សរុប ${courseStats?.totalCourses || 0} វគ្គសិក្សា`,
+      color: '#7c3aed',
+      trend: 'stable',
+      trendText: `${courseStats?.totalHours || 0} ម៉ោងសរុប`
+    }
+  ];
+};
+
+// Fetch all report data
+const fetchReportData = async () => {
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    // Fetch all data in parallel
+    const [dashboardStats, courseStats, students, trendData] = await Promise.all([
+      getDashboardStats(30),
+      getCourseStats(),
+      getStudents({ status: 'ACTIVE' }),
+      getAttendanceTrend(30)
+    ]);
+
+    // Build class insights from real data
+    classInsights.value = buildClassInsights(dashboardStats, courseStats, trendData);
+
+    // Categorize students based on attendance
+    const studentList = students?.students || students || [];
+    const categorized = categorizeStudents(studentList);
+
+    atRiskStudents.value = categorized.atRisk;
+    inconsistentStudents.value = categorized.inconsistent;
+    excellingStudents.value = categorized.excelling;
+
+  } catch (err) {
+    console.error('Error fetching report data:', err);
+    error.value = 'Failed to load report data';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchReportData();
+});
 </script>
 
 <style scoped>
@@ -593,6 +840,61 @@ const saveNotes = () => {
   width: 100%;
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   min-height: 100vh;
+}
+
+/* Loading and Error States */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #5d5fef;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #ef4444;
+}
+
+.btn-retry {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #5d5fef;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-retry:hover {
+  background: #4c4edb;
+  transform: translateY(-2px);
+}
+
+.empty-insights {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .report-header {
@@ -643,6 +945,11 @@ const saveNotes = () => {
   margin: 0;
 }
 
+/* Download Dropdown */
+.download-dropdown {
+  position: relative;
+}
+
 .download-btn {
   display: flex;
   align-items: center;
@@ -668,6 +975,74 @@ const saveNotes = () => {
 .download-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(76, 110, 245, 0.25);
+}
+
+.chevron-icon {
+  transition: transform 0.3s ease;
+  margin-left: 4px;
+}
+
+.chevron-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.download-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  min-width: 200px;
+  z-index: 100;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.download-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a202c;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.download-option:hover {
+  background: linear-gradient(135deg, #f0f1ff, #e8e9ff);
+  color: #4c6ef5;
+}
+
+.download-option:first-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.download-option svg {
+  color: #64748b;
+  transition: color 0.2s;
+}
+
+.download-option:hover svg {
+  color: #4c6ef5;
 }
 
 .report-section {
