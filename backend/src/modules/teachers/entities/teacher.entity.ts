@@ -1,11 +1,11 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  JoinColumn, 
-  OneToOne, 
-  CreateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Department } from '../../departments/entities/department.entity';
@@ -26,11 +26,17 @@ export class Teacher {
   @Column({ unique: true })
   employeeId: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   phoneNumber: string;
 
   @Column()
   specialization: string;
+
+  @Column({ type: 'date', nullable: true })
+  dateOfBirth: Date;
+
+  @Column({ nullable: true })
+  imageUrl: string;
 
   @Column({
     type: 'enum',
@@ -42,11 +48,12 @@ export class Teacher {
   @CreateDateColumn()
   createdAt: Date;
 
-  
   @OneToOne(() => User, (user) => user.teacher, { onDelete: 'CASCADE' })
-  @JoinColumn() 
+  @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Department, (dept) => dept.teachers, { onDelete: 'RESTRICT' })
-  department: Department; 
+  @ManyToOne(() => Department, (dept) => dept.teachers, {
+    onDelete: 'RESTRICT',
+  })
+  department: Department;
 }

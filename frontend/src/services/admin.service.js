@@ -18,4 +18,20 @@ export default {
   createTeacher(data) { return api.post('/teachers', data); },
   updateTeacher(id, data) { return api.patch(`/teachers/${id}`, data); },
   deleteTeacher(id) { return api.delete(`/teachers/${id}`); },
+
+  // --- Courses ---
+  getCourses() { return api.get('/courses'); },
+  getCourse(id) { return api.get(`/courses/${id}`); },
+  createCourse(formData) {
+    return api.post('/courses', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  updateCourse(id, formData) {
+    return api.patch(`/courses/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  deleteCourse(id) { return api.delete(`/courses/${id}`); },
+  toggleCourseStatus(id) { return api.patch(`/courses/${id}/toggle-status`); },
 };

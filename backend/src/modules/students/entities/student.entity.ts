@@ -1,11 +1,11 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
-  JoinColumn, 
-  OneToOne, 
-  CreateDateColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Department } from '../../departments/entities/department.entity';
@@ -21,11 +21,14 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  fullName: string;
+  @Column({ type: 'int', generated: 'increment', unique: true })
+  studentNumber: number;
 
   @Column({ unique: true })
-  studentIdCard: string;
+  studentIdCard: string; // Format: rtc[studentNumber] - auto-generated
+
+  @Column()
+  fullName: string;
 
   @Column('int')
   year: number;
@@ -46,11 +49,12 @@ export class Student {
   @CreateDateColumn()
   createdAt: Date;
 
-  
   @OneToOne(() => User, (user) => user.student, { onDelete: 'CASCADE' })
-  @JoinColumn() 
+  @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Department, (dept) => dept.students, { onDelete: 'RESTRICT' })
-  department: Department; 
+  @ManyToOne(() => Department, (dept) => dept.students, {
+    onDelete: 'RESTRICT',
+  })
+  department: Department;
 }

@@ -29,7 +29,7 @@
 
       <!-- Year Selection Disabled until department selected -->
       <div class="selection-group" :class="{ disabled: !selectedDepartment }">
-        <h3 class="selection-label">ជ្រើសរើសឆ្នាំសិក្សា</h3>
+        <h3 class="selection-label">ជ្រើសរើសឆ្នាំសិក្សា (អាចជ្រើសបានច្រើន)</h3>
         <div v-if="!selectedDepartment" class="year-placeholder">
           <p class="placeholder-text">សូមជ្រើសរើសដេប៉ាតឺម៉ង់ដំបូង</p>
         </div>
@@ -37,8 +37,8 @@
           <button
             v-for="year in availableYears"
             :key="year"
-            :class="['year-card', { active: selectedYear === year }]"
-            @click="selectedYear = year"
+            :class="['year-card', { active: selectedYears.includes(year) }]"
+            @click="toggleYear(year)"
           >
             {{ year }}
           </button>
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Timetable Section -->
-    <div v-if="selectedDepartment && selectedYear" class="timetable-section">
+    <div v-if="selectedDepartment && selectedYears.length > 0" class="timetable-section">
       <!-- Legend Section -->
       <div class="legend-section">
         <span class="legend-label">មុខវិជ្ជា:</span>
@@ -72,6 +72,18 @@
           </svg>
           បន្ថែមកាលវិភាគ
         </button>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <span>Loading...</span>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="error" class="error-toast">
+        {{ error }}
+        <button @click="error = null">✕</button>
       </div>
 
       <!-- Timetable Grid -->
@@ -100,6 +112,7 @@
                 v-for="schedule in getScheduleForCell(day, slot)"
                 :key="schedule.id"
                 :schedule="schedule"
+                :is-other-teacher="!isOwnSchedule(schedule)"
                 @edit="openEditModal"
                 @delete="openDeleteConfirm"
               />
@@ -125,7 +138,7 @@
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <h3 class="empty-title">សូមជ្រើសរើសដេប៉ាតឺម៉ង់ និង ឆ្នាំសិក្សា</h3>
-        <p class="empty-text">ការជ្រើសរើសដេប៉ាតឺម៉ង់ និងឆ្នាំសិក្សាដើម្បីមើលលម្អិតពេលលេង</p>
+        <p class="empty-text">ជ្រើសរើសដេប៉ាតឺម៉ង់ និងឆ្នាំសិក្សា (អាចជ្រើសច្រើន) ដើម្បីមើលកាលវិភាគ</p>
       </div>
     </div>
 
@@ -134,7 +147,6 @@
       :is-open="isModalOpen"
       :is-edit="isEditing"
       :schedule="selectedSchedule"
-      :selected-year="selectedYear"
       @close="closeModal"
       @submit="handleSubmit"
     />
@@ -149,24 +161,33 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ScheduleCard from '../_components/ScheduleCard.vue';
 import ScheduleModal from '../_components/ScheduleModal.vue';
 import DeleteConfirmModal from '../_components/DeleteConfirmModal.vue';
+import { getSchedules, createSchedule, updateSchedule, deleteSchedule } from '@/services/schedules.api';
+import { getTeacherProfile } from '@/services/teacher-dashboard.api';
+import adminService from '@/services/admin.service';
 
-const departments = [
-  { id: 1, name: 'GIC', color: '#5B55F3' },
-  { id: 2, name: 'IT', color: '#10B981' },
-  { id: 3, name: 'Business', color: '#F59E0B' },
-  { id: 4, name: 'Engineering', color: '#EF4444' },
-];
+// Loading and error states
+const isLoading = ref(false);
+const error = ref(null);
 
-const departmentYears = {
-  1: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
-  2: ['Year 1', 'Year 2', 'Year 3', 'Year 4'],
-  3: ['Year 1', 'Year 2', 'Year 3'],
-  4: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+// Current teacher info
+const currentTeacherId = ref(null);
+const currentTeacherDepartmentId = ref(null);
+
+// Departments from API
+const departments = ref([]);
+const departmentColors = {
+  'GIC': '#5B55F3',
+  'IT': '#10B981',
+  'Business': '#F59E0B',
+  'Engineering': '#EF4444',
 };
+
+// Years available per department (will be populated based on schedules)
+const departmentYears = ref({});
 
 // Schedule Data
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -180,159 +201,51 @@ const dayLabels = {
   Saturday: 'សៅរ៍',
 };
 
+// 1-hour time slots from 7:00 to 5:00 PM
 const timeSlots = [
-  { start: '07:00', end: '09:00' },
-  { start: '09:00', end: '11:00' },
-  { start: '13:00', end: '15:00' },
-  { start: '15:00', end: '17:00' },
+  { start: '07:00', end: '08:00' },
+  { start: '08:00', end: '09:00' },
+  { start: '09:00', end: '10:00' },
+  { start: '10:00', end: '11:00' },
+  { start: '11:00', end: '12:00' },
+  { start: '13:00', end: '14:00' },
+  { start: '14:00', end: '15:00' },
+  { start: '15:00', end: '16:00' },
+  { start: '16:00', end: '17:00' },
 ];
 
-const schedules = ref([
-  {
-    id: 1,
-    subjectName: 'គណិតវិទ្យា',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 101',
-    day: 'Monday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#5B55F3',
-  },
-  {
-    id: 2,
-    subjectName: 'រូបវិទ្យា',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'B',
-    year: 'Year 2',
-    department: 1,
-    room: 'Room 102',
-    day: 'Monday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#10B981',
-  },
-  {
-    id: 3,
-    subjectName: 'គីមីវិទ្យា',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 103',
-    day: 'Tuesday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#F59E0B',
-  },
-  {
-    id: 4,
-    subjectName: 'ជីវវិទ្យា',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'C',
-    year: 'Year 3',
-    department: 1,
-    room: 'Room 104',
-    day: 'Wednesday',
-    startTime: '13:00',
-    endTime: '15:00',
-    color: '#EF4444',
-  },
-  {
-    id: 5,
-    subjectName: 'ភាសាអង់គ្លេស',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'B',
-    year: 'Year 2',
-    department: 1,
-    room: 'Room 105',
-    day: 'Thursday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#8B5CF6',
-  },
-  {
-    id: 6,
-    subjectName: 'Python Programming',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'A',
-    year: 'Year 1',
-    department: 2,
-    room: 'Lab 01',
-    day: 'Monday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#06B6D4',
-  },
-  {
-    id: 7,
-    subjectName: 'Web Development',
-    teacherName: 'លោក​​​ ដូ​ ដាវីន',
-    group: 'B',
-    year: 'Year 2',
-    department: 2,
-    room: 'Lab 02',
-    day: 'Tuesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#EC4899',
-  },
-  {
-    id: 8,
-    subjectName: 'Accounting',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'A',
-    year: 'Year 1',
-    department: 3,
-    room: 'Room 201',
-    day: 'Monday',
-    startTime: '13:00',
-    endTime: '15:00',
-    color: '#84CC16',
-  },
-  {
-    id: 9,
-    subjectName: 'Civil Engineering',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'A',
-    year: 'Year 1',
-    department: 4,
-    room: 'Room 301',
-    day: 'Wednesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#14B8A6',
-  },
-  {
-    id: 10,
-    subjectName: 'Mechanics',
-    teacherName: 'លោក ដូ​ ដាវីន',
-    group: 'B',
-    year: 'Year 2',
-    department: 4,
-    room: 'Room 302',
-    day: 'Friday',
-    startTime: '15:00',
-    endTime: '17:00',
-    color: '#F97316',
-  },
-]);
+const schedules = ref([]);
 
 const selectedDepartment = ref(null);
-const selectedYear = ref(null);
+const selectedYears = ref([]); // Changed to array for multiple selection
 
 const availableYears = computed(() => {
   if (!selectedDepartment.value) return [];
-  return departmentYears[selectedDepartment.value] || [];
+  const years = departmentYears.value[selectedDepartment.value] || [];
+  // If no years from data, provide default years
+  return years.length > 0 ? years : ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
 });
 
 const filteredSchedules = computed(() => {
-  return schedules.value.filter(
-    (s) => s.department === selectedDepartment.value && s.year === selectedYear.value
-  );
+  // Filter by department id and selected years
+  const deptId = selectedDepartment.value;
+  const years = selectedYears.value;
+
+  if (years.length === 0) {
+    return [];
+  }
+
+  return schedules.value.filter((s) => {
+    const scheduleDeptId = s.department?.id || s.departmentId;
+    return scheduleDeptId === deptId && years.includes(s.year);
+  });
 });
+
+// Check if a schedule belongs to current teacher
+const isOwnSchedule = (schedule) => {
+  const teacherId = schedule.teacher?.id || schedule.teacherId;
+  return teacherId === currentTeacherId.value;
+};
 
 const uniqueSubjects = computed(() => {
   const seen = new Map();
@@ -351,15 +264,122 @@ const selectedSchedule = ref(null);
 const isDeleteConfirmOpen = ref(false);
 const scheduleToDelete = ref(null);
 
-const selectDepartment = (deptId) => {
+// Load teacher profile to get current teacher ID
+const loadTeacherProfile = async () => {
+  try {
+    const profile = await getTeacherProfile();
+    currentTeacherId.value = profile.id;
+    currentTeacherDepartmentId.value = profile.departmentId;
+  } catch (err) {
+    console.error('Failed to load teacher profile:', err);
+  }
+};
+
+// Load departments from API
+const loadDepartments = async () => {
+  try {
+    const response = await adminService.getDepartments();
+    const depts = response.data || [];
+    departments.value = depts.map(dept => ({
+      id: dept.id,
+      name: dept.name || dept.code,
+      color: departmentColors[dept.code] || departmentColors[dept.name] || '#5B55F3'
+    }));
+  } catch (err) {
+    console.error('Failed to load departments:', err);
+    error.value = 'Failed to load departments';
+  }
+};
+
+// Load schedules from API
+const loadSchedules = async () => {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    // Load all schedules for the department (without year filter)
+    // We'll filter by selected years on the frontend
+    const schedulesData = await getSchedules(
+      selectedDepartment.value || '',
+      '' // Don't filter by year in API call
+    );
+
+    // Map schedules to expected format
+    schedules.value = (schedulesData || []).map(schedule => ({
+      id: schedule.id,
+      subjectName: schedule.subjectName,
+      teacherName: schedule.teacher?.fullName || schedule.teacherName,
+      teacherId: schedule.teacher?.id,
+      group: schedule.group,
+      year: schedule.year,
+      department: schedule.department,
+      departmentId: schedule.department?.id,
+      room: schedule.room,
+      day: schedule.day,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      color: schedule.color || '#5B55F3',
+      type: schedule.type || 'Lecture'
+    }));
+
+    // Build available years from schedules data
+    buildDepartmentYears();
+  } catch (err) {
+    console.error('Failed to load schedules:', err);
+    error.value = 'Failed to load schedules';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Build department years from schedule data
+const buildDepartmentYears = () => {
+  const yearsMap = {};
+  schedules.value.forEach(s => {
+    const deptId = s.department?.id || s.departmentId;
+    if (!yearsMap[deptId]) {
+      yearsMap[deptId] = new Set();
+    }
+    yearsMap[deptId].add(s.year);
+  });
+
+  // Convert sets to sorted arrays
+  Object.keys(yearsMap).forEach(deptId => {
+    yearsMap[deptId] = Array.from(yearsMap[deptId]).sort();
+  });
+
+  departmentYears.value = yearsMap;
+};
+
+const selectDepartment = async (deptId) => {
   selectedDepartment.value = deptId;
-  selectedYear.value = null; // Reset year when department changes
+  selectedYears.value = []; // Reset years when department changes
+  await loadSchedules();
+};
+
+// Toggle year selection (allow multiple)
+const toggleYear = (year) => {
+  const index = selectedYears.value.indexOf(year);
+  if (index > -1) {
+    // Remove year if already selected
+    selectedYears.value.splice(index, 1);
+  } else {
+    // Add year if not selected
+    selectedYears.value.push(year);
+  }
+  // filteredSchedules will automatically update due to reactivity
 };
 
 const getScheduleForCell = (day, slot) => {
-  return filteredSchedules.value.filter(
-    (s) => s.day === day && s.startTime === slot.start && s.endTime === slot.end
-  );
+  return filteredSchedules.value.filter((s) => {
+    // Check if schedule overlaps with this time slot
+    const scheduleStart = s.startTime;
+    const scheduleEnd = s.endTime;
+    const slotStart = slot.start;
+    const slotEnd = slot.end;
+
+    // Check if the schedule starts at this slot's start time
+    return s.day === day && scheduleStart === slotStart && scheduleEnd === slotEnd;
+  });
 };
 
 const handleCellClick = (day, slot) => {
@@ -379,8 +399,9 @@ const openAddModal = (day = null, slot = null) => {
     startTime: slot ? slot.start : '',
     endTime: slot ? slot.end : '',
     department: selectedDepartment.value,
-    year: selectedYear.value,
+    year: selectedYears.value[0] || 'Year 1', // Use first selected year or default
     color: '#5B55F3',
+    type: 'Lecture'
   };
   isModalOpen.value = true;
 };
@@ -397,17 +418,50 @@ const closeModal = () => {
   isEditing.value = false;
 };
 
-const handleSubmit = (formData) => {
-  if (isEditing.value && selectedSchedule.value?.id) {
-    const index = schedules.value.findIndex((s) => s.id === selectedSchedule.value.id);
-    if (index !== -1) {
-      schedules.value[index] = { ...formData, id: selectedSchedule.value.id };
+const handleSubmit = async (formData) => {
+  isLoading.value = true;
+  try {
+    if (isEditing.value && selectedSchedule.value?.id) {
+      // Update existing schedule
+      await updateSchedule(selectedSchedule.value.id, {
+        subjectName: formData.subjectName,
+        group: formData.group,
+        year: formData.year,
+        room: formData.room,
+        day: formData.day,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        color: formData.color,
+        type: formData.type,
+        teacherId: currentTeacherId.value,
+        departmentId: selectedDepartment.value
+      });
+    } else {
+      // Create new schedule
+      await createSchedule({
+        subjectName: formData.subjectName,
+        group: formData.group,
+        year: formData.year || selectedYears.value[0] || 'Year 1',
+        room: formData.room,
+        day: formData.day,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        color: formData.color,
+        type: formData.type || 'Lecture',
+        teacherId: currentTeacherId.value,
+        departmentId: selectedDepartment.value
+      });
     }
-  } else {
-    const newId = Math.max(...schedules.value.map((s) => s.id), 0) + 1;
-    schedules.value.push({ ...formData, id: newId });
+
+    // Reload schedules after change
+    await loadSchedules();
+    closeModal();
+  } catch (err) {
+    console.error('Failed to save schedule:', err);
+    error.value = err.response?.data?.message || 'Failed to save schedule';
+  } finally {
+    isLoading.value = false;
   }
-  closeModal();
 };
 
 const openDeleteConfirm = (id) => {
@@ -420,12 +474,32 @@ const closeDeleteConfirm = () => {
   scheduleToDelete.value = null;
 };
 
-const handleDelete = () => {
-  if (scheduleToDelete.value) {
-    schedules.value = schedules.value.filter((s) => s.id !== scheduleToDelete.value);
+const handleDelete = async () => {
+  if (!scheduleToDelete.value) {
+    closeDeleteConfirm();
+    return;
   }
-  closeDeleteConfirm();
+
+  isLoading.value = true;
+  try {
+    await deleteSchedule(scheduleToDelete.value);
+    await loadSchedules();
+  } catch (err) {
+    console.error('Failed to delete schedule:', err);
+    error.value = err.response?.data?.message || 'Failed to delete schedule';
+  } finally {
+    isLoading.value = false;
+    closeDeleteConfirm();
+  }
 };
+
+// Initialize on mount
+onMounted(async () => {
+  await Promise.all([
+    loadTeacherProfile(),
+    loadDepartments()
+  ]);
+});
 </script>
 
 <style scoped>
@@ -790,6 +864,61 @@ const handleDelete = () => {
   color: #9ca3af;
   font-size: 0.95rem;
   margin: 0;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 100;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #5B55F3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error toast */
+.error-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-toast button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 16px;
 }
 
 @media (max-width: 768px) {
