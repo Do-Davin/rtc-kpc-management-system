@@ -25,6 +25,10 @@ export class CreateCourseDto {
   @IsString()
   subtitle?: string;
 
+  @IsString()
+  @IsNotEmpty()
+  courseCode: string;
+
   @IsNumber()
   @IsNotEmpty()
   @Min(2000)

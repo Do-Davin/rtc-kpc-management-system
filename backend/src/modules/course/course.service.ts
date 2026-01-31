@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Course } from './entity/course.entity';
@@ -24,6 +28,17 @@ export class CoursesService {
     if (!department) {
       throw new NotFoundException(
         `Department with ID ${dto.departmentId} not found`,
+      );
+    }
+
+    // Check if course code already exists
+    const existingCourse = await this.courseRepo.findOneBy({
+      courseCode: dto.courseCode,
+    });
+
+    if (existingCourse) {
+      throw new ConflictException(
+        `Course with code ${dto.courseCode} already exists`,
       );
     }
 
@@ -75,6 +90,19 @@ export class CoursesService {
   async update(id: string, dto: UpdateCourseDto): Promise<Course> {
     const course = await this.findOne(id);
 
+    // Check if course code is being changed and if it already exists
+    if (dto.courseCode && dto.courseCode !== course.courseCode) {
+      const existingCourse = await this.courseRepo.findOneBy({
+        courseCode: dto.courseCode,
+      });
+
+      if (existingCourse) {
+        throw new ConflictException(
+          `Course with code ${dto.courseCode} already exists`,
+        );
+      }
+    }
+
     // If updating department, verify it exists
     if (dto.departmentId) {
       const department = await this.departmentRepo.findOneBy({
@@ -93,6 +121,7 @@ export class CoursesService {
 
     // Update other fields
     if (dto.title) course.title = dto.title;
+    if (dto.courseCode) course.courseCode = dto.courseCode;
     if (dto.subtitle !== undefined) course.subtitle = dto.subtitle;
     if (dto.year) course.year = dto.year;
     if (dto.status !== undefined) course.status = dto.status;

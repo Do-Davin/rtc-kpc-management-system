@@ -23,6 +23,9 @@ export class Course {
   @Column({ type: 'text', nullable: true })
   subtitle: string;
 
+  @Column({ unique: true })
+  courseCode: string;
+
   @Column('int')
   year: number;
 

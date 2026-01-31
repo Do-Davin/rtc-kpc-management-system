@@ -24,6 +24,10 @@ export class UpdateCourseDto {
   subtitle?: string;
 
   @IsOptional()
+  @IsString()
+  courseCode?: string;
+
+  @IsOptional()
   @IsNumber()
   @Min(2000)
   @Max(2100)
