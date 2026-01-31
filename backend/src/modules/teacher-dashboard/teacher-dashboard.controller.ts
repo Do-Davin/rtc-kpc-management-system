@@ -18,6 +18,12 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { DashboardQueryDto, TrendQueryDto } from './dto/dashboard-query.dto';
+import {
+  TeacherStudentQueryDto,
+  AddStudentToClassDto,
+  UpdateStudentByTeacherDto,
+} from './dto/student-management.dto';
+import { UpdateTeacherProfileDto } from './dto/update-teacher-profile.dto';
 import type { AuthRequest } from '../common/types/auth-request.type';
 
 @Controller('teacher-dashboard')
@@ -25,6 +31,34 @@ import type { AuthRequest } from '../common/types/auth-request.type';
 @Roles('TEACHER')
 export class TeacherDashboardController {
   constructor(private readonly dashboardService: TeacherDashboardService) {}
+
+  // ========== Teacher Profile ==========
+
+  /**
+   * Get the logged-in teacher's profile
+   * GET /teacher-dashboard/profile
+   */
+  @Get('profile')
+  async getProfile(@Request() req: AuthRequest) {
+    const profile = await this.dashboardService.getTeacherProfile(req.user.sub);
+    return { profile };
+  }
+
+  /**
+   * Update the logged-in teacher's profile
+   * PUT /teacher-dashboard/profile
+   */
+  @Put('profile')
+  async updateProfile(
+    @Request() req: AuthRequest,
+    @Body() dto: UpdateTeacherProfileDto,
+  ) {
+    const profile = await this.dashboardService.updateTeacherProfile(
+      req.user.sub,
+      dto,
+    );
+    return { profile };
+  }
 
   // ========== Dashboard Statistics ==========
 
@@ -117,5 +151,84 @@ export class TeacherDashboardController {
   @Delete('todos/:id')
   async deleteTodo(@Request() req: AuthRequest, @Param('id') todoId: string) {
     return this.dashboardService.deleteTodo(req.user.sub, todoId);
+  }
+
+  // ========== Student Management ==========
+
+  /**
+   * Get students in teacher's department with filtering
+   * GET /teacher-dashboard/students?search=&status=ACTIVE&page=1&limit=50
+   */
+  @Get('students')
+  async getStudents(
+    @Request() req: AuthRequest,
+    @Query() query: TeacherStudentQueryDto,
+  ) {
+    return this.dashboardService.getStudentsInDepartment(req.user.sub, query);
+  }
+
+  /**
+   * Get a single student's details
+   * GET /teacher-dashboard/students/:id
+   */
+  @Get('students/:id')
+  async getStudentDetails(
+    @Request() req: AuthRequest,
+    @Param('id') studentId: string,
+  ) {
+    const student = await this.dashboardService.getStudentDetails(
+      req.user.sub,
+      studentId,
+    );
+    return { student };
+  }
+
+  /**
+   * Add a new student to teacher's department
+   * POST /teacher-dashboard/students
+   */
+  @Post('students')
+  async addStudent(
+    @Request() req: AuthRequest,
+    @Body() dto: AddStudentToClassDto,
+  ) {
+    const student = await this.dashboardService.addStudentToDepartment(
+      req.user.sub,
+      dto,
+    );
+    return { student };
+  }
+
+  /**
+   * Update a student in teacher's department
+   * PUT /teacher-dashboard/students/:id
+   */
+  @Put('students/:id')
+  async updateStudent(
+    @Request() req: AuthRequest,
+    @Param('id') studentId: string,
+    @Body() dto: UpdateStudentByTeacherDto,
+  ) {
+    const student = await this.dashboardService.updateStudentInDepartment(
+      req.user.sub,
+      studentId,
+      dto,
+    );
+    return { student };
+  }
+
+  /**
+   * Remove a student from teacher's department (soft delete)
+   * DELETE /teacher-dashboard/students/:id
+   */
+  @Delete('students/:id')
+  async removeStudent(
+    @Request() req: AuthRequest,
+    @Param('id') studentId: string,
+  ) {
+    return this.dashboardService.removeStudentFromDepartment(
+      req.user.sub,
+      studentId,
+    );
   }
 }
