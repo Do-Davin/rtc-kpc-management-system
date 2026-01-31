@@ -168,13 +168,25 @@
 
     <!-- Student Table -->
     <div class="table-card">
-      <div class="table-container">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>កំពុងផ្ទុកទិន្នន័យ...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" @click="fetchStudents">ព្យាយាមម្តងទៀត</button>
+      </div>
+
+      <div v-else class="table-container">
         <table class="student-table">
           <thead>
             <tr>
               <th>លេខសម្គាល់</th>
               <th>ឈ្មោះពេញ</th>
-              <th>ថ្ងៃខែឆ្នាំកំណើត</th>
+              <th>ឆ្នាំសិក្សា</th>
               <th>អ៊ីមែល</th>
               <th>វត្តមាន</th>
               <th>ស្ថានភាព</th>
@@ -182,7 +194,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="student in filteredStudents" :key="student.id">
+            <tr v-for="student in paginatedStudents" :key="student.id">
               <td class="student-id">{{ student.studentId }}</td>
               <td>
                 <div class="student-name">
@@ -190,7 +202,7 @@
                   <span>{{ student.fullName }}</span>
                 </div>
               </td>
-              <td>{{ formatDate(student.dateOfBirth) }}</td>
+              <td>Year {{ student.year || 'N/A' }}</td>
               <td class="email">{{ student.email }}</td>
               <td>
                 <div class="attendance-cell">
@@ -206,7 +218,7 @@
               </td>
               <td>
                 <span :class="['status-badge', student.status.toLowerCase()]">
-                  {{ student.status }}
+                  {{ student.status === 'ACTIVE' ? 'Active' : 'Inactive' }}
                 </span>
               </td>
               <td>
@@ -227,7 +239,7 @@
                       <circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
-                  <button class="action-btn edit" @click="openEditModal(student)" title="កែប្រែសិស្ស">
+                  <button v-if="student.status === 'ACTIVE'" class="action-btn edit" @click="openEditModal(student)" title="កែប្រែសិស្ស">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -243,7 +255,7 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
-                  <button class="action-btn delete" @click="confirmDelete(student)" title="លុបសិស្ស">
+                  <button v-if="student.status === 'ACTIVE'" class="action-btn delete" @click="confirmDelete(student)" title="លុបសិស្ស">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -368,16 +380,6 @@
           <form @submit.prevent="saveStudent" class="modal-form">
             <div class="form-row">
               <div class="form-group">
-                <label for="studentId">លេខសម្គាល់សិស្ស</label>
-                <input
-                  type="text"
-                  id="studentId"
-                  v-model="formData.studentId"
-                  placeholder="ឧ. STU001"
-                  required
-                />
-              </div>
-              <div class="form-group">
                 <label for="fullName">ឈ្មោះពេញ</label>
                 <input
                   type="text"
@@ -390,49 +392,50 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="dob">ថ្ងៃខែឆ្នាំកំណើត</label>
+                <label for="phoneNumber">លេខទូរស័ព្ទ (ជម្រើស)</label>
                 <input
-                  type="date"
-                  id="dob"
-                  v-model="formData.dateOfBirth"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label for="email">អ៊ីមែល</label>
-                <input
-                  type="email"
-                  id="email"
-                  v-model="formData.email"
-                  placeholder="student@email.com"
-                  required
+                  type="text"
+                  id="phoneNumber"
+                  v-model="formData.phoneNumber"
+                  placeholder="012345678"
                 />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label for="attendance">វត្តមាន (%)</label>
+                <label for="year">ឆ្នាំសិក្សា</label>
+                <select id="year" v-model="formData.year" required>
+                  <option :value="1">Year 1</option>
+                  <option :value="2">Year 2</option>
+                  <option :value="3">Year 3</option>
+                  <option :value="4">Year 4</option>
+                  <option :value="5">Year 5</option>
+                </select>
+              </div>
+              <div class="form-group" v-if="!isEditing">
+                <label for="enrollmentYear">ឆ្នាំចូលរៀន</label>
                 <input
                   type="number"
-                  id="attendance"
-                  v-model="formData.attendance"
-                  min="0"
-                  max="100"
-                  placeholder="0-100"
+                  id="enrollmentYear"
+                  v-model="formData.enrollmentYear"
+                  :min="2020"
+                  :max="new Date().getFullYear()"
+                  required
                 />
               </div>
               <div class="form-group">
                 <label for="status">ស្ថានភាព</label>
                 <select id="status" v-model="formData.status">
-                  <option value="Active">កំពុងសិក្សា</option>
-                  <option value="Inactive">ឈប់សិក្សា</option>
+                  <option value="ACTIVE">កំពុងសិក្សា</option>
+                  <option value="INACTIVE">ឈប់សិក្សា</option>
                 </select>
               </div>
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-secondary" @click="closeModal">បោះបង់</button>
-              <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'រក្សាទុកការកែប្រែ' : 'បន្ថែមសិស្ស' }}
+              <button type="button" class="btn btn-secondary" @click="closeModal" :disabled="isSaving">បោះបង់</button>
+              <button type="submit" class="btn btn-primary" :disabled="isSaving">
+                <span v-if="isSaving">កំពុងរក្សាទុក...</span>
+                <span v-else>{{ isEditing ? 'រក្សាទុកការកែប្រែ' : 'បន្ថែមសិស្ស' }}</span>
               </button>
             </div>
           </form>
@@ -538,15 +541,12 @@
               <div class="detail-item">
                 <div class="detail-icon dob-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                    <line x1="16" x2="16" y1="2" y2="6"/>
-                    <line x1="8" x2="8" y1="2" y2="6"/>
-                    <line x1="3" x2="21" y1="10" y2="10"/>
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                   </svg>
                 </div>
                 <div class="detail-info">
-                  <span class="detail-label">Date of Birth</span>
-                  <span class="detail-value">{{ formatDate(selectedStudent.dateOfBirth) }}</span>
+                  <span class="detail-label">Phone Number</span>
+                  <span class="detail-value">{{ selectedStudent.phoneNumber || 'N/A' }}</span>
                 </div>
               </div>
 
@@ -559,7 +559,7 @@
                 </div>
                 <div class="detail-info">
                   <span class="detail-label">Status</span>
-                  <span :class="['status-badge', selectedStudent.status.toLowerCase()]">{{ selectedStudent.status }}</span>
+                  <span :class="['status-badge', selectedStudent.status.toLowerCase()]">{{ selectedStudent.status === 'ACTIVE' ? 'Active' : 'Inactive' }}</span>
                 </div>
               </div>
             </div>
@@ -575,16 +575,16 @@
                   <span class="perf-label">Attendance</span>
                 </div>
                 <div class="perf-stat">
-                  <div class="perf-circle" :class="selectedStudent.gpa >= 3.0 ? 'high' : selectedStudent.gpa >= 2.0 ? 'medium' : 'low'">
-                    <span class="perf-value">{{ selectedStudent.gpa?.toFixed(1) || '0.0' }}</span>
+                  <div class="perf-circle high">
+                    <span class="perf-value">Year {{ selectedStudent.year || 'N/A' }}</span>
                   </div>
-                  <span class="perf-label">GPA</span>
+                  <span class="perf-label">Study Year</span>
                 </div>
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="details-actions">
+            <!-- Action Buttons - Only show for active students -->
+            <div class="details-actions" v-if="selectedStudent.status === 'ACTIVE'">
               <button class="btn btn-edit" @click="editFromDetails">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -601,6 +601,10 @@
                 Delete
               </button>
             </div>
+            <!-- Inactive student notice -->
+            <div class="details-actions inactive-notice" v-else>
+              <p>សិស្សនេះមានស្ថានភាពអសកម្ម (Inactive)</p>
+            </div>
           </div>
         </div>
       </div>
@@ -609,23 +613,27 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import PrimaryButton from '../_components/PrimaryButton.vue'
+import {
+  getStudents,
+  addStudent,
+  updateStudent,
+  removeStudent,
+} from '@/services/teacher-dashboard.api'
 
-const students = ref([
-  { id: 1, studentId: 'STU001', fullName: 'cristiano ronaldo', dateOfBirth: '2005-03-15', email: 'ronaldo@gmail.com', attendance: 100, status: 'Active', gpa: 3.9, classInfo: 'Year 3 / Computer Science' },
-  { id: 2, studentId: 'STU002', fullName: 'Leo Messi', dateOfBirth: '2005-07-22', email: 'messi@gmail.com', attendance: 0, status: 'Inactive', gpa: 2.1, classInfo: 'Year 2 / Information Technology' },
-  { id: 3, studentId: 'STU003', fullName: 'Neymar JR', dateOfBirth: '2005-11-08', email: 'neymar@gmail.com', attendance: 100, status: 'Active', gpa: 3.5, classInfo: 'Year 3 / Computer Science' },
-  { id: 4, studentId: 'STU004', fullName: 'Jing Jork', dateOfBirth: '2004-01-30', email: 'jingjork@gmail.com', attendance: 50, status: 'Active', gpa: 2.8, classInfo: 'Year 1 / Software Engineering' },
-  { id: 5, studentId: 'STU005', fullName: 'Huoth Sitha', dateOfBirth: '2005-09-12', email: 'sitha@gmail.com', attendance: 50, status: 'Active', gpa: 3.2, classInfo: 'Year 2 / Data Science' },
-  { id: 6, studentId: 'STU006', fullName: 'Sam Sokleap', dateOfBirth: '2004-05-25', email: 'daneth@gmail.com', attendance: 50, status: 'Active', gpa: 2.5, classInfo: 'Year 3 / Computer Science' },
-  { id: 7, studentId: 'STU007', fullName: 'Vathvath', dateOfBirth: '2005-12-03', email: 'vathvath@gmail.com', attendance: 0, status: 'Inactive', gpa: 1.8, classInfo: 'Year 1 / Information Technology' },
-  { id: 8, studentId: 'STU008', fullName: 'Teytey', dateOfBirth: '2004-08-19', email: 'teytey@gmail.com', attendance: 80, status: 'Active', gpa: 3.7, classInfo: 'Year 2 / Software Engineering' },
-  { id: 9, studentId: 'STU009', fullName: 'Vannda', dateOfBirth: '2005-02-14', email: 'vannda@gmail.com', attendance: 100, status: 'Active', gpa: 4.0, classInfo: 'Year 3 / Computer Science' },
-  { id: 10, studentId: 'STU010', fullName: 'Sokha Meas', dateOfBirth: '2004-06-28', email: 'sokha@gmail.com', attendance: 75, status: 'Active', gpa: 3.0, classInfo: 'Year 2 / Data Science' },
-  { id: 11, studentId: 'STU011', fullName: 'Bopha Chan', dateOfBirth: '2005-04-10', email: 'bopha@gmail.com', attendance: 90, status: 'Active', gpa: 3.8, classInfo: 'Year 1 / Computer Science' },
-  { id: 12, studentId: 'STU012', fullName: 'Dara Kim', dateOfBirth: '2004-10-05', email: 'dara@gmail.com', attendance: 25, status: 'Inactive', gpa: 2.0, classInfo: 'Year 3 / Information Technology' },
-])
+// Reactive state
+const students = ref([])
+const isLoading = ref(false)
+const error = ref(null)
+
+// Stats from API
+const stats = ref({
+  total: 0,
+  active: 0,
+  inactive: 0,
+  averageAttendance: 0,
+})
 
 const searchQuery = ref('')
 const currentFilter = ref('all')
@@ -638,16 +646,14 @@ const isEditing = ref(false)
 const studentToDelete = ref(null)
 const editingStudent = ref(null)
 const selectedStudent = ref(null)
+const isSaving = ref(false)
 
 const formData = ref({
-  studentId: '',
   fullName: '',
-  dateOfBirth: '',
-  email: '',
-  attendance: 0,
-  status: 'Active',
-  gpa: 0,
-  classInfo: ''
+  year: 1,
+  enrollmentYear: new Date().getFullYear(),
+  phoneNumber: '',
+  status: 'ACTIVE',
 })
 
 const statusFilters = [
@@ -656,14 +662,11 @@ const statusFilters = [
   { label: 'ឈប់សិក្សា', value: 'inactive' }
 ]
 
-const totalStudents = computed(() => students.value.length)
-const activeStudents = computed(() => students.value.filter(s => s.status === 'Active').length)
-const inactiveStudents = computed(() => students.value.filter(s => s.status === 'Inactive').length)
-const averageAttendance = computed(() => {
-  if (students.value.length === 0) return 0
-  const total = students.value.reduce((sum, s) => sum + s.attendance, 0)
-  return Math.round(total / students.value.length)
-})
+// Computed properties using API stats
+const totalStudents = computed(() => stats.value.total)
+const activeStudents = computed(() => stats.value.active)
+const inactiveStudents = computed(() => stats.value.inactive)
+const averageAttendance = computed(() => stats.value.averageAttendance)
 
 const filteredStudents = computed(() => {
   let result = students.value
@@ -676,8 +679,8 @@ const filteredStudents = computed(() => {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(s =>
       s.fullName.toLowerCase().includes(query) ||
-      s.email.toLowerCase().includes(query) ||
-      s.studentId.toLowerCase().includes(query)
+      s.email?.toLowerCase().includes(query) ||
+      s.studentId?.toLowerCase().includes(query)
     )
   }
 
@@ -688,18 +691,67 @@ const totalPages = computed(() => Math.ceil(filteredStudents.value.length / item
 const paginationStart = computed(() => (currentPage.value - 1) * itemsPerPage + 1)
 const paginationEnd = computed(() => Math.min(currentPage.value * itemsPerPage, filteredStudents.value.length))
 
+// Paginated students for current page
+const paginatedStudents = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredStudents.value.slice(start, end)
+})
+
+// Watch for filter changes to reset page
+watch([currentFilter, searchQuery], () => {
+  currentPage.value = 1
+})
+
+// Fetch students from API
+const fetchStudents = async () => {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const response = await getStudents({
+      page: 1,
+      limit: 100, // Max allowed by backend
+    })
+
+    students.value = response.students || []
+    stats.value = response.stats || {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      averageAttendance: 0,
+    }
+  } catch (err) {
+    console.error('Error fetching students:', err)
+    const errorMsg = err.response?.data?.message || 'Failed to load students'
+
+    // Provide helpful error messages
+    if (errorMsg.includes('Teacher profile not found')) {
+      error.value = 'គណនីគ្រូរបស់អ្នកមិនទាន់មានប្រវត្តិរូបទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងដើម្បីបង្កើតប្រវត្តិរូបគ្រូ។'
+    } else if (errorMsg.includes('not assigned to any department')) {
+      error.value = 'គ្រូមិនទាន់ត្រូវបានចាត់តាំងទៅដេប៉ាតឺម៉ង់ទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។'
+    } else {
+      error.value = errorMsg
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Initialize on mount
+onMounted(() => {
+  fetchStudents()
+})
+
 const getFilterCount = (filter) => {
-  if (filter === 'all') return students.value.length
-  return students.value.filter(s => s.status.toLowerCase() === filter).length
+  if (filter === 'all') return stats.value.total
+  if (filter === 'active') return stats.value.active
+  return stats.value.inactive
 }
 
 const getInitials = (name) => {
+  if (!name) return '??'
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
 }
 
 const getAttendanceClass = (attendance) => {
@@ -711,14 +763,11 @@ const getAttendanceClass = (attendance) => {
 const openAddModal = () => {
   isEditing.value = false
   formData.value = {
-    studentId: '',
     fullName: '',
-    dateOfBirth: '',
-    email: '',
-    attendance: 0,
-    status: 'Active',
-    gpa: 0,
-    classInfo: ''
+    year: 1,
+    enrollmentYear: new Date().getFullYear(),
+    phoneNumber: '',
+    status: 'ACTIVE',
   }
   showModal.value = true
 }
@@ -726,7 +775,13 @@ const openAddModal = () => {
 const openEditModal = (student) => {
   isEditing.value = true
   editingStudent.value = student
-  formData.value = { ...student }
+  formData.value = {
+    fullName: student.fullName,
+    year: student.year || 1,
+    enrollmentYear: student.enrollmentYear || new Date().getFullYear(),
+    phoneNumber: student.phoneNumber || '',
+    status: student.status,
+  }
   showModal.value = true
 }
 
@@ -735,22 +790,51 @@ const closeModal = () => {
   editingStudent.value = null
 }
 
-const saveStudent = () => {
-  if (isEditing.value) {
-    const index = students.value.findIndex(s => s.id === editingStudent.value.id)
-    if (index !== -1) {
-      students.value[index] = {
-        ...formData.value,
-        id: editingStudent.value.id
-      }
+const saveStudent = async () => {
+  isSaving.value = true
+  error.value = null
+
+  try {
+    if (isEditing.value) {
+      // Update student
+      await updateStudent(editingStudent.value.id, {
+        fullName: formData.value.fullName,
+        phoneNumber: formData.value.phoneNumber,
+        year: formData.value.year,
+        status: formData.value.status,
+      })
+    } else {
+      // Add new student - email and studentId are auto-generated by backend
+      await addStudent({
+        fullName: formData.value.fullName,
+        year: formData.value.year,
+        enrollmentYear: formData.value.enrollmentYear,
+        phoneNumber: formData.value.phoneNumber,
+        status: formData.value.status,
+      })
     }
-  } else {
-    students.value.push({
-      ...formData.value,
-      id: Date.now()
-    })
+
+    // Refresh the list
+    await fetchStudents()
+    closeModal()
+  } catch (err) {
+    console.error('Error saving student:', err)
+    const errorMsg = err.response?.data?.message || 'Failed to save student'
+
+    // Check for specific error and provide helpful message
+    if (errorMsg.includes('Teacher profile not found')) {
+      error.value = 'គណនីគ្រូរបស់អ្នកមិនទាន់មានប្រវត្តិរូបទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងដើម្បីបង្កើតប្រវត្តិរូបគ្រូ។'
+      alert('Teacher profile not found. Please contact admin to create your teacher profile.')
+    } else if (errorMsg.includes('not assigned to any department')) {
+      error.value = 'គ្រូមិនទាន់ត្រូវបានចាត់តាំងទៅដេប៉ាតឺម៉ង់ទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។'
+      alert('Teacher is not assigned to any department. Please contact admin.')
+    } else {
+      error.value = errorMsg
+      alert(error.value)
+    }
+  } finally {
+    isSaving.value = false
   }
-  closeModal()
 }
 
 const confirmDelete = (student) => {
@@ -763,9 +847,18 @@ const closeDeleteModal = () => {
   studentToDelete.value = null
 }
 
-const deleteStudent = () => {
-  students.value = students.value.filter(s => s.id !== studentToDelete.value.id)
-  closeDeleteModal()
+const deleteStudent = async () => {
+  if (!studentToDelete.value) return
+
+  try {
+    await removeStudent(studentToDelete.value.id)
+    await fetchStudents()
+    closeDeleteModal()
+  } catch (err) {
+    console.error('Error deleting student:', err)
+    error.value = err.response?.data?.message || 'Failed to delete student'
+    alert(error.value)
+  }
 }
 
 const viewStudentDetails = (student) => {
@@ -780,12 +873,20 @@ const closeDetailsModal = () => {
 
 const getStudentPerformanceStatus = (student) => {
   if (!student) return { label: 'Unknown', class: 'unknown' }
-  const gpa = student.gpa || 0
+
+  // Check if student is inactive
+  if (student.status === 'INACTIVE') {
+    return { label: 'Inactive', class: 'inactive' }
+  }
+
   const attendance = student.attendance || 0
 
-  if (gpa >= 3.5 && attendance >= 80) {
+  // New student with no attendance records yet
+  if (attendance === 0) {
+    return { label: 'New', class: 'new' }
+  } else if (attendance >= 80) {
     return { label: 'Good', class: 'good' }
-  } else if (gpa >= 2.5 && attendance >= 50) {
+  } else if (attendance >= 50) {
     return { label: 'Warning', class: 'warning' }
   } else {
     return { label: 'Risk', class: 'risk' }
@@ -793,13 +894,19 @@ const getStudentPerformanceStatus = (student) => {
 }
 
 const editFromDetails = () => {
+  const student = selectedStudent.value
   closeDetailsModal()
-  openEditModal(selectedStudent.value)
+  if (student) {
+    openEditModal(student)
+  }
 }
 
 const deleteFromDetails = () => {
+  const student = selectedStudent.value
   closeDetailsModal()
-  confirmDelete(selectedStudent.value)
+  if (student) {
+    confirmDelete(student)
+  }
 }
 </script>
 
@@ -1530,6 +1637,26 @@ const deleteFromDetails = () => {
   color: #dc2626;
 }
 
+.performance-badge.new {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: var(--purple-600);
+}
+
+.performance-badge.inactive {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #6b7280;
+}
+
+.inactive-notice {
+  justify-content: center;
+}
+
+.inactive-notice p {
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1697,6 +1824,44 @@ const deleteFromDetails = () => {
   background: #ef4444;
   color: white;
   border-color: #ef4444;
+}
+
+/* Loading & Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-state .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--purple-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p,
+.error-state p {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.error-state {
+  color: #ef4444;
 }
 
 @media (max-width: 1200px) {
