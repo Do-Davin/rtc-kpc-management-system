@@ -32,6 +32,12 @@ export class Teacher {
   @Column()
   specialization: string;
 
+  @Column({ type: 'date', nullable: true })
+  dateOfBirth: Date;
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
   @Column({
     type: 'enum',
     enum: TeacherStatus,
