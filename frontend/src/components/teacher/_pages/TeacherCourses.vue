@@ -60,15 +60,13 @@
             stroke="currentColor"
             stroke-width="2"
           >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
           </svg>
         </div>
         <div class="stat-content">
-          <p class="stat-label">Total Students</p>
-          <p class="stat-value">{{ totalStudents }}</p>
+          <p class="stat-label">Average Progress</p>
+          <p class="stat-value">{{ averageProgress }}%</p>
         </div>
       </div>
       <div class="stat-card">
@@ -115,16 +113,28 @@
 
     <!-- Courses Grid -->
     <div class="courses-grid">
-      <div v-if="filteredCourses.length > 0" class="courses-list">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="loading-state">
+        <p>Loading courses...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button @click="fetchCourses" class="btn-retry">Retry</button>
+      </div>
+
+      <!-- Courses List -->
+      <div v-else-if="filteredCourses.length > 0" class="courses-list">
         <div v-for="course in filteredCourses" :key="course.id" class="course-card">
           <!-- Course Image -->
           <div class="course-image-wrapper">
-            <img :src="course.image" :alt="course.title" class="course-image"/>
+            <img :src="course.image || '/public/courses/default.jpg'" :alt="course.title" class="course-image"/>
             <div class="course-badge" :class="course.status">{{ course.status === 'active' ? 'Active' : 'Inactive' }}</div>
             <div class="course-overlay">
               <button class="btn-view" @click="viewCourse(course)">View</button>
               <button class="btn-edit" @click="editCourse(course)">Edit</button>
-              <button class="btn-delete" @click="deleteCourse(course.id)">Delete</button>
+              <button class="btn-delete" @click="deleteCourseHandler(course.id)">Delete</button>
             </div>
           </div>
 
@@ -241,94 +251,214 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select v-model="formData.status" class="form-input">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Course Image</label>
+            <div class="image-upload-container">
+              <div class="image-preview-wrapper" v-if="imagePreview">
+                <img :src="imagePreview" alt="Preview" class="image-preview" />
+                <button type="button" class="btn-remove-image" @click="removeImage">&times;</button>
+              </div>
+              <div class="upload-area" v-else>
+                <input
+                  type="file"
+                  ref="fileInput"
+                  @change="handleImageUpload"
+                  accept="image/*"
+                  class="file-input"
+                  id="image-upload"
+                />
+                <label for="image-upload" class="upload-label">
+                  <svg class="upload-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span class="upload-text">Click to upload image</span>
+                  <span class="upload-hint">PNG, JPG, GIF up to 5MB</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="button" class="btn-secondary" @click="closeModal">Close</button>
-            <button type="submit" class="btn-primary">{{ editingCourse ? 'Update' : 'Create' }}</button>
+            <button type="submit" class="btn-primary" :disabled="isSaving">
+              {{ isSaving ? 'Saving...' : (editingCourse ? 'Update' : 'Create') }}
+            </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Course View Modal -->
+    <div v-if="showViewCourseModal" class="modal-overlay" @click.self="closeViewModal">
+      <div class="modal-content view-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">{{ viewingCourse?.title }}</h2>
+          <button class="btn-close" @click="closeViewModal">&times;</button>
+        </div>
+
+        <div class="view-modal-body">
+          <!-- Course Info -->
+          <div class="course-info-section">
+            <img :src="viewingCourse?.image || '/public/courses/default.jpg'" :alt="viewingCourse?.title" class="view-course-image"/>
+            <p class="view-course-description">{{ viewingCourse?.description }}</p>
+            <div class="course-info-meta">
+              <span class="info-badge level">{{ viewingCourse?.level }}</span>
+              <span class="info-badge duration">{{ viewingCourse?.duration }} Hours</span>
+              <span class="info-badge" :class="viewingCourse?.status">{{ viewingCourse?.status === 'active' ? 'Active' : 'Inactive' }}</span>
+            </div>
+          </div>
+
+          <!-- Course Pages Section -->
+          <div class="pages-section">
+            <div class="pages-header">
+              <h3>Course Pages</h3>
+              <div class="overall-progress">
+                <span>Overall Progress: </span>
+                <strong>{{ calculateOverallProgress() }}%</strong>
+              </div>
+            </div>
+
+            <div class="pages-list">
+              <div
+                v-for="(page, index) in coursePages"
+                :key="page.id"
+                class="page-item"
+                :class="{ 'completed': page.completed }"
+              >
+                <div class="page-number">{{ index + 1 }}</div>
+                <div class="page-content">
+                  <h4 class="page-title">{{ page.title }}</h4>
+                  <p class="page-description">{{ page.description }}</p>
+                </div>
+                <div class="page-status">
+                  <button
+                    class="status-icon-btn"
+                    :class="{ 'completed': page.completed }"
+                    @click="togglePageComplete(page.id)"
+                    title="Click to toggle completion"
+                  >
+                    <svg v-if="page.completed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="pages-progress">
+              <div class="pages-progress-bar">
+                <div
+                  class="pages-progress-fill"
+                  :style="{ width: calculateOverallProgress() + '%' }"
+                ></div>
+              </div>
+              <div class="pages-progress-text">
+                {{ completedPagesCount }} / {{ coursePages.length }} pages completed
+              </div>
+            </div>
+          </div>
+
+          <!-- Enrolled Students Progress -->
+          <div class="students-progress-section">
+            <h3>Student Progress Overview</h3>
+            <div v-if="isLoadingStudents" class="students-loading">
+              <p>Loading students...</p>
+            </div>
+            <div v-else-if="enrolledStudents.length === 0" class="students-empty">
+              <p>No students enrolled yet</p>
+            </div>
+            <div v-else class="students-list">
+              <div
+                v-for="student in enrolledStudents"
+                :key="student.id"
+                class="student-progress-item"
+              >
+                <div class="student-avatar">{{ student.name.charAt(0) }}</div>
+                <div class="student-info">
+                  <span class="student-name">{{ student.name }}</span>
+                  <div class="student-progress-bar">
+                    <div
+                      class="student-progress-fill"
+                      :style="{ width: student.progress + '%' }"
+                      :class="getProgressClass(student.progress)"
+                    ></div>
+                  </div>
+                </div>
+                <div class="student-progress-value" :class="getProgressClass(student.progress)">
+                  {{ student.progress }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" @click="closeViewModal">Close</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import {
+  getCourses,
+  getCourseStats,
+  createCourse,
+  updateCourse,
+  deleteCourse as deleteCourseApi
+} from '@/services/courses.api'
+import { getStudents } from '@/services/teacher-dashboard.api'
 
 const searchQuery = ref('')
 const selectedLevel = ref('')
 const selectedStatus = ref('')
 const showAddCourseModal = ref(false)
+const showViewCourseModal = ref(false)
 const editingCourse = ref(null)
+const viewingCourse = ref(null)
+const isLoading = ref(false)
+const isSaving = ref(false)
+const error = ref(null)
+const imagePreview = ref(null)
+const fileInput = ref(null)
 
-// Add dummy data sen for now jam connect to backend tam kroii
-const courses = ref([
-  {
-    id: 1,
-    title: 'Introduction to Computer Science',
-    description: 'Learn the fundamentals of computer science including algorithms, data structures, and computational thinking.',
-    image: '/public/courses/cs.jpeg',
-    level: 'Beginner',
-    duration: 20,
-    students: 45,
-    progress: 75,
-    status: 'active'
-  },
-  {
-    id: 2,
-    title: 'Web Development Fundamentals',
-    description: 'Master HTML, CSS, and JavaScript to build modern, responsive websites and web applications.',
-    image: '/public/courses/webdev.png',
-    level: 'Intermediate',
-    duration: 30,
-    students: 38,
-    progress: 60,
-    status: 'active'
-  },
-  {
-    id: 3,
-    title: 'Data Structures & Algorithms',
-    description: 'Deep dive into essential data structures and algorithms needed for efficient software development.',
-    image: '/public/courses/ds.jpg',
-    level: 'Intermediate',
-    duration: 25,
-    students: 52,
-    progress: 85,
-    status: 'active'
-  },
-  {
-    id: 4,
-    title: 'Cybersecurity Essentials',
-    description: 'Understand network security, encryption, and best practices for protecting digital assets.',
-    image: '/public/courses/ce.webp',
-    level: 'Advanced',
-    duration: 35,
-    students: 28,
-    progress: 45,
-    status: 'inactive'
-  },
-  {
-    id: 5,
-    title: 'IT Infrastructure & Systems',
-    description: 'Learn about servers, networking, cloud computing, and system administration fundamentals.',
-    image: '/public/courses/itf.jpg',
-    level: 'Beginner',
-    duration: 28,
-    students: 61,
-    progress: 70,
-    status: 'active'
-  },
-  {
-    id: 6,
-    title: 'Advanced Python Programming',
-    description: 'Master Python programming including OOP, file handling, and building real-world applications.',
-    image: '/public/courses/apy.jpg',
-    level: 'Advanced',
-    duration: 32,
-    students: 35,
-    progress: 55,
-    status: 'active'
-  }
+// Course pages data (simulated - each course has pages)
+const coursePages = ref([
+  { id: 1, title: 'Introduction to the Course', description: 'Overview of course objectives and structure', completed: false },
+  { id: 2, title: 'Core Concepts', description: 'Fundamental concepts and principles', completed: false },
+  { id: 3, title: 'Practical Applications', description: 'Hands-on exercises and real-world examples', completed: false }
 ])
+
+// Enrolled students fetched from API
+const enrolledStudents = ref([])
+const isLoadingStudents = ref(false)
+
+// Courses data from API
+const courses = ref([])
+const stats = ref({
+  totalCourses: 0,
+  activeCourses: 0,
+  totalStudents: 0,
+  totalHours: 0
+})
 
 const formData = ref({
   title: '',
@@ -347,30 +477,148 @@ const filteredCourses = computed(() => {
   })
 })
 
-const totalStudents = computed(() => {
-  return courses.value.reduce((sum, course) => sum + course.students, 0)
+const averageProgress = computed(() => {
+  if (courses.value.length === 0) return 0
+  const total = courses.value.reduce((sum, c) => sum + (c.progress || 0), 0)
+  return Math.round(total / courses.value.length)
+})
+const totalHours = computed(() => stats.value.totalHours)
+
+const completedPagesCount = computed(() => {
+  return coursePages.value.filter(p => p.completed).length
 })
 
-const totalHours = computed(() => {
-  return courses.value.reduce((sum, course) => sum + course.duration, 0)
-})
+const calculateOverallProgress = () => {
+  if (coursePages.value.length === 0) return 0
+  return Math.round((completedPagesCount.value / coursePages.value.length) * 100)
+}
 
-const viewCourse = (course) => {
-  console.log('View course:', course)
-  alert(`View course: ${course.title}`)
+const getProgressClass = (progress) => {
+  if (progress >= 100) return 'complete'
+  if (progress >= 50) return 'in-progress'
+  return 'started'
+}
+
+// Toggle page completion status (teacher can check/uncheck)
+const togglePageComplete = (pageId) => {
+  const page = coursePages.value.find(p => p.id === pageId)
+  if (page) {
+    page.completed = !page.completed
+    // Update course progress based on pages completed
+    updateCourseProgress()
+  }
+}
+
+// Update course progress when pages are toggled
+const updateCourseProgress = async () => {
+  if (!viewingCourse.value) return
+  const progress = calculateOverallProgress()
+  try {
+    await updateCourse(viewingCourse.value.id, { progress })
+    // Update local course data
+    const courseIndex = courses.value.findIndex(c => c.id === viewingCourse.value.id)
+    if (courseIndex !== -1) {
+      courses.value[courseIndex].progress = progress
+    }
+    viewingCourse.value.progress = progress
+  } catch (err) {
+    console.error('Error updating course progress:', err)
+  }
+}
+
+// Fetch students from API
+const fetchEnrolledStudents = async () => {
+  isLoadingStudents.value = true
+  try {
+    const response = await getStudents({ status: 'ACTIVE' })
+    // Map students with simulated progress based on course progress
+    const courseProgress = viewingCourse.value?.progress || 0
+    enrolledStudents.value = (response.students || response || []).map((student, index) => ({
+      id: student.id,
+      name: student.fullName,
+      // Calculate varied progress for each student based on course progress
+      progress: Math.min(100, Math.max(0, courseProgress + (index % 3 - 1) * 20))
+    }))
+  } catch (err) {
+    console.error('Error fetching students:', err)
+    enrolledStudents.value = []
+  } finally {
+    isLoadingStudents.value = false
+  }
+}
+
+// Fetch courses and stats from API
+const fetchCourses = async () => {
+  isLoading.value = true
+  error.value = null
+  try {
+    const [coursesResponse, statsResponse] = await Promise.all([
+      getCourses(),
+      getCourseStats()
+    ])
+    courses.value = coursesResponse
+    stats.value = statsResponse
+  } catch (err) {
+    console.error('Error fetching courses:', err)
+    error.value = 'Failed to load courses'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const viewCourse = async (course) => {
+  viewingCourse.value = course
+  // Initialize pages based on course (3 pages per course)
+  const totalPages = 3
+  const completedPages = Math.floor((course.progress / 100) * totalPages)
+
+  const pageTemplates = [
+    { title: 'Introduction', description: 'Overview of course objectives and structure' },
+    { title: 'Core Concepts', description: 'Fundamental concepts and principles' },
+    { title: 'Practical Applications', description: 'Hands-on exercises and real-world examples' }
+  ]
+
+  coursePages.value = pageTemplates.map((page, index) => ({
+    id: index + 1,
+    title: page.title,
+    description: page.description,
+    completed: index < completedPages
+  }))
+
+  showViewCourseModal.value = true
+
+  // Fetch real students from API
+  await fetchEnrolledStudents()
+}
+
+const closeViewModal = () => {
+  showViewCourseModal.value = false
+  viewingCourse.value = null
 }
 
 const editCourse = (course) => {
   editingCourse.value = course
-  formData.value = { ...course }
+  formData.value = {
+    title: course.title,
+    description: course.description,
+    level: course.level,
+    duration: course.duration,
+    image: course.image || '',
+    status: course.status
+  }
+  // Set preview if editing and has existing image
+  imagePreview.value = course.image || null
   showAddCourseModal.value = true
 }
 
-const deleteCourse = (id) => {
+const deleteCourseHandler = async (id) => {
   if (confirm('Are you sure you want to delete this course?')) {
-    const index = courses.value.findIndex(c => c.id === id)
-    if (index > -1) {
-      courses.value.splice(index, 1)
+    try {
+      await deleteCourseApi(id)
+      await fetchCourses()
+    } catch (err) {
+      console.error('Error deleting course:', err)
+      alert('Failed to delete course')
     }
   }
 }
@@ -381,30 +629,32 @@ const openAddModal = () => {
     title: '',
     description: '',
     level: 'Beginner',
-    duration: 0
+    duration: 0,
+    image: '',
+    status: 'active'
   }
+  imagePreview.value = null
   showAddCourseModal.value = true
 }
 
-const saveCourse = () => {
-  if (editingCourse.value) {
-    // Update existing course
-    const index = courses.value.findIndex(c => c.id === editingCourse.value.id)
-    if (index > -1) {
-      courses.value[index] = { ...courses.value[index], ...formData.value }
+const saveCourse = async () => {
+  isSaving.value = true
+  try {
+    if (editingCourse.value) {
+      // Update existing course
+      await updateCourse(editingCourse.value.id, formData.value)
+    } else {
+      // Create new course
+      await createCourse(formData.value)
     }
-  } else {
-    // Create new course
-    courses.value.push({
-      id: Math.max(...courses.value.map(c => c.id), 0) + 1,
-      ...formData.value,
-      image: '/public/courses/default.jpg',
-      students: 0,
-      progress: 0,
-      status: 'active'
-    })
+    await fetchCourses()
+    closeModal()
+  } catch (err) {
+    console.error('Error saving course:', err)
+    alert('Failed to save course')
+  } finally {
+    isSaving.value = false
   }
-  closeModal()
 }
 
 const closeModal = () => {
@@ -414,9 +664,50 @@ const closeModal = () => {
     title: '',
     description: '',
     level: 'Beginner',
-    duration: 0
+    duration: 0,
+    image: '',
+    status: 'active'
+  }
+  imagePreview.value = null
+}
+
+const handleImageUpload = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB')
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result
+      formData.value.image = e.target.result // Store base64 for now
+    }
+    reader.readAsDataURL(file)
   }
 }
+
+const removeImage = () => {
+  imagePreview.value = null
+  formData.value.image = ''
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// Fetch courses on mount
+onMounted(() => {
+  fetchCourses()
+})
 </script>
 
 <style scoped>
@@ -827,6 +1118,32 @@ const closeModal = () => {
   margin: 0 0 24px 0;
 }
 
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.error-state {
+  color: #e53e3e;
+}
+
+.btn-retry {
+  margin-top: 16px;
+  padding: 8px 20px;
+  background: var(--purple-500);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-retry:hover {
+  background: var(--purple-600);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -936,6 +1253,432 @@ const closeModal = () => {
   border-top: 1px solid #e2e8f0;
 }
 
+.image-upload-container {
+  width: 100%;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-image:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+.upload-area {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  border: 2px dashed #cbd5e0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  background-color: #f7fafc;
+}
+
+.upload-area:hover {
+  border-color: #5d5fef;
+  background-color: #f0f1ff;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 20px;
+  text-align: center;
+}
+
+.upload-icon {
+  color: #5d5fef;
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #718096;
+}
+
+/* View Course Modal Styles */
+.view-modal {
+  max-width: 700px;
+}
+
+.view-modal-body {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.course-info-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.view-course-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.view-course-description {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.course-info-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.info-badge.level {
+  background-color: #f0f1ff;
+  color: #5d5fef;
+}
+
+.info-badge.duration {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.info-badge.active {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.info-badge.inactive {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Pages Section */
+.pages-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pages-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
+}
+
+.overall-progress {
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.overall-progress strong {
+  color: #5d5fef;
+  font-weight: 700;
+}
+
+.pages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.page-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s;
+}
+
+.page-item.completed {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.page-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #4a5568;
+  flex-shrink: 0;
+}
+
+.page-item.completed .page-number {
+  background: #22c55e;
+  color: white;
+}
+
+.page-content {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.page-description {
+  font-size: 12px;
+  color: #718096;
+  margin: 0;
+}
+
+.page-status {
+  flex-shrink: 0;
+}
+
+.status-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #cbd5e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.status-icon-btn:hover {
+  background: #d1fae5;
+  border-color: #86efac;
+  color: #22c55e;
+  transform: scale(1.1);
+}
+
+.status-icon-btn.completed {
+  background: #22c55e;
+  border-color: #16a34a;
+  color: white;
+}
+
+.status-icon-btn.completed:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: white;
+}
+
+.status-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a0aec0;
+}
+
+.status-icon.completed {
+  background: #22c55e;
+  color: white;
+}
+
+/* Students loading and empty states */
+.students-loading,
+.students-empty {
+  text-align: center;
+  padding: 24px;
+  color: #718096;
+  font-size: 14px;
+}
+
+.pages-progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pages-progress-bar {
+  flex: 1;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.pages-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5d5fef, #7c3aed);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.pages-progress-text {
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Students Progress Section */
+.students-progress-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 16px 0;
+}
+
+.students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.student-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5d5fef, #7c3aed);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.student-progress-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.student-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.student-progress-fill.complete {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.student-progress-fill.in-progress {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.student-progress-fill.started {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.student-progress-value {
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 50px;
+  text-align: right;
+}
+
+.student-progress-value.complete {
+  color: #22c55e;
+}
+
+.student-progress-value.in-progress {
+  color: #f59e0b;
+}
+
+.student-progress-value.started {
+  color: #ef4444;
+}
+
 @media (max-width: 768px) {
   .header-actions {
     flex-direction: column;
@@ -968,6 +1711,19 @@ const closeModal = () => {
 
   .filter-select {
     min-width: 100%;
+  }
+
+  .view-modal {
+    max-width: 100%;
+  }
+
+  .pages-progress {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pages-progress-text {
+    text-align: center;
   }
 }
 </style>
