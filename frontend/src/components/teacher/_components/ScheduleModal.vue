@@ -13,7 +13,7 @@
         </div>
 
         <form @submit.prevent="handleSubmit" class="modal-form">
-          <!-- Department & Year (Read-only when creating) -->
+          <!-- Department & Year -->
           <div class="form-row">
             <div class="form-group">
               <label for="department">ដេប៉ាតឺម៉ង់</label>
@@ -28,15 +28,15 @@
             </div>
 
             <div class="form-group">
-              <label for="year">ឆ្នាំសិក្សា</label>
-              <input
-                id="year"
-                :value="form.year"
-                type="text"
-                disabled
-                class="disabled-field"
-              />
-              <p class="field-hint">ឆ្នាំត្រូវបានកំណត់ដោយការជ្រើសរើស</p>
+              <label for="year">ឆ្នាំសិក្សា <span class="required">*</span></label>
+              <select id="year" v-model="form.year" required>
+                <option value="">ជ្រើសរើសឆ្នាំ</option>
+                <option value="Year 1">Year 1</option>
+                <option value="Year 2">Year 2</option>
+                <option value="Year 3">Year 3</option>
+                <option value="Year 4">Year 4</option>
+                <option value="Year 5">Year 5</option>
+              </select>
             </div>
           </div>
 
@@ -75,15 +75,25 @@
             </div>
 
             <div class="form-group">
-              <label for="room">បន្ទប់រៀន <span class="required">*</span></label>
-              <input
-                id="room"
-                v-model="form.room"
-                type="text"
-                placeholder="ឧ. Room 101"
-                required
-              />
+              <label for="type">ប្រភេទ <span class="required">*</span></label>
+              <select id="type" v-model="form.type" required>
+                <option value="">ជ្រើសរើសប្រភេទ</option>
+                <option value="Lecture">Lecture</option>
+                <option value="Practical">Practical</option>
+                <option value="Lab">Lab</option>
+              </select>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="room">បន្ទប់រៀន <span class="required">*</span></label>
+            <input
+              id="room"
+              v-model="form.room"
+              type="text"
+              placeholder="ឧ. Room 101"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -102,12 +112,17 @@
           <div class="form-row">
             <div class="form-group">
               <label for="startTime">ម៉ោងចាប់ផ្តើម <span class="required">*</span></label>
-              <select id="startTime" v-model="form.startTime" required>
+              <select id="startTime" v-model="form.startTime" required @change="onStartTimeChange">
                 <option value="">ជ្រើសរើសម៉ោង</option>
                 <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
                 <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
                 <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
                 <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
               </select>
             </div>
 
@@ -115,9 +130,14 @@
               <label for="endTime">ម៉ោងបញ្ចប់ <span class="required">*</span></label>
               <select id="endTime" v-model="form.endTime" required>
                 <option value="">ជ្រើសរើសម៉ោង</option>
+                <option value="08:00">08:00</option>
                 <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
                 <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="14:00">14:00</option>
                 <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
                 <option value="17:00">17:00</option>
               </select>
             </div>
@@ -171,13 +191,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-const departments = [
-  { id: 1, name: 'GIC' },
-  { id: 2, name: 'IT' },
-  { id: 3, name: 'Business' },
-  { id: 4, name: 'Engineering' },
-];
-
 const colors = [
   '#5B55F3',
   '#10B981',
@@ -200,13 +213,36 @@ const defaultForm = {
   department: null,
   year: '',
   color: '#5B55F3',
+  type: 'Lecture',
+  disabledYears: [],
 };
 
 const form = ref({ ...defaultForm });
 
-const getDepartmentName = (deptId) => {
-  const dept = departments.find(d => d.id === deptId);
-  return dept ? dept.name : '';
+const getDepartmentName = (dept) => {
+  // Handle different formats: object with name/code, or just an ID string
+  if (!dept) return '';
+  if (typeof dept === 'object') {
+    return dept.name || dept.code || '';
+  }
+  // If it's just an ID string, return it as is
+  return dept;
+};
+
+// Auto-set end time to 1 hour after start time
+const onStartTimeChange = () => {
+  if (form.value.startTime) {
+    const [hours, minutes] = form.value.startTime.split(':').map(Number);
+    let endHour = hours + 1;
+
+    // Handle lunch break: if start is 11:00, end should be 12:00
+    // If start is 12:00 (shouldn't happen but just in case), skip
+    if (endHour === 12) {
+      endHour = 12;
+    }
+
+    form.value.endTime = `${endHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
 };
 
 watch(
@@ -225,6 +261,11 @@ const handleSubmit = () => {
   if (!form.value.subjectName || !form.value.teacherName || !form.value.group || !form.value.room || !form.value.day || !form.value.startTime || !form.value.endTime) {
     alert('សូមបំពេញឯកសារទាំងអស់');
     return;
+  }
+
+  // If year was changed from 'Year 5' to 'Year 4', disable 'Year 5'
+  if (props.isEdit && props.schedule?.year === 'Year 5' && form.value.year === 'Year 4') {
+    form.value.disabledYears = [...(form.value.disabledYears || []), 'Year 5'];
   }
 
   emit('submit', { ...form.value });

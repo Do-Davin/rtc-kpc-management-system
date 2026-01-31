@@ -1,13 +1,19 @@
 <template>
   <div
     class="schedule-card"
-    :style="{ backgroundColor: schedule.color + '15', borderLeftColor: schedule.color }"
+    :class="{ 'is-other-teacher': isOtherTeacher }"
+    :style="cardStyle"
   >
     <div class="card-header">
-      <span class="subject-name" :style="{ color: schedule.color }">
-        {{ schedule.subjectName }}
-      </span>
-      <div class="card-actions">
+      <div class="header-left">
+        <span class="type-badge" :class="schedule.type?.toLowerCase() || 'lecture'">
+          {{ schedule.type || 'Lecture' }}
+        </span>
+        <span class="subject-name" :style="{ color: isOtherTeacher ? '#9ca3af' : schedule.color }">
+          {{ schedule.subjectName }}
+        </span>
+      </div>
+      <div v-if="!isOtherTeacher" class="card-actions">
         <button class="action-btn edit-btn" @click="$emit('edit', schedule)" title="កែប្រែ">
           <svg
             width="14"
@@ -48,7 +54,7 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
-        <span>{{ schedule.teacherName }}</span>
+        <span>{{ schedule.teacherName || schedule.teacher?.fullName }}</span>
       </div>
       <div class="info-row">
         <svg
@@ -80,36 +86,47 @@
         </svg>
         <span>{{ schedule.room }}</span>
       </div>
-      <div class="info-row time-row">
-        <svg
-          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12,6 12,12 16,14"/>
-        </svg>
-        <span>{{ schedule.startTime }} - {{ schedule.endTime }}</span>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   schedule: {
     type: Object,
     required: true,
   },
+  isOtherTeacher: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(['edit', 'delete']);
+
+const cardStyle = computed(() => {
+  if (props.isOtherTeacher) {
+    return {
+      backgroundColor: '#f3f4f6',
+      borderLeftColor: '#d1d5db',
+    };
+  }
+  return {
+    backgroundColor: props.schedule.color + '15',
+    borderLeftColor: props.schedule.color,
+  };
+});
 </script>
 
 <style scoped>
 .schedule-card {
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-left: 4px solid;
   height: 100%;
-  min-height: 120px;
+  min-height: 90px;
   display: flex;
   flex-direction: column;
   transition: all 0.2s;
@@ -120,24 +137,72 @@ defineEmits(['edit', 'delete']);
   transform: translateY(-2px);
 }
 
+.schedule-card.is-other-teacher {
+  opacity: 0.7;
+}
+
+.schedule-card.is-other-teacher:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  gap: 4px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.type-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.type-badge.lecture {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.type-badge.practical {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.type-badge.lab {
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .subject-name {
   font-weight: 600;
-  font-size: 0.85rem;
-  line-height: 1.3;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .card-actions {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   opacity: 0;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .schedule-card:hover .card-actions {
@@ -147,7 +212,7 @@ defineEmits(['edit', 'delete']);
 .action-btn {
   background: white;
   border: none;
-  padding: 4px;
+  padding: 3px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -178,25 +243,24 @@ defineEmits(['edit', 'delete']);
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .info-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
+  gap: 4px;
+  font-size: 0.7rem;
   color: #6b7280;
 }
 
 .info-row svg {
   flex-shrink: 0;
+  width: 10px;
+  height: 10px;
 }
 
-.time-row {
-  margin-top: auto;
-  padding-top: 6px;
-  font-weight: 500;
-  color: #374151;
+.is-other-teacher .info-row {
+  color: #9ca3af;
 }
 </style>
