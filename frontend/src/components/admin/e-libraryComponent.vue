@@ -571,11 +571,15 @@ onMounted(fetchData)
 }
 
 .btn-primary.teal {
-  background: #14b8a6;
+  background: #5d5fef;
+}
+
+.btn-primary:hover {
+  background: #4c4ee0;
 }
 
 .btn-primary.teal:hover {
-  background: #0d9488;
+  background: #4c4ee0;
 }
 
 .btn-stats {
@@ -594,8 +598,8 @@ onMounted(fetchData)
 
 .btn-stats:hover {
   background: #f8fafc;
-  border-color: #14b8a6;
-  color: #14b8a6;
+  border-color: #5d5fef;
+  color: #5d5fef;
 }
 
 .btn-primary:disabled {
@@ -662,7 +666,7 @@ onMounted(fetchData)
 .book-card:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   transform: translateY(-4px);
-  border-color: #14b8a6;
+  border-color: #5d5fef;
 }
 
 .book-cover-container {
@@ -791,7 +795,7 @@ onMounted(fetchData)
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8rem;
-  color: #14b8a6;
+  color: #5d5fef;
   font-weight: 600;
 }
 
@@ -1031,8 +1035,8 @@ onMounted(fetchData)
 }
 
 .upload-placeholder:hover {
-  border-color: #14b8a6;
-  color: #14b8a6;
+  border-color: #5d5fef;
+  color: #5d5fef;
 }
 
 .upload-placeholder svg {
@@ -1085,8 +1089,8 @@ onMounted(fetchData)
 }
 
 .success-icon.teal {
-  background: #ccfbf1;
-  color: #14b8a6;
+  background: #f0f2ff;
+  color: #5d5fef;
 }
 
 .credential-box {
