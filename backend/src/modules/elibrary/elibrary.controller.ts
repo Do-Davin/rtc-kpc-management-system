@@ -63,6 +63,12 @@ export class ELibraryController {
   }
 
   @Roles('ADMIN', 'TEACHER', 'STUDENT')
+  @Get('categories')
+  getCategories() {
+    return this.eLibraryService.getCategories();
+  }
+
+  @Roles('ADMIN', 'TEACHER', 'STUDENT')
   @Get()
   findAll(
     @Query('category') category?: BookCategory,

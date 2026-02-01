@@ -104,4 +104,9 @@ export class ELibraryService {
       })),
     };
   }
+
+  // Get all available categories from the BookCategory enum
+  getCategories(): string[] {
+    return Object.values(BookCategory);
+  }
 }
