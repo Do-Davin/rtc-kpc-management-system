@@ -7,6 +7,7 @@ import { AttendanceRecord } from '../attendance/entities/attendance-record.entit
 import { Student } from '../students/entities/student.entity';
 import { User } from '../users/entities/user.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
+import { Course } from '../admin-courses/entity/course.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Schedule } from '../schedules/entities/schedule.entity';
       Student,
       User,
       Schedule,
+      Course,
     ]),
   ],
   providers: [StudentDashboardService],

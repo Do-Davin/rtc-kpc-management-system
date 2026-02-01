@@ -71,10 +71,33 @@ export const getMySchedule = async () => {
   return response.data
 }
 
+// ========== Student Courses ==========
+
+/**
+ * Get all courses for the student's department
+ * Returns courses where course.departmentId === student.departmentId
+ */
+export const getMyCourses = async () => {
+  const response = await api.get('/student-dashboard/my-courses')
+  return response.data
+}
+
+/**
+ * Get a specific course by ID
+ * @param {string} courseId - The course ID
+ * Returns course details if it belongs to student's department
+ */
+export const getCourseById = async (courseId) => {
+  const response = await api.get(`/student-dashboard/courses/${courseId}`)
+  return response.data
+}
+
 export default {
   getStudentProfile,
   getDashboardStats,
   getAttendanceTrend,
   getTodayClasses,
-  getMySchedule
+  getMySchedule,
+  getMyCourses,
+  getCourseById
 }

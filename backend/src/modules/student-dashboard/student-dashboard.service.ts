@@ -6,6 +6,7 @@ import { AttendanceRecord } from '../attendance/entities/attendance-record.entit
 import { Student } from '../students/entities/student.entity';
 import { User } from '../users/entities/user.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
+import { Course } from '../admin-courses/entity/course.entity';
 
 @Injectable()
 export class StudentDashboardService {
@@ -20,6 +21,8 @@ export class StudentDashboardService {
     private userRepo: Repository<User>,
     @InjectRepository(Schedule)
     private scheduleRepo: Repository<Schedule>,
+    @InjectRepository(Course)
+    private courseRepo: Repository<Course>,
   ) {}
 
   /**
@@ -317,6 +320,133 @@ export class StudentDashboardService {
         group: schedule.group,
         color: schedule.color || '#5B55F3',
       })),
+    };
+  }
+
+  /**
+   * Get courses for the authenticated student
+   * Filters by: student.departmentId === course.departmentId
+   * Only returns active courses (status = true)
+   */
+  async getMyCourses(userId: string) {
+    // Step 1: Get student with department relation
+    const student = await this.studentRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    if (!student.department) {
+      throw new NotFoundException('Student department not assigned');
+    }
+
+    // Step 2: Fetch courses where departmentId matches student's department
+    // Only return active courses (status = true)
+    const courses = await this.courseRepo.find({
+      where: {
+        departmentId: student.department.id,
+        status: true,
+      },
+      relations: ['department'],
+      order: {
+        year: 'ASC',
+        title: 'ASC',
+      },
+    });
+
+    // Step 3: Return formatted response
+    return {
+      student: {
+        id: student.id,
+        fullName: student.fullName,
+        year: student.year,
+        department: {
+          id: student.department.id,
+          name: student.department.name,
+          code: student.department.code,
+        },
+      },
+      courses: courses.map((course) => ({
+        id: course.id,
+        title: course.title,
+        subtitle: course.subtitle,
+        courseCode: course.courseCode,
+        image: course.image,
+        year: course.year,
+        professorName: course.professorName,
+        department: course.department
+          ? {
+              id: course.department.id,
+              name: course.department.name,
+            }
+          : null,
+        // Progress tracking
+        progress1: course.progress1,
+        progress2: course.progress2,
+        progress3: course.progress3,
+      })),
+      total: courses.length,
+    };
+  }
+
+  /**
+   * Get a specific course by ID
+   * Validates that the course belongs to student's department
+   */
+  async getCourseById(userId: string, courseId: string) {
+    // Step 1: Get student with department
+    const student = await this.studentRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    if (!student.department) {
+      throw new NotFoundException('Student department not assigned');
+    }
+
+    // Step 2: Get course with department relation
+    const course = await this.courseRepo.findOne({
+      where: { id: courseId },
+      relations: ['department'],
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Step 3: Validate course belongs to student's department
+    if (course.departmentId !== student.department.id) {
+      throw new NotFoundException('Course not found in your department');
+    }
+
+    // Step 4: Return course details
+    return {
+      id: course.id,
+      title: course.title,
+      subtitle: course.subtitle,
+      courseCode: course.courseCode,
+      image: course.image,
+      year: course.year,
+      professorName: course.professorName,
+      status: course.status,
+      department: course.department
+        ? {
+            id: course.department.id,
+            name: course.department.name,
+          }
+        : null,
+      progress1: course.progress1,
+      progress2: course.progress2,
+      progress3: course.progress3,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
     };
   }
 }

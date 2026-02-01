@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   Query,
   Request,
   UseGuards,
@@ -95,5 +96,38 @@ export class StudentDashboardController {
   @Get('my-schedule')
   async getMySchedule(@Request() req: AuthRequest) {
     return this.dashboardService.getMySchedule(req.user.sub);
+  }
+
+  // ========== Student Courses ==========
+
+  /**
+   * Get all courses for the student's department
+   * GET /student-dashboard/my-courses
+   * 
+   * Logic:
+   * - Fetches student's department from profile
+   * - Returns only courses where course.departmentId === student.departmentId
+   * - Only returns active courses (status = true)
+   */
+  @Get('my-courses')
+  async getMyCourses(@Request() req: AuthRequest) {
+    return this.dashboardService.getMyCourses(req.user.sub);
+  }
+
+  /**
+   * Get a specific course by ID
+   * GET /student-dashboard/courses/:id
+   * 
+   * Logic:
+   * - Validates course exists
+   * - Validates course belongs to student's department
+   * - Returns course details if authorized
+   */
+  @Get('courses/:id')
+  async getCourseById(
+    @Request() req: AuthRequest,
+    @Param('id') courseId: string,
+  ) {
+    return this.dashboardService.getCourseById(req.user.sub, courseId);
   }
 }

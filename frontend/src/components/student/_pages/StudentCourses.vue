@@ -49,13 +49,26 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>{{ t('common.loading') }}</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <p>{{ error }}</p>
+      <button @click="fetchCourses" class="retry-btn">{{ t('common.retry') }}</button>
+    </div>
+
     <!-- Courses Grid -->
-    <div class="courses-grid">
+    <div v-else class="courses-grid">
       <div v-if="filteredCourses.length > 0" class="courses-list">
         <div v-for="course in filteredCourses" :key="course.id" class="course-card">
           <!-- Course Image -->
           <div class="course-image-wrapper">
-            <img :src="course.image" :alt="course.title" class="course-image"/>
+            <img :src="course.image" :alt="course.title" class="course-image" @error="handleImageError"/>
             <div class="course-badge" :class="course.status">{{ course.status === 'active' ? t('coursesPage.active') : t('coursesPage.inactive') }}</div>
             <div class="course-overlay">
               <button class="btn-view" @click="viewCourse(course)">{{ t('coursesPage.viewCourse') }}</button>
@@ -140,84 +153,72 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTranslation } from '@/composables/useTranslation'
+import * as studentDashboardApi from '@/services/student-dashboard.api'
 
 const { t } = useTranslation()
 
 const searchQuery = ref('')
 const selectedLevel = ref('')
 const selectedStatus = ref('')
+const loading = ref(true)
+const error = ref(null)
 
-// Add dummy data sen for now jam connect to backend tam kroii
-const courses = ref([
-  {
-    id: 1,
-    title: 'Introduction to Computer Science',
-    description: 'Learn the fundamentals of computer science including algorithms, data structures, and computational thinking.',
-    image: '/public/courses/cs.jpeg',
-    level: 'Beginner',
-    duration: 20,
-    students: 45,
-    progress: 75,
-    status: 'active'
-  },
-  {
-    id: 2,
-    title: 'Web Development Fundamentals',
-    description: 'Master HTML, CSS, and JavaScript to build modern, responsive websites and web applications.',
-    image: '/public/courses/webdev.png',
-    level: 'Intermediate',
-    duration: 30,
-    students: 38,
-    progress: 60,
-    status: 'active'
-  },
-  {
-    id: 3,
-    title: 'Data Structures & Algorithms',
-    description: 'Deep dive into essential data structures and algorithms needed for efficient software development.',
-    image: '/public/courses/ds.jpg',
-    level: 'Intermediate',
-    duration: 25,
-    students: 52,
-    progress: 85,
-    status: 'active'
-  },
-  {
-    id: 4,
-    title: 'Cybersecurity Essentials',
-    description: 'Understand network security, encryption, and best practices for protecting digital assets.',
-    image: '/public/courses/ce.webp',
-    level: 'Advanced',
-    duration: 35,
-    students: 28,
-    progress: 45,
-    status: 'inactive'
-  },
-  {
-    id: 5,
-    title: 'IT Infrastructure & Systems',
-    description: 'Learn about servers, networking, cloud computing, and system administration fundamentals.',
-    image: '/public/courses/itf.jpg',
-    level: 'Beginner',
-    duration: 28,
-    students: 61,
-    progress: 70,
-    status: 'active'
-  },
-  {
-    id: 6,
-    title: 'Advanced Python Programming',
-    description: 'Master Python programming including OOP, file handling, and building real-world applications.',
-    image: '/public/courses/apy.jpg',
-    level: 'Advanced',
-    duration: 32,
-    students: 35,
-    progress: 55,
-    status: 'active'
+// Courses data from API
+const courses = ref([])
+const studentInfo = ref(null)
+
+// Fetch courses from backend
+const fetchCourses = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    const data = await studentDashboardApi.getMyCourses()
+    
+    // Store student info
+    studentInfo.value = data.student
+    
+    // Map API response to frontend format
+    courses.value = (data.courses || []).map(course => ({
+      id: course.id,
+      title: course.title,
+      description: course.subtitle || 'No description available',
+      image: course.image ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${course.image}` : '/courses/default.jpg',
+      level: getYearLevel(course.year),
+      duration: 30, // Default duration
+      students: 0, // Not tracked yet
+      progress: calculateProgress(course),
+      status: 'active', // Only active courses are returned
+      year: course.year,
+      courseCode: course.courseCode,
+      professorName: course.professorName,
+      department: course.department
+    }))
+  } catch (err) {
+    console.error('Failed to fetch courses:', err)
+    error.value = 'Failed to load courses'
+    courses.value = []
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Map year to level
+const getYearLevel = (year) => {
+  if (year <= 1) return 'Beginner'
+  if (year <= 3) return 'Intermediate'
+  return 'Advanced'
+}
+
+// Calculate progress from progress1, progress2, progress3
+const calculateProgress = (course) => {
+  let completed = 0
+  if (course.progress1) completed++
+  if (course.progress2) completed++
+  if (course.progress3) completed++
+  return Math.round((completed / 3) * 100)
+}
 
 const filteredCourses = computed(() => {
   return courses.value.filter(course => {
@@ -238,6 +239,16 @@ const viewCourse = (course) => {
   console.log('View course:', course)
   alert(`Viewing course: ${course.title}`)
 }
+
+// Handle image loading error - fallback to default
+const handleImageError = (event) => {
+  event.target.src = '/courses/default.jpg'
+}
+
+// Fetch courses on mount
+onMounted(() => {
+  fetchCourses()
+})
 </script>
 
 <style scoped>
@@ -245,6 +256,62 @@ const viewCourse = (course) => {
   width: 100%;
   background: #f9fafb;
   min-height: 100vh;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #5B55F3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 48px;
+}
+
+.retry-btn {
+  padding: 10px 20px;
+  background: #5B55F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.retry-btn:hover {
+  background: #4C46E0;
 }
 
 .header-section {
