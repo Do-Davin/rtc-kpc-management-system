@@ -381,16 +381,25 @@ const toggleYear = (year) => {
   // filteredSchedules will automatically update due to reactivity
 };
 
-const getScheduleForCell = (day, slot) => {
-  return filteredSchedules.value.filter((s) => {
-    // Check if schedule overlaps with this time slot
-    const scheduleStart = s.startTime;
-    const scheduleEnd = s.endTime;
-    const slotStart = slot.start;
-    const slotEnd = slot.end;
+// Convert time string to minutes for comparison
+const timeToMinutes = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
 
-    // Check if the schedule starts at this slot's start time
-    return s.day === day && scheduleStart === slotStart && scheduleEnd === slotEnd;
+const getScheduleForCell = (day, slot) => {
+  const slotStartMinutes = timeToMinutes(slot.start);
+  const slotEndMinutes = timeToMinutes(slot.end);
+  
+  // Show schedule in ALL slots it covers
+  return filteredSchedules.value.filter((s) => {
+    if (s.day !== day) return false;
+    
+    const scheduleStartMinutes = timeToMinutes(s.startTime);
+    const scheduleEndMinutes = timeToMinutes(s.endTime);
+    
+    // Check if this slot overlaps with the schedule
+    return slotStartMinutes >= scheduleStartMinutes && slotEndMinutes <= scheduleEndMinutes;
   });
 };
 

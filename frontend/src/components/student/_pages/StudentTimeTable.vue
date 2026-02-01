@@ -77,7 +77,10 @@
               v-for="schedule in getScheduleForCell(day, slot)"
               :key="schedule.id"
               class="schedule-card"
-              :style="{ backgroundColor: schedule.color + '15', borderColor: schedule.color }"
+              :style="{ 
+                backgroundColor: schedule.color + '15', 
+                borderColor: schedule.color
+              }"
             >
               <!-- Type Badge -->
               <div class="card-type" :style="{ color: schedule.color }">
@@ -254,11 +257,26 @@ const todayClasses = computed(() => {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 });
 
-// Get schedule for a specific cell
+// Convert time string to minutes for comparison
+const timeToMinutes = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// Get schedule for a specific cell - show in ALL slots that the schedule covers
 const getScheduleForCell = (day, slot) => {
-  return filteredSchedules.value.filter(
-    (s) => s.day === day && s.startTime === slot.start && s.endTime === slot.end
-  );
+  const slotStartMinutes = timeToMinutes(slot.start);
+  const slotEndMinutes = timeToMinutes(slot.end);
+  
+  return filteredSchedules.value.filter((s) => {
+    if (s.day !== day) return false;
+    
+    const scheduleStartMinutes = timeToMinutes(s.startTime);
+    const scheduleEndMinutes = timeToMinutes(s.endTime);
+    
+    // Check if this slot overlaps with the schedule
+    return slotStartMinutes >= scheduleStartMinutes && slotEndMinutes <= scheduleEndMinutes;
+  });
 };
 
 // Get type label (LECTURE, LAB, PRACTICE)
