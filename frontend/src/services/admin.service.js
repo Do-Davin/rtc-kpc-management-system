@@ -34,4 +34,21 @@ export default {
   },
   deleteCourse(id) { return api.delete(`/courses/${id}`); },
   toggleCourseStatus(id) { return api.patch(`/courses/${id}/toggle-status`); },
+
+  // --- E-Library ---
+  getBooks() { return api.get('/e-library'); },
+  getBook(id) { return api.get(`/e-library/${id}`); },
+  createBook(formData) {
+    return api.post('/e-library', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  updateBook(id, formData) {
+    return api.patch(`/e-library/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  deleteBook(id) { return api.delete(`/e-library/${id}`); },
+  toggleBookAvailability(id) { return api.patch(`/e-library/${id}/toggle-availability`); },
+  getBooksStatistics() { return api.get('/e-library/statistics'); },
 };

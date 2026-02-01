@@ -56,28 +56,22 @@
 }
 
 /* ================================
-   Base Typography
+   Base Typography (Updated)
 ================================ */
+/* Apply to everything to ensure no local overrides break the Khmer font */
+*, body, button, input, select, textarea {
+  font-family:
+    'Noto Sans Khmer',
+    'Inter',
+    -apple-system,
+    sans-serif;
+}
+
 body {
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family:
-    'Noto Sans Khmer',
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Helvetica Neue',
-    sans-serif;
-
   line-height: 1.6;
   font-size: 15px;
-
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
