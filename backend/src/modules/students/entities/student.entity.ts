@@ -30,6 +30,9 @@ export class Student {
   @Column()
   fullName: string;
 
+  @Column({ type: 'date', nullable: true })
+  dateOfBirth: Date;
+
   @Column('int')
   year: number;
 
@@ -38,6 +41,9 @@ export class Student {
 
   @Column({ nullable: true })
   phoneNumber: string;
+
+  @Column({ nullable: true })
+  imageUrl: string;
 
   @Column({
     type: 'enum',

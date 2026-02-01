@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Put,
+  Body,
   Param,
   Query,
   Request,
@@ -11,6 +13,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { DashboardQueryDto, TrendQueryDto } from './dto/dashboard-query.dto';
+import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import type { AuthRequest } from '../common/types/auth-request.type';
 
 @Controller('student-dashboard')
@@ -28,6 +31,23 @@ export class StudentDashboardController {
   @Get('profile')
   async getProfile(@Request() req: AuthRequest) {
     const profile = await this.dashboardService.getStudentProfile(req.user.sub);
+    return { profile };
+  }
+
+  /**
+   * Update the logged-in student's profile
+   * PUT /student-dashboard/profile
+   * Allowed fields: fullName, phoneNumber, dateOfBirth, imageUrl
+   */
+  @Put('profile')
+  async updateProfile(
+    @Request() req: AuthRequest,
+    @Body() dto: UpdateStudentProfileDto,
+  ) {
+    const profile = await this.dashboardService.updateStudentProfile(
+      req.user.sub,
+      dto,
+    );
     return { profile };
   }
 

@@ -7,6 +7,7 @@ import { Student } from '../students/entities/student.entity';
 import { User } from '../users/entities/user.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Course } from '../admin-courses/entity/course.entity';
+import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 
 @Injectable()
 export class StudentDashboardService {
@@ -38,9 +39,14 @@ export class StudentDashboardService {
       throw new NotFoundException('Student profile not found');
     }
 
+    // Get attendance stats for this student
+    const stats = await this.getDashboardStats(userId);
+
     return {
       id: student.id,
       fullName: student.fullName,
+      dateOfBirth: student.dateOfBirth,
+      imageUrl: student.imageUrl,
       studentIdCard: student.studentIdCard,
       year: student.year,
       enrollmentYear: student.enrollmentYear,
@@ -51,8 +57,61 @@ export class StudentDashboardService {
         ? {
             id: student.department.id,
             name: student.department.name,
+            code: student.department.code,
           }
         : null,
+      // Stats
+      attendanceRate: stats.attendanceRate,
+      totalCourses: stats.totalCourses,
+    };
+  }
+
+  /**
+   * Update the logged-in student's profile
+   * Only allows updating: fullName, phoneNumber, dateOfBirth, imageUrl
+   */
+  async updateStudentProfile(userId: string, dto: UpdateStudentProfileDto) {
+    const student = await this.studentRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['user', 'department'],
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    // Update allowed fields only
+    if (dto.fullName !== undefined) student.fullName = dto.fullName;
+    if (dto.phoneNumber !== undefined) student.phoneNumber = dto.phoneNumber;
+    if (dto.dateOfBirth !== undefined)
+      student.dateOfBirth = new Date(dto.dateOfBirth);
+    if (dto.imageUrl !== undefined) student.imageUrl = dto.imageUrl;
+
+    const updatedStudent = await this.studentRepo.save(student);
+
+    // Get updated stats
+    const stats = await this.getDashboardStats(userId);
+
+    return {
+      id: updatedStudent.id,
+      fullName: updatedStudent.fullName,
+      dateOfBirth: updatedStudent.dateOfBirth,
+      imageUrl: updatedStudent.imageUrl,
+      studentIdCard: updatedStudent.studentIdCard,
+      year: updatedStudent.year,
+      enrollmentYear: updatedStudent.enrollmentYear,
+      phoneNumber: updatedStudent.phoneNumber,
+      status: updatedStudent.status,
+      email: student.user?.email,
+      department: student.department
+        ? {
+            id: student.department.id,
+            name: student.department.name,
+            code: student.department.code,
+          }
+        : null,
+      attendanceRate: stats.attendanceRate,
+      totalCourses: stats.totalCourses,
     };
   }
 

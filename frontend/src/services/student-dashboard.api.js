@@ -15,6 +15,15 @@ export const getStudentProfile = async () => {
   return response.data?.profile || response.data
 }
 
+/**
+ * Update the logged-in student's profile
+ * @param {Object} data - Profile data { fullName?, phoneNumber?, dateOfBirth?, imageUrl? }
+ */
+export const updateStudentProfile = async (data) => {
+  const response = await api.put('/student-dashboard/profile', data)
+  return response.data?.profile || response.data
+}
+
 // ========== Dashboard Statistics ==========
 
 /**
