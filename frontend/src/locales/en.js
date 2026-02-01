@@ -19,11 +19,11 @@ export default {
 
   // Stats Cards
   stats: {
-    myPresence: 'My Presence',
-    lateDays: 'Late Days',
-    absentDays: 'Absent Days',
+    myPresence: 'Present Courses',
+    lateDays: 'Late Courses',
+    absentDays: 'Absent Courses',
     myAttendanceRate: 'My Attendance Rate',
-    days: 'days'
+    days: 'courses'
   },
 
   // Attendance Chart
@@ -34,6 +34,7 @@ export default {
     last3Months: 'Last 3 months',
     errorMessage: 'Unable to fetch data.',
     people: 'people',
+    total: 'Total',
     attendanceRate: 'Attendance Rate',
     courseCompleted: 'Course Completed',
     loadingTitle: 'Loading data...',

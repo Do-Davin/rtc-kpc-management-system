@@ -65,7 +65,12 @@
 
       <!-- Add Button -->
       <div class="add-button-container">
-        <button class="add-btn" @click="openAddModal">
+        <button 
+          class="add-btn" 
+          @click="openAddModal"
+          :disabled="!currentTeacherId"
+          :title="!currentTeacherId ? 'Loading teacher profile...' : 'Add new schedule'"
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -268,10 +273,17 @@ const scheduleToDelete = ref(null);
 const loadTeacherProfile = async () => {
   try {
     const profile = await getTeacherProfile();
-    currentTeacherId.value = profile.id;
-    currentTeacherDepartmentId.value = profile.departmentId;
+    console.log('Loaded teacher profile:', profile); // Debug log
+    if (profile && profile.id) {
+      currentTeacherId.value = profile.id;
+      currentTeacherDepartmentId.value = profile.departmentId;
+    } else {
+      console.error('Teacher profile missing ID:', profile);
+      error.value = 'Failed to load teacher profile - missing ID';
+    }
   } catch (err) {
     console.error('Failed to load teacher profile:', err);
+    error.value = 'Failed to load teacher profile';
   }
 };
 
@@ -388,8 +400,14 @@ const handleCellClick = (day, slot) => {
   }
 };
 
+// Get selected department object (with name)
+const getSelectedDepartmentObj = () => {
+  return departments.value.find(d => d.id === selectedDepartment.value) || null;
+};
+
 const openAddModal = (day = null, slot = null) => {
   isEditing.value = false;
+  const deptObj = getSelectedDepartmentObj();
   selectedSchedule.value = {
     subjectName: '',
     teacherName: '',
@@ -398,7 +416,8 @@ const openAddModal = (day = null, slot = null) => {
     day: day || '',
     startTime: slot ? slot.start : '',
     endTime: slot ? slot.end : '',
-    department: selectedDepartment.value,
+    department: deptObj, // Pass full department object with name
+    departmentId: selectedDepartment.value,
     year: selectedYears.value[0] || 'Year 1', // Use first selected year or default
     color: '#5B55F3',
     type: 'Lecture'
@@ -419,6 +438,17 @@ const closeModal = () => {
 };
 
 const handleSubmit = async (formData) => {
+  // Validate teacher ID is available
+  if (!currentTeacherId.value) {
+    error.value = 'Teacher profile not loaded. Please refresh the page.';
+    return;
+  }
+
+  if (!selectedDepartment.value) {
+    error.value = 'Please select a department first.';
+    return;
+  }
+
   isLoading.value = true;
   try {
     if (isEditing.value && selectedSchedule.value?.id) {
@@ -694,10 +724,16 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
-.add-btn:hover {
+.add-btn:hover:not(:disabled) {
   background: #4C46E0;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(91, 85, 243, 0.3);
+}
+
+.add-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .legend-section {

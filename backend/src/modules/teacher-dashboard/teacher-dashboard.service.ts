@@ -139,7 +139,7 @@ export class TeacherDashboardService {
 
   /**
    * Get attendance trend data for line chart
-   * Aggregates attendance percentage by date
+   * Shows CUMULATIVE attendance data that matches the stats cards
    */
   async getAttendanceTrend(teacherId: string, days: number = 30) {
     const startDate = new Date();
@@ -156,7 +156,7 @@ export class TeacherDashboardService {
       order: { sessionDate: 'ASC' },
     });
 
-    // Group by date and calculate daily attendance percentages
+    // Group by date and calculate daily attendance
     const dailyStats: Map<
       string,
       { present: number; absent: number; total: number }
@@ -185,7 +185,7 @@ export class TeacherDashboardService {
       });
     });
 
-    // Convert to array for chart data
+    // Convert to array for chart data - showing CUMULATIVE values
     const trendData: {
       date: string;
       percentage: number;
@@ -193,6 +193,11 @@ export class TeacherDashboardService {
       absent: number;
       total: number;
     }[] = [];
+
+    // Track cumulative values
+    let cumulativePresent = 0;
+    let cumulativeAbsent = 0;
+    let cumulativeTotal = 0;
 
     // Fill in all dates in range
     for (
@@ -203,13 +208,21 @@ export class TeacherDashboardService {
       const dateKey = d.toISOString().split('T')[0];
       const stats = dailyStats.get(dateKey);
 
+      // Add today's values to cumulative totals
       if (stats && stats.total > 0) {
+        cumulativePresent += stats.present;
+        cumulativeAbsent += stats.absent;
+        cumulativeTotal += stats.total;
+      }
+
+      // Only add data point if we have any cumulative data
+      if (cumulativeTotal > 0) {
         trendData.push({
           date: dateKey,
-          percentage: Math.round((stats.present / stats.total) * 100),
-          present: stats.present,
-          absent: stats.absent,
-          total: stats.total,
+          percentage: Math.round((cumulativePresent / cumulativeTotal) * 100),
+          present: cumulativePresent,
+          absent: cumulativeAbsent,
+          total: cumulativeTotal,
         });
       }
     }

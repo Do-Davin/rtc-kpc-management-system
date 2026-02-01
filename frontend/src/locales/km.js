@@ -19,11 +19,11 @@ export default {
 
   // Stats Cards
   stats: {
-    myPresence: 'វត្តមានរបស់ខ្ញុំ',
-    lateDays: 'មកយឺត',
-    absentDays: 'អវត្តមាន',
+    myPresence: 'មុខវិជ្ជាមានវត្តមាន',
+    lateDays: 'មុខវិជ្ជាមកយឺត',
+    absentDays: 'មុខវិជ្ជាអវត្តមាន',
     myAttendanceRate: 'អត្រាវត្តមានរបស់ខ្ញុំ',
-    days: 'ថ្ងៃ'
+    days: 'មុខវិជ្ជា'
   },
 
   // Attendance Chart
@@ -34,6 +34,7 @@ export default {
     last3Months: '3 ខែចុងក្រោយ',
     errorMessage: 'មិនអាចទាញយកទិន្នន័យបានទេ។',
     people: 'នាក់',
+    total: 'សរុប',
     attendanceRate: 'អត្រាវត្តមាន',
     courseCompleted: 'វគ្គសិក្សាបានបញ្ចប់',
     loadingTitle: 'កំពុងផ្ទុកទិន្នន័យ...',
