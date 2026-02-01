@@ -24,17 +24,6 @@
           </div>
         </div>
 
-        <!-- Late Today -->
-        <div class="stat-card">
-          <div class="icon-box orange">
-            <Clock :size="24" />
-          </div>
-          <div class="stat-info">
-            <p>មកយឺតថ្ងៃនេះ</p>
-            <h3>{{ stats.lateToday || 0 }} <span class="unit">នាក់</span></h3>
-          </div>
-        </div>
-
         <!-- Absent Today -->
         <div class="stat-card">
           <div class="icon-box red">
@@ -54,6 +43,17 @@
           <div class="stat-info">
             <p>មធ្យមភាគវត្តមាន</p>
             <h3>{{ stats.attendanceRate || 0 }}%</h3>
+          </div>
+        </div>
+
+        <!-- Course Completion -->
+        <div class="stat-card">
+          <div class="icon-box orange">
+            <BookOpen :size="24" />
+          </div>
+          <div class="stat-info">
+            <p>ការបញ្ចប់វគ្គសិក្សា</p>
+            <h3>{{ stats.courseCompletion || 0 }}%</h3>
           </div>
         </div>
       </template>
@@ -116,9 +116,9 @@
             :class="{ completed: todo.isCompleted }"
           >
             <button class="todo-checkbox" @click="handleToggleTodo(todo.id)">
-              <Check v-if="todo.isCompleted" :size="20" stroke-width="3" />
+              <Check v-if="todo.isCompleted" :size="14" />
             </button>
-            <div class="todo-content" @click="handleToggleTodo(todo.id)">
+            <div class="todo-content">
               <span class="todo-title">{{ todo.title }}</span>
               <span v-if="todo.dueDate" class="todo-due">
                 <Calendar :size="12" />
@@ -183,7 +183,7 @@
               <td class="session-time">
                 {{ formatSessionTime(session.sessionDate) }}
               </td>
-              <td class="status-cell">
+              <td>
                 <span class="status-badge" :class="getStatusClass(session.status)">
                   {{ getStatusLabel(session.status) }}
                 </span>
@@ -194,85 +194,18 @@
                 <span class="count absent">{{ session.absentCount }}</span>
               </td>
               <td class="actions-cell">
-                <button
+                <router-link
+                  :to="`/teacher/attendance/${session.id}`"
                   class="action-link"
-                  @click="openSessionModal(session)"
                 >
                   <Eye :size="16" /> មើល
-                </button>
+                </router-link>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- Session Detail Modal -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="showSessionModal" class="modal-overlay" @click.self="closeSessionModal">
-          <div class="modal-content session-modal">
-            <div class="modal-header">
-              <h3><BookOpen :size="20" /> ព័ត៌មានលម្អិតវគ្គសិក្សា</h3>
-              <button class="close-btn" @click="closeSessionModal">
-                <X :size="20" />
-              </button>
-            </div>
-            <div class="session-detail-body" v-if="selectedSession">
-              <div class="detail-row">
-                <span class="detail-label">វគ្គសិក្សា:</span>
-                <span class="detail-value">{{ selectedSession.courseName }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">នាយកដ្ឋាន:</span>
-                <span class="detail-value">{{ selectedSession.department || '-' }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">ឆ្នាំ:</span>
-                <span class="detail-value">{{ selectedSession.year || '-' }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">ម៉ោង:</span>
-                <span class="detail-value">{{ formatSessionTime(selectedSession.sessionDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">ស្ថានភាព:</span>
-                <span class="status-badge" :class="getStatusClass(selectedSession.status)">
-                  {{ getStatusLabel(selectedSession.status) }}
-                </span>
-              </div>
-              <div class="attendance-summary">
-                <h4>សង្ខេបវត្តមាន</h4>
-                <div class="summary-counts">
-                  <div class="summary-item present">
-                    <span class="summary-number">{{ selectedSession.presentCount }}</span>
-                    <span class="summary-label">វត្តមាន</span>
-                  </div>
-                  <div class="summary-item late">
-                    <span class="summary-number">{{ selectedSession.lateCount }}</span>
-                    <span class="summary-label">យឺត</span>
-                  </div>
-                  <div class="summary-item absent">
-                    <span class="summary-number">{{ selectedSession.absentCount }}</span>
-                    <span class="summary-label">អវត្តមាន</span>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-actions">
-                <button class="btn-cancel" @click="closeSessionModal">បិទ</button>
-                <router-link
-                  :to="`/teacher/attendance`"
-                  class="btn-primary"
-                  @click="closeSessionModal"
-                >
-                  <Eye :size="16" /> មើលលម្អិត
-                </router-link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
 
     <!-- Todo Modal -->
     <Teleport to="body">
@@ -328,7 +261,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import {
   Users, UserX, Percent, BookOpen, Plus, Check, Pencil, Trash2,
-  Calendar, CalendarDays, Eye, ChevronRight, X, ListTodo, ClipboardList, Clock
+  Calendar, CalendarDays, Eye, ChevronRight, X, ListTodo, ClipboardList
 } from 'lucide-vue-next'
 import AttendanceChart from '../_components/AttendanceChart.vue'
 import {
@@ -350,7 +283,7 @@ const stats = ref({
   presentToday: 0,
   absentToday: 0,
   attendanceRate: 0,
-  lateToday: 0
+  courseCompletion: 0
 })
 
 // Chart
@@ -362,8 +295,6 @@ const attendanceData = ref([])
 // Sessions
 const loadingSessions = ref(true)
 const todaySessions = ref([])
-const showSessionModal = ref(false)
-const selectedSession = ref(null)
 
 // Todos
 const loadingTodos = ref(true)
@@ -387,11 +318,11 @@ const fetchStats = async () => {
       presentToday: data.presentToday ?? 0,
       absentToday: data.absentToday ?? 0,
       attendanceRate: data.attendancePercentage ?? 0,
-      lateToday: data.lateToday ?? 0
+      courseCompletion: data.courseCompletion ?? 0
     }
   } catch (error) {
     console.error('Failed to fetch stats:', error)
-    stats.value = { presentToday: 0, absentToday: 0, attendanceRate: 0, lateToday: 0 }
+    stats.value = { presentToday: 0, absentToday: 0, attendanceRate: 0, courseCompletion: 0 }
   } finally {
     loadingStats.value = false
   }
@@ -456,18 +387,6 @@ const getStatusLabel = (status) => {
     'PENDING': 'រង់ចាំ'
   }
   return labels[status] || status
-}
-
-// ========== Session Modal ==========
-
-const openSessionModal = (session) => {
-  selectedSession.value = session
-  showSessionModal.value = true
-}
-
-const closeSessionModal = () => {
-  showSessionModal.value = false
-  selectedSession.value = null
 }
 
 // ========== Todo CRUD ==========
@@ -583,9 +502,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ========== Base ========== */
 h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 .page-header p { color: #64748b; margin-bottom: 24px; }
 
+/* ========== Stats Grid ========== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -656,6 +577,7 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
   font-weight: 500;
 }
 
+/* ========== Content Grid (Chart + Todos) ========== */
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -815,8 +737,8 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 }
 
 .todo-checkbox {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border: 2px solid #cbd5e1;
   border-radius: 6px;
   background: white;
@@ -841,7 +763,6 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 .todo-content {
   flex: 1;
   min-width: 0;
-  cursor: pointer;
 }
 
 .todo-title {
@@ -969,27 +890,12 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
   font-weight: 600;
   font-size: 0.8rem;
   border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.sessions-table th:nth-child(3),
-.sessions-table th:nth-child(4),
-.sessions-table th:nth-child(5),
-.sessions-table th:nth-child(6),
-.sessions-table th:nth-child(7) {
-  text-align: center;
 }
 
 .sessions-table td {
   padding: 14px 16px;
   border-bottom: 1px solid #f1f5f9;
   color: #475569;
-  vertical-align: middle;
-}
-
-.sessions-table td:nth-child(3),
-.sessions-table td:nth-child(4) {
-  text-align: center;
 }
 
 .sessions-table tr:hover td {
@@ -1007,10 +913,6 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 .session-time {
   font-family: 'SF Mono', monospace;
   color: #64748b;
-}
-
-.status-cell {
-  text-align: center;
 }
 
 .status-badge {
@@ -1044,7 +946,6 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 .attendance-counts {
   display: flex;
   gap: 8px;
-  justify-content: center;
 }
 
 .count {
@@ -1088,9 +989,6 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
   font-weight: 500;
   text-decoration: none;
   border-radius: 6px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
   transition: background 0.2s;
 }
 
@@ -1267,134 +1165,5 @@ h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
 .modal-enter-from .modal-content,
 .modal-leave-to .modal-content {
   transform: scale(0.95) translateY(-10px);
-}
-
-/* Session Modal Styles */
-.session-modal {
-  max-width: 500px;
-}
-
-.session-modal .modal-header h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.session-detail-body {
-  padding: 24px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.detail-row:last-of-type {
-  border-bottom: none;
-}
-
-.detail-label {
-  font-size: 0.9rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.detail-value {
-  font-size: 0.95rem;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.attendance-summary {
-  margin-top: 20px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.attendance-summary h4 {
-  margin: 0 0 16px 0;
-  font-size: 0.9rem;
-  color: #475569;
-  font-weight: 600;
-}
-
-.summary-counts {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
-
-.summary-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px;
-  border-radius: 10px;
-}
-
-.summary-item.present {
-  background: #dcfce7;
-}
-
-.summary-item.late {
-  background: #fef3c7;
-}
-
-.summary-item.absent {
-  background: #fef2f2;
-}
-
-.summary-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.summary-item.present .summary-number {
-  color: #15803d;
-}
-
-.summary-item.late .summary-number {
-  color: #d97706;
-}
-
-.summary-item.absent .summary-number {
-  color: #dc2626;
-}
-
-.summary-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #4f46e5;
-}
-
-.session-detail-body .modal-actions {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
 }
 </style>

@@ -29,9 +29,9 @@ import { ELibraryModule } from './modules/elibrary/elibrary.module';
     TeachersModule,
     AttendanceModule,
     TeacherDashboardModule,
-    StudentDashboardModule, // Student dashboard for attendance stats and trends
-    AdminCoursesModule, // Admin can CREATE/UPDATE/DELETE courses for departments
-    TeacherCoursesModule, // Teacher can only VIEW courses from their department
+    StudentDashboardModule,
+    AdminCoursesModule,
+    TeacherCoursesModule,
     ELibraryModule,
     SchedulesModule,
   ],

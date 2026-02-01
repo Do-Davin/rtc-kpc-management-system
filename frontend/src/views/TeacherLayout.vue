@@ -102,7 +102,8 @@ const fetchProfile = async () => {
     const profile = await getTeacherProfile()
     teacherProfile.fullName = profile.fullName || ''
     teacherProfile.imageUrl = profile.imageUrl || ''
-    teacherProfile.department = profile.department || ''
+    // department is an object with id and name
+    teacherProfile.department = profile.department?.name || profile.department || ''
   } catch (err) {
     console.error('Failed to fetch teacher profile:', err)
   }
