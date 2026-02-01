@@ -95,6 +95,63 @@ export const deleteTodo = async (todoId) => {
   return response.data
 }
 
+// ========== Teacher Profile ==========
+
+/**
+ * Get the logged-in teacher's profile
+ */
+export const getTeacherProfile = async () => {
+  const response = await api.get('/teacher-dashboard/profile')
+  return response.data?.profile || response.data
+}
+
+/**
+ * Update the logged-in teacher's profile
+ * @param {Object} data - Profile update data
+ */
+export const updateTeacherProfile = async (data) => {
+  const response = await api.put('/teacher-dashboard/profile', data)
+  return response.data?.profile || response.data
+}
+
+// ========== Student Management ==========
+
+/**
+ * Get students in teacher's department
+ */
+export const getStudents = async () => {
+  const response = await api.get('/teacher-dashboard/students')
+  return response.data?.students || response.data
+}
+
+/**
+ * Add a new student
+ * @param {Object} data - Student data
+ */
+export const addStudent = async (data) => {
+  const response = await api.post('/teacher-dashboard/students', data)
+  return response.data?.student || response.data
+}
+
+/**
+ * Update a student
+ * @param {string} studentId - Student ID
+ * @param {Object} data - Update data
+ */
+export const updateStudent = async (studentId, data) => {
+  const response = await api.put(`/teacher-dashboard/students/${studentId}`, data)
+  return response.data?.student || response.data
+}
+
+/**
+ * Remove a student
+ * @param {string} studentId - Student ID
+ */
+export const removeStudent = async (studentId) => {
+  const response = await api.delete(`/teacher-dashboard/students/${studentId}`)
+  return response.data
+}
+
 export default {
   getDashboardStats,
   getAttendanceTrend,
@@ -104,4 +161,10 @@ export default {
   updateTodo,
   toggleTodoComplete,
   deleteTodo,
+  getTeacherProfile,
+  updateTeacherProfile,
+  getStudents,
+  addStudent,
+  updateStudent,
+  removeStudent,
 }

@@ -65,8 +65,8 @@
 
       <!-- Add Button -->
       <div class="add-button-container">
-        <button 
-          class="add-btn" 
+        <button
+          class="add-btn"
           @click="openAddModal"
           :disabled="!currentTeacherId"
           :title="!currentTeacherId ? 'Loading teacher profile...' : 'Add new schedule'"
@@ -276,7 +276,8 @@ const loadTeacherProfile = async () => {
     console.log('Loaded teacher profile:', profile); // Debug log
     if (profile && profile.id) {
       currentTeacherId.value = profile.id;
-      currentTeacherDepartmentId.value = profile.departmentId;
+      // department comes as an object with id and name
+      currentTeacherDepartmentId.value = profile.department?.id || profile.departmentId;
     } else {
       console.error('Teacher profile missing ID:', profile);
       error.value = 'Failed to load teacher profile - missing ID';
@@ -390,14 +391,14 @@ const timeToMinutes = (time) => {
 const getScheduleForCell = (day, slot) => {
   const slotStartMinutes = timeToMinutes(slot.start);
   const slotEndMinutes = timeToMinutes(slot.end);
-  
+
   // Show schedule in ALL slots it covers
   return filteredSchedules.value.filter((s) => {
     if (s.day !== day) return false;
-    
+
     const scheduleStartMinutes = timeToMinutes(s.startTime);
     const scheduleEndMinutes = timeToMinutes(s.endTime);
-    
+
     // Check if this slot overlaps with the schedule
     return slotStartMinutes >= scheduleStartMinutes && slotEndMinutes <= scheduleEndMinutes;
   });
