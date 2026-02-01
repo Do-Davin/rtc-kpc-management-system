@@ -1,67 +1,107 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './entities/book.entity';
+import { Book, BookCategory } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
-export class ElibraryService {
+export class ELibraryService {
   constructor(
     @InjectRepository(Book)
-    private readonly bookRepository: Repository<Book>,
+    private bookRepo: Repository<Book>,
   ) {}
 
-  async create(createBookDto: CreateBookDto): Promise<Book> {
-    const book = this.bookRepository.create(createBookDto);
-    return this.bookRepository.save(book);
+  async create(dto: CreateBookDto): Promise<Book> {
+    const newBook = this.bookRepo.create({
+      ...dto,
+      available: dto.available ?? true,
+    });
+    return this.bookRepo.save(newBook);
   }
 
-  async findAll(search?: string, category?: string): Promise<Book[]> {
-    const queryBuilder = this.bookRepository.createQueryBuilder('book');
+  async findAll(): Promise<Book[]> {
+    return this.bookRepo.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
 
-    if (category && category !== 'All') {
-      queryBuilder.andWhere('book.category = :category', { category });
-    }
+  async findByCategory(category: BookCategory): Promise<Book[]> {
+    return this.bookRepo.find({
+      where: { category },
+      order: { title: 'ASC' },
+    });
+  }
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(book.title ILIKE :search OR book.author ILIKE :search OR book.category ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    queryBuilder.orderBy('book.createdAt', 'DESC');
-
-    return queryBuilder.getMany();
+  async findAvailable(): Promise<Book[]> {
+    return this.bookRepo.find({
+      where: { available: true },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: string): Promise<Book> {
-    const book = await this.bookRepository.findOne({ where: { id } });
+    const book = await this.bookRepo.findOneBy({ id });
     if (!book) {
       throw new NotFoundException(`Book with ID ${id} not found`);
     }
     return book;
   }
 
-  async update(id: string, updateBookDto: UpdateBookDto): Promise<Book> {
+  async search(query: string): Promise<Book[]> {
+    return this.bookRepo
+      .createQueryBuilder('book')
+      .where('LOWER(book.title) LIKE LOWER(:query)', { query: `%${query}%` })
+      .orWhere('LOWER(book.author) LIKE LOWER(:query)', { query: `%${query}%` })
+      .orWhere('LOWER(book.isbn) LIKE LOWER(:query)', { query: `%${query}%` })
+      .orWhere('LOWER(book.publisher) LIKE LOWER(:query)', {
+        query: `%${query}%`,
+      })
+      .orderBy('book.title', 'ASC')
+      .getMany();
+  }
+
+  async update(id: string, dto: UpdateBookDto): Promise<Book> {
     const book = await this.findOne(id);
-    Object.assign(book, updateBookDto);
-    return this.bookRepository.save(book);
+
+    Object.assign(book, dto);
+
+    return this.bookRepo.save(book);
   }
 
   async remove(id: string): Promise<void> {
     const book = await this.findOne(id);
-    await this.bookRepository.remove(book);
+    await this.bookRepo.remove(book);
   }
 
-  async getCategories(): Promise<string[]> {
-    const result = await this.bookRepository
-      .createQueryBuilder('book')
-      .select('DISTINCT book.category', 'category')
-      .where('book.category IS NOT NULL')
-      .getRawMany<{ category: string }>();
+  async toggleAvailability(id: string): Promise<Book> {
+    const book = await this.findOne(id);
+    book.available = !book.available;
+    return this.bookRepo.save(book);
+  }
 
-    return result.map((r) => r.category).filter(Boolean);
+  async getStatistics() {
+    const total = await this.bookRepo.count();
+    const available = await this.bookRepo.count({ where: { available: true } });
+    const borrowed = total - available;
+
+    const byCategory = await this.bookRepo
+      .createQueryBuilder('book')
+      .select('book.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('book.category')
+      .getRawMany();
+
+    return {
+      total,
+      available,
+      borrowed,
+      byCategory: byCategory.map((item) => ({
+        category: item.category,
+        count: parseInt(item.count),
+      })),
+    };
   }
 }

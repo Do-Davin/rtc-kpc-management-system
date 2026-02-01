@@ -6,102 +6,137 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { ElibraryService } from './elibrary.service';
+import { ELibraryService } from './elibrary.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { BookCategory } from './entities/book.entity';
 
-// Configure multer storage for cover images
-const coverStorage = diskStorage({
-  destination: './public/covers',
-  filename: (req, file, callback) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = extname(file.originalname);
-    callback(null, `cover-${uniqueSuffix}${ext}`);
-  },
-});
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('e-library')
+export class ELibraryController {
+  constructor(private readonly eLibraryService: ELibraryService) {}
 
-// File filter to only allow images
-const imageFileFilter = (
-  req: any,
-  file: Express.Multer.File,
-  callback: (error: Error | null, acceptFile: boolean) => void,
-) => {
-  // Accept any image type - more permissive for images from various sources
-  if (!file.mimetype.startsWith('image/')) {
-    return callback(
-      new BadRequestException('Only image files are allowed!'),
-      false,
-    );
-  }
-  callback(null, true);
-};
-
-@Controller('elibrary')
-@UseGuards(JwtAuthGuard)
-export class ElibraryController {
-  constructor(private readonly elibraryService: ElibraryService) {}
-
+  @Roles('ADMIN')
   @Post()
-  create(@Body() createBookDto: CreateBookDto) {
-    return this.elibraryService.create(createBookDto);
-  }
-
-  @Post('upload-cover')
   @UseInterceptors(
     FileInterceptor('cover', {
-      storage: coverStorage,
-      fileFilter: imageFileFilter,
+      storage: diskStorage({
+        destination: './uploads/books',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
+        fileSize: 5 * 1024 * 1024, // 5MB
       },
     }),
   )
-  uploadCover(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
+  create(
+    @Body() createBookDto: CreateBookDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (file) {
+      createBookDto.cover = `/uploads/books/${file.filename}`;
     }
-    // Return the URL path to access the uploaded file
-    return {
-      url: `/public/covers/${file.filename}`,
-      filename: file.filename,
-    };
+    return this.eLibraryService.create(createBookDto);
   }
 
+  @Roles('ADMIN', 'TEACHER', 'STUDENT')
   @Get()
   findAll(
+    @Query('category') category?: BookCategory,
     @Query('search') search?: string,
-    @Query('category') category?: string,
   ) {
-    return this.elibraryService.findAll(search, category);
+    if (search) {
+      return this.eLibraryService.search(search);
+    }
+    if (category) {
+      return this.eLibraryService.findByCategory(category);
+    }
+    return this.eLibraryService.findAll();
   }
 
-  @Get('categories')
-  getCategories() {
-    return this.elibraryService.getCategories();
+  @Roles('ADMIN', 'TEACHER', 'STUDENT')
+  @Get('available')
+  findAvailable() {
+    return this.eLibraryService.findAvailable();
   }
 
+  @Roles('ADMIN', 'TEACHER')
+  @Get('statistics')
+  getStatistics() {
+    return this.eLibraryService.getStatistics();
+  }
+
+  @Roles('ADMIN', 'TEACHER', 'STUDENT')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.elibraryService.findOne(id);
+    return this.eLibraryService.findOne(id);
   }
 
+  @Roles('ADMIN')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto) {
-    return this.elibraryService.update(id, updateBookDto);
+  @UseInterceptors(
+    FileInterceptor('cover', {
+      storage: diskStorage({
+        destination: './uploads/books',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  update(
+    @Param('id') id: string,
+    @Body() updateBookDto: UpdateBookDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (file) {
+      updateBookDto.cover = `/uploads/books/${file.filename}`;
+    }
+    return this.eLibraryService.update(id, updateBookDto);
   }
 
+  @Roles('ADMIN')
+  @Patch(':id/toggle-availability')
+  toggleAvailability(@Param('id') id: string) {
+    return this.eLibraryService.toggleAvailability(id);
+  }
+
+  @Roles('ADMIN')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.elibraryService.remove(id);
+    return this.eLibraryService.remove(id);
   }
 }

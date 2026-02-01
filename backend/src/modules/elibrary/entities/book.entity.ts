@@ -6,6 +6,22 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+// Define possible book categories
+export enum BookCategory {
+  SCIENCE = 'SCIENCE',
+  MATHEMATICS = 'MATHEMATICS',
+  ENGINEERING = 'ENGINEERING',
+  LITERATURE = 'LITERATURE',
+  HISTORY = 'HISTORY',
+  ARTS = 'ARTS',
+  BUSINESS = 'BUSINESS',
+  TECHNOLOGY = 'TECHNOLOGY',
+  MEDICINE = 'MEDICINE',
+  LAW = 'LAW',
+  EDUCATION = 'EDUCATION',
+  OTHER = 'OTHER',
+}
+
 @Entity('books')
 export class Book {
   @PrimaryGeneratedColumn('uuid')
@@ -14,26 +30,36 @@ export class Book {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
+  @Column()
   author: string;
 
-  @Column({ nullable: true })
-  category: string;
+  @Column('int')
+  year: number;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ nullable: true })
   cover: string;
 
-  @Column({ nullable: true })
-  year: string;
+  @Column({
+    type: 'enum',
+    enum: BookCategory,
+    default: BookCategory.OTHER,
+  })
+  category: BookCategory;
 
-  @Column({ type: 'int', nullable: true })
-  pages: number;
+  @Column({ type: 'boolean', default: true })
+  available: boolean;
 
   @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({ nullable: true })
-  bookUrl: string;
+  isbn: string;
+
+  @Column({ nullable: true })
+  publisher: string;
+
+  @Column({ type: 'int', nullable: true })
+  pages: number;
 
   @CreateDateColumn()
   createdAt: Date;

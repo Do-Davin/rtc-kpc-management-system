@@ -12,8 +12,8 @@ import { TeachersModule } from './modules/teachers/teachers.module';
 import { TeacherDashboardModule } from './modules/teacher-dashboard/teacher-dashboard.module';
 import { AdminCoursesModule } from './modules/admin-courses/admin-courses.module';
 import { TeacherCoursesModule } from './modules/teacher-courses/teacher-courses.module';
-import { ElibraryModule } from './modules/elibrary/elibrary.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
+import { ELibraryModule } from './modules/elibrary/elibrary.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { SchedulesModule } from './modules/schedules/schedules.module';
     TeacherDashboardModule,
     AdminCoursesModule, // Admin can CREATE/UPDATE/DELETE courses for departments
     TeacherCoursesModule, // Teacher can only VIEW courses from their department
-    ElibraryModule,
+    ELibraryModule,
     SchedulesModule,
   ],
   controllers: [AppController],
