@@ -2,8 +2,8 @@
   <div class="attendance-container">
     <!-- Header -->
     <div class="header">
-      <h1>Mark Attendance</h1>
-      <p class="subtitle">Upload QR code to mark your attendance</p>
+      <h1>{{ t('attendancePage.title') }}</h1>
+      <p class="subtitle">{{ t('attendancePage.subtitle') }}</p>
     </div>
 
     <div class="content-grid">
@@ -16,7 +16,7 @@
               <CheckCircle2 v-if="currentStep > 1" :size="20" />
               <span v-else>1</span>
             </div>
-            <span class="step-label">Upload QR</span>
+            <span class="step-label">{{ t('attendancePage.uploadQR') }}</span>
           </div>
           <div class="step-line" :class="{ active: currentStep > 1 }"></div>
           <div :class="['step', { active: currentStep >= 2, completed: currentStep > 2 }]">
@@ -24,7 +24,7 @@
               <CheckCircle2 v-if="currentStep > 2" :size="20" />
               <span v-else>2</span>
             </div>
-            <span class="step-label">Enter Password</span>
+            <span class="step-label">{{ t('attendancePage.enterPassword') }}</span>
           </div>
           <div class="step-line" :class="{ active: currentStep > 2 }"></div>
           <div :class="['step', { active: currentStep >= 3 }]">
@@ -32,7 +32,7 @@
               <CheckCircle2 v-if="submissionSuccess" :size="20" />
               <span v-else>3</span>
             </div>
-            <span class="step-label">Complete</span>
+            <span class="step-label">{{ t('attendancePage.complete') }}</span>
           </div>
         </div>
 
@@ -58,15 +58,15 @@
               <div class="upload-icon-wrapper">
                 <Upload :size="32" />
               </div>
-              <h3>Upload QR Code</h3>
-              <p>Drag and drop or click to select</p>
+              <h3>{{ t('attendancePage.uploadQRCode') }}</h3>
+              <p>{{ t('attendancePage.dragOrClick') }}</p>
               <span class="file-types">PNG, JPG, JPEG</span>
             </div>
 
             <div v-else class="upload-preview">
               <div class="preview-badge">
                 <CheckCircle2 :size="16" />
-                QR Code Ready
+                {{ t('attendancePage.qrReady') }}
               </div>
               <img :src="qrPreview" alt="QR Preview" class="qr-preview-img" />
               <div class="file-info">
@@ -75,7 +75,7 @@
               </div>
               <button class="change-file-btn" @click.stop="clearFile">
                 <RefreshCw :size="14" />
-                Change Image
+                {{ t('attendancePage.changeImage') }}
               </button>
             </div>
           </div>
@@ -86,10 +86,10 @@
             @click="validateQr"
           >
             <span v-if="isValidating" class="flex-center">
-              <Loader2 :size="20" class="spinning" /> Validating...
+              <Loader2 :size="20" class="spinning" /> {{ t('attendancePage.validating') }}
             </span>
             <span v-else class="flex-center">
-              <ScanLine :size="20" /> Validate QR Code
+              <ScanLine :size="20" /> {{ t('attendancePage.validateQR') }}
             </span>
           </button>
         </div>
@@ -114,7 +114,7 @@
               <div class="countdown-timer" :class="{ warning: remainingSeconds <= 30 }">
                 <Clock :size="18" />
                 <span class="countdown-value">{{ formatTime(remainingSeconds) }}</span>
-                <span class="countdown-label">remaining</span>
+                <span class="countdown-label">{{ t('attendancePage.minutesRemaining') }}</span>
               </div>
             </div>
           </div>
@@ -123,14 +123,14 @@
           <div class="form-group">
             <label for="password">
               <Lock :size="16" />
-              Session Password
+              {{ t('attendancePage.sessionPassword') }}
             </label>
             <div class="password-input">
               <input
                 id="password"
                 v-model="sessionPassword"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="Enter password from whiteboard"
+                :placeholder="t('attendancePage.enterSessionPassword')"
                 @keyup.enter="submitAttendance"
               />
               <button type="button" class="toggle-password" @click="showPassword = !showPassword">
@@ -140,13 +140,13 @@
             </div>
             <small class="hint">
               <Info :size="14" />
-              Ask your teacher for the session password
+              {{ t('attendancePage.passwordHint') }}
             </small>
           </div>
 
           <div class="action-buttons">
             <button class="btn-secondary" @click="goBack">
-              <span class="flex-center"><ArrowLeft :size="18" /> Back</span>
+              <span class="flex-center"><ArrowLeft :size="18" /> {{ t('attendancePage.back') }}</span>
             </button>
             <button
               class="btn-primary"
@@ -154,10 +154,10 @@
               @click="submitAttendance"
             >
               <span v-if="isSubmitting" class="flex-center">
-                <Loader2 :size="20" class="spinning" /> Submitting...
+                <Loader2 :size="20" class="spinning" /> {{ t('attendancePage.submitting') }}
               </span>
               <span v-else class="flex-center">
-                <CheckCircle2 :size="20" /> Submit Attendance
+                <CheckCircle2 :size="20" /> {{ t('attendancePage.submit') }}
               </span>
             </button>
           </div>
@@ -198,8 +198,8 @@
               </div>
             </div>
 
-            <h2 class="success-title">Attendance Marked!</h2>
-            <p class="success-subtitle">Your attendance has been successfully recorded.</p>
+            <h2 class="success-title">{{ t('attendancePage.success') }}</h2>
+            <p class="success-subtitle">{{ t('attendancePage.attendanceRecorded') }}</p>
             <div class="result-details">
               <div class="detail-item">
                 <BookOpen :size="16" />
@@ -215,7 +215,7 @@
               </div>
             </div>
             <button class="btn-primary" @click="resetForm">
-              <span class="flex-center"><RefreshCw :size="18" /> Mark Another</span>
+              <span class="flex-center"><RefreshCw :size="18" /> {{ t('attendancePage.recordAnother') }}</span>
             </button>
           </div>
 
@@ -223,10 +223,10 @@
             <div class="result-icon">
               <XCircle :size="48" />
             </div>
-            <h2>Submission Failed</h2>
+            <h2>{{ t('attendancePage.submissionFailed') }}</h2>
             <p>{{ submissionError }}</p>
             <button class="btn-primary" @click="goBack">
-              <span class="flex-center"><ArrowLeft :size="18" /> Try Again</span>
+              <span class="flex-center"><ArrowLeft :size="18" /> {{ t('common.retry') }}</span>
             </button>
           </div>
         </div>
@@ -237,7 +237,7 @@
         <div class="card-header">
           <h3>
             <History :size="20" />
-            Recent Attendance
+            {{ t('attendancePage.myHistory') }}
           </h3>
           <button class="btn-icon" @click="loadAttendanceHistory" :disabled="isLoadingHistory">
             <RefreshCw :size="18" :class="{ spinning: isLoadingHistory }" />
@@ -254,7 +254,7 @@
 
           <div v-if="attendanceHistory.length === 0 && !isLoadingHistory" class="empty-state">
             <ClipboardList :size="40" />
-            <p>No attendance records yet</p>
+            <p>{{ t('attendancePage.noHistory') }}</p>
           </div>
 
           <div
@@ -288,11 +288,11 @@
             >
               <span v-if="isLoadingMoreHistory" class="flex-center">
                 <Loader2 :size="16" class="spinning" />
-                Loading...
+                {{ t('attendancePage.loading') }}
               </span>
               <span v-else class="flex-center">
                 <RefreshCw :size="16" />
-                Load More
+                {{ t('attendancePage.loadMore') }}
               </span>
             </button>
           </div>
@@ -345,6 +345,9 @@ import {
   validateQrToken,
   getMyAttendance
 } from '@/services/attendance.api'
+import { useTranslation } from '@/composables/useTranslation'
+
+const { t } = useTranslation()
 
 // Step management
 const currentStep = ref(1)
@@ -615,10 +618,10 @@ const formatTime24 = (date) => {
 
 const formatStatus = (status) => {
   const statusMap = {
-    'PRESENT': 'Present',
-    'MANUAL_PRESENT': 'Manual',
-    'ABSENT': 'Absent',
-    'LATE': 'Late'
+    'PRESENT': 'មានវត្តមាន',
+    'MANUAL_PRESENT': 'ដៃគ្រូ',
+    'ABSENT': 'គ្មានវត្តមាន',
+    'LATE': 'ចូលយឺត'
   }
   return statusMap[status] || status
 }
