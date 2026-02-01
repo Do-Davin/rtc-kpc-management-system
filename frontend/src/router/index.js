@@ -6,10 +6,10 @@ import ELibraryComponent from '@/components/admin/e-libraryComponent.vue';
 import ReportsComponent from '@/components/admin/reportsComponent.vue';
 import StaffComponent from '@/components/admin/staffComponent.vue';
 import StudentComponent from '@/components/admin/studentComponent.vue';
-import AttendanceStu from '@/components/student/attendanceStu.vue';
-import CourseStu from '@/components/student/courseStu.vue';
-import DashboardStudent from '@/components/student/dashboardStudent.vue';
-import ELibraryStu from '@/components/student/e-libraryStu.vue';
+import AttendanceStu from '@/components/student/_pages/StudentAttendance.vue';
+import CourseStu from '@/components/student/_pages/StudentCourses.vue';
+import DashboardStudent from '@/components/student/_pages/StudentDashboard.vue';
+import ELibraryStu from '@/components/student/_pages/StudentLibrary.vue';
 import authRoutes from '@/modules/auth/_routes/auth.routes';
 import { useAuthStore } from '@/stores/auth.store';
 import AdminLayout from '@/views/AdminLayout.vue';
@@ -57,6 +57,7 @@ const routes = [
       { path: 'dashboard', name: 'StudentDashboard', component: DashboardStudent },
       { path: 'attendance', name: 'StudentAttendance', component: AttendanceStu },
       { path: 'courses', name: 'StudentCourse', component: CourseStu },
+      { path: 'timetable', name: 'StudentTimetable', component: () => import('@/components/student/_pages/StudentTimeTable.vue') },
       { path: 'e-library', name: 'StudentELibrary', component: ELibraryStu },
     ]
   }
