@@ -110,7 +110,7 @@
             <path d="M5 21V7l7-4 7 4v14"></path>
             <path d="M9 21v-6h6v6"></path>
           </svg>
-          <!-- Technology -->
+          <!-- Books List View -->
           <svg v-else-if="cat === 'Technology'" class="pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
             <line x1="8" y1="21" x2="16" y2="21"></line>
@@ -142,7 +142,6 @@
       </div>
       <p>Loading library...</p>
     </div>
-
     <!-- Error State -->
     <div v-else-if="error" class="error-state">
       <div class="error-icon">
@@ -203,6 +202,12 @@
                 <polyline points="14 2 14 8 20 8"></polyline>
               </svg>
               {{ book.pages }} pages
+            </span>
+            <span v-if="book.isbn" class="meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M3 12h18M3 18h18"></path>
+              </svg>
+              {{ book.isbn }}
             </span>
           </div>
         </div>
@@ -324,32 +329,15 @@
                 </div>
               </div>
 
+              <!-- ISBN -->
+              <div v-if="selectedBook.isbn" class="modal-isbn">
+                <span class="isbn-label">ISBN:</span>
+                <span class="isbn-value">{{ selectedBook.isbn }}</span>
+              </div>
+
               <div class="modal-description">
                 <h4>About this book</h4>
                 <p>{{ selectedBook.description || 'No description available for this book.' }}</p>
-              </div>
-
-              <div class="modal-actions">
-                <a
-                  v-if="selectedBook.bookUrl"
-                  :href="selectedBook.bookUrl"
-                  target="_blank"
-                  class="btn-primary"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                  Open Book Link
-                </a>
-                <button v-else class="btn-disabled" disabled>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                  </svg>
-                  No Link Available
-                </button>
               </div>
             </div>
           </div>
@@ -1199,6 +1187,31 @@ onMounted(() => {
 .modal-stat .stat-label {
   font-size: 12px;
   color: #9ca3af;
+}
+
+.modal-isbn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.isbn-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.isbn-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
 }
 
 .modal-description {
