@@ -348,6 +348,42 @@ export class AttendanceService {
     return record;
   }
 
+  // ========== Admin Methods ==========
+
+  async getAdminStats(): Promise<any> {
+    const totalSessions = await this.sessionRepository.count();
+
+    const activeSessions = await this.sessionRepository.count({
+      where: { status: 'ACTIVE' },
+    });
+
+    // Count distinct teachers who have created at least one session
+    const uniqueTeachersQuery = await this.sessionRepository
+      .createQueryBuilder('session')
+      .select('COUNT(DISTINCT session.teacherId)', 'count')
+      .getRawOne();
+
+    return {
+      totalSessions,
+      activeSessions,
+      activeTeachers: parseInt(uniqueTeachersQuery.count || '0'),
+    };
+  }
+
+  async getAllSessionsAdmin(
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<AttendanceSession[]> {
+    return this.sessionRepository.find({
+      relations: ['teacher', 'attendanceRecords'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: offset,
+    });
+  }
+
+  // ========== Private Helpers ==========
+
   private generateSecureToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }

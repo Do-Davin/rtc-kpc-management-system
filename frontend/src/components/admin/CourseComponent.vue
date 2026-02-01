@@ -1,4 +1,3 @@
-<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import adminService from '@/services/admin.service'
@@ -18,6 +17,7 @@ import {
 
 const courses = ref([])
 const departments = ref([])
+const teachers = ref([]) 
 const showModal = ref(false)
 const showSuccessModal = ref(false)
 const isEditing = ref(false)
@@ -46,12 +46,14 @@ const createdCourse = ref({ title: '', courseCode: '' })
 const fetchData = async () => {
   loading.value = true
   try {
-    const [coursesRes, deptsRes] = await Promise.all([
+    const [coursesRes, deptsRes, teachersRes] = await Promise.all([
       adminService.getCourses(),
       adminService.getDepartments(),
+      adminService.getTeachers()
     ])
     courses.value = coursesRes.data
     departments.value = deptsRes.data
+    teachers.value = teachersRes.data 
   } catch (err) {
     console.error(err)
   } finally {
@@ -100,7 +102,7 @@ const openCreate = () => {
     year: 1,
     status: true,
     departmentId: '',
-    professorName: '',
+    professorName: '', 
     image: null,
   }
   showModal.value = true
@@ -234,7 +236,6 @@ onMounted(fetchData)
 
     <div v-else-if="filteredCourses.length > 0" class="courses-grid">
       <div v-for="course in filteredCourses" :key="course.id" class="course-card">
-        <!-- Course Image -->
         <div class="course-image-container">
           <img v-if="course.image" :src="`http://localhost:3000${course.image}`" :alt="course.title"
             class="course-image" />
@@ -242,7 +243,6 @@ onMounted(fetchData)
             <BookOpen size="40" />
           </div>
 
-          <!-- Status Badge on Image -->
           <div class="status-overlay">
             <span :class="['status-badge-small', course.status ? 'active' : 'inactive']">
               {{ course.status ? 'Active' : 'Inactive' }}
@@ -250,18 +250,14 @@ onMounted(fetchData)
           </div>
         </div>
 
-        <!-- Course Content -->
         <div class="course-content">
-          <!-- Title & Code -->
           <div class="course-header">
             <h3 class="course-title">{{ course.title }}</h3>
             <span class="course-code">{{ course.courseCode }}</span>
           </div>
 
-          <!-- Subtitle -->
           <p class="course-subtitle">{{ course.subtitle || 'No description available' }}</p>
 
-          <!-- Course Meta Info -->
           <div class="course-meta">
             <div class="meta-item">
               <Building2 size="14" />
@@ -277,7 +273,6 @@ onMounted(fetchData)
             </div>
           </div>
 
-          <!-- Action Buttons -->
           <div class="card-actions">
             <button @click="toggleStatus(course.id)" class="btn-toggle" :class="{ active: course.status }">
               <Check v-if="course.status" size="14" />
@@ -302,12 +297,10 @@ onMounted(fetchData)
       <p>No courses found</p>
     </div>
 
-    <!-- Create/Edit Modal -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content large">
         <h3>{{ isEditing ? 'Edit Course' : 'Add New Course' }}</h3>
         <form @submit.prevent="handleSubmit">
-          <!-- Image Upload -->
           <div class="form-group">
             <label>Course Image</label>
             <div class="image-upload-area">
@@ -352,9 +345,15 @@ onMounted(fetchData)
                 </option>
               </select>
             </div>
+            
             <div class="form-group half">
               <label>Professor Name</label>
-              <input v-model="form.professorName" type="text" placeholder="e.g., Dr. John Doe" />
+              <select v-model="form.professorName">
+                <option value="">Select Professor</option>
+                <option v-for="t in teachers" :key="t.id" :value="t.fullName">
+                  {{ t.fullName }} ({{ t.user?.email || 'No Email' }})
+                </option>
+              </select>
             </div>
           </div>
 
@@ -388,7 +387,6 @@ onMounted(fetchData)
       </div>
     </div>
 
-    <!-- Success Modal -->
     <div v-if="showSuccessModal" class="modal-overlay">
       <div class="modal-content success-content">
         <div class="success-icon purple">

@@ -11,11 +11,13 @@ import CourseStu from '@/components/student/_pages/StudentCourses.vue';
 import DashboardStudent from '@/components/student/_pages/StudentDashboard.vue';
 import ELibraryStu from '@/components/student/_pages/StudentLibrary.vue';
 import authRoutes from '@/modules/auth/_routes/auth.routes';
+import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.store';
+
+// Layouts
 import AdminLayout from '@/views/AdminLayout.vue';
 import StudentLayout from '@/views/StudentLayout.vue';
 import TeacherLayout from '@/views/TeacherLayout.vue';
-import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -29,7 +31,7 @@ const routes = [
       { path: 'students', name: 'StudentManagement', component: StudentComponent },
       { path: 'staff', name: 'StaffManagement', component: StaffComponent },
       { path: 'departments', name: 'DepartmentManagement', component: DepartmentComponent },
-      { path: 'attendance', name: 'AttendanceManagement', component: AttendanceComponent },
+      { path: 'attendance', name: 'AttendanceManagement', component: AttendanceComponent }, // Logic is perfect here
       { path: 'reports', name: 'ReportsManagement', component: ReportsComponent },
       { path: 'courses', name: 'CourseManagement', component: CourseComponent },
       { path: 'e-library', name: 'ElibraryManagement', component: ELibraryComponent },
@@ -84,7 +86,6 @@ router.beforeEach((to) => {
 
   if (!to.meta.requiresAuth) return true
 
-  // Fixed: Logical OR (||)
   if (!auth.accessToken || !auth.user) {
     return '/login'
   }
