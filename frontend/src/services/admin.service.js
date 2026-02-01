@@ -21,17 +21,25 @@ export default {
 
   // --- Courses ---
   getCourses() { return api.get('/courses'); },
-  getCourse(id) { return api.get(`/courses/${id}`); },
-  createCourse(formData) {
-    return api.post('/courses', formData, {
+  createCourse(data) { 
+    return api.post('/courses', data, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    }); 
   },
-  updateCourse(id, formData) {
-    return api.patch(`/courses/${id}`, formData, {
+  updateCourse(id, data) { 
+    return api.patch(`/courses/${id}`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    }); 
   },
   deleteCourse(id) { return api.delete(`/courses/${id}`); },
   toggleCourseStatus(id) { return api.patch(`/courses/${id}/toggle-status`); },
+
+  // --- NEW: Attendance (Admin View) ---
+  getAttendanceStats() {
+    return api.get('/attendance/admin/stats');
+  },
+  
+  getAllSessions(limit = 20, offset = 0) {
+    return api.get(`/attendance/admin/all-sessions?limit=${limit}&offset=${offset}`);
+  }
 };

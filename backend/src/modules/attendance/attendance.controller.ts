@@ -29,7 +29,7 @@ export class AttendanceController {
 
   /**
    * Generate a new QR code for attendance session
-   * POST /attendance/generate-qr [Test នៅ Postman]
+   * POST /attendance/generate-qr
    */
   @Post('generate-qr')
   @Roles('TEACHER')
@@ -39,7 +39,7 @@ export class AttendanceController {
 
   /**
    * Stop an active attendance session
-   * POST /attendance/stop-session [Test នៅ Postman]
+   * POST /attendance/stop-session
    */
   @Post('stop-session')
   @Roles('TEACHER')
@@ -104,7 +104,6 @@ export class AttendanceController {
   /**
    * Get students for a course (for manual attendance)
    * GET /attendance/students?department=X&year=Y
-   * Example: /attendance/students?department=Computer%20Science&year=2
    */
   @Get('students')
   @Roles('TEACHER')
@@ -259,5 +258,30 @@ export class AttendanceController {
     @Body() body: { qrToken: string },
   ) {
     return this.attendanceService.validateQrToken(req.user.sub, body.qrToken);
+  }
+
+  // ========== Admin Endpoints (NEW) ==========
+
+  /**
+   * Get global attendance statistics for the admin dashboard
+   * GET /attendance/admin/stats
+   */
+  @Get('admin/stats')
+  @Roles('ADMIN')
+  async getAdminStats() {
+    return this.attendanceService.getAdminStats();
+  }
+
+  /**
+   * Get a list of all attendance sessions for monitoring
+   * GET /attendance/admin/all-sessions?limit=20&offset=0
+   */
+  @Get('admin/all-sessions')
+  @Roles('ADMIN')
+  async getAllSessions(
+    @Query('limit') limit: number,
+    @Query('offset') offset: number,
+  ) {
+    return this.attendanceService.getAllSessionsAdmin(limit || 20, offset || 0);
   }
 }

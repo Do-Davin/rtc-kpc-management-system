@@ -1,5 +1,5 @@
-import { Student } from 'src/modules/students/entities/student.entity';
-import { Teacher } from 'src/modules/teachers/entities/teacher.entity';
+import { Student } from '../../students/entities/student.entity';
+import { Teacher } from '../../teachers/entities/teacher.entity';
 import {
   Column,
   CreateDateColumn,
