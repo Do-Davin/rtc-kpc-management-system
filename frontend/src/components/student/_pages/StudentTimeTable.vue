@@ -79,6 +79,10 @@
               class="schedule-card"
               :style="{ backgroundColor: schedule.color + '15', borderColor: schedule.color }"
             >
+              <!-- Type Badge -->
+              <div class="card-type" :style="{ color: schedule.color }">
+                {{ getTypeLabel(schedule.type) }}
+              </div>
               <div class="card-header">
                 <span class="subject-name" :style="{ color: schedule.color }">{{ schedule.subjectName }}</span>
               </div>
@@ -90,10 +94,10 @@
                   </svg>
                   <span>{{ schedule.teacherName }}</span>
                 </div>
-                <div class="card-info">
+                <div class="card-info" v-if="schedule.room">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
                   </svg>
                   <span>{{ schedule.room }}</span>
                 </div>
@@ -153,16 +157,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useTranslation } from '@/composables/useTranslation'
+import * as studentDashboardApi from '@/services/student-dashboard.api'
 
 const { t, currentLanguage } = useTranslation()
 
-// Student's current info (will come from auth/API later)
-const currentDepartment = ref('GIC');
-const currentYear = ref('Year 1');
-const currentGroup = ref('A');
-const studentDepartmentId = ref(1);
+// Loading state
+const loading = ref(true)
+
+// Student's current info (fetched from API)
+const currentDepartment = ref('');
+const currentYear = ref('');
+const currentGroup = ref('');
 
 // Schedule Data
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -176,153 +183,49 @@ const dayLabels = computed(() => ({
   Saturday: t('schedulePage.saturday'),
 }));
 
+// 1-hour time slots from 7:00 to 5:00 PM (matching teacher schedule)
 const timeSlots = [
-  { start: '07:00', end: '09:00' },
-  { start: '09:00', end: '11:00' },
-  { start: '13:00', end: '15:00' },
-  { start: '15:00', end: '17:00' },
+  { start: '07:00', end: '08:00' },
+  { start: '08:00', end: '09:00' },
+  { start: '09:00', end: '10:00' },
+  { start: '10:00', end: '11:00' },
+  { start: '11:00', end: '12:00' },
+  { start: '13:00', end: '14:00' },
+  { start: '14:00', end: '15:00' },
+  { start: '15:00', end: '16:00' },
+  { start: '16:00', end: '17:00' },
 ];
 
-// Sample schedule data (will come from API later)
-const schedules = ref([
-  {
-    id: 1,
-    subjectName: 'គណិតវិទ្យា',
-    teacherName: 'លោក សុខ វិសាល',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 101',
-    day: 'Monday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#5B55F3',
-  },
-  {
-    id: 2,
-    subjectName: 'រូបវិទ្យា',
-    teacherName: 'លោកស្រី ចាន់ សុភា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 102',
-    day: 'Monday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#10B981',
-  },
-  {
-    id: 3,
-    subjectName: 'គីមីវិទ្យា',
-    teacherName: 'លោក រស្មី ពេជ្រ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 103',
-    day: 'Tuesday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#F59E0B',
-  },
-  {
-    id: 4,
-    subjectName: 'ភាសាអង់គ្លេស',
-    teacherName: 'អ្នកគ្រូ មាលា សុវណ្ណ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 104',
-    day: 'Tuesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#8B5CF6',
-  },
-  {
-    id: 5,
-    subjectName: 'ព័ត៌មានវិទ្យា',
-    teacherName: 'លោក ដារា សុភាព',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Lab 01',
-    day: 'Wednesday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#06B6D4',
-  },
-  {
-    id: 6,
-    subjectName: 'ជីវវិទ្យា',
-    teacherName: 'លោកស្រី សុខ លក្ខណា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 105',
-    day: 'Wednesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#EF4444',
-  },
-  {
-    id: 7,
-    subjectName: 'គណិតវិទ្យា',
-    teacherName: 'លោក សុខ វិសាល',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 101',
-    day: 'Thursday',
-    startTime: '13:00',
-    endTime: '15:00',
-    color: '#5B55F3',
-  },
-  {
-    id: 8,
-    subjectName: 'រូបវិទ្យា',
-    teacherName: 'លោកស្រី ចាន់ សុភា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 102',
-    day: 'Thursday',
-    startTime: '15:00',
-    endTime: '17:00',
-    color: '#10B981',
-  },
-  {
-    id: 9,
-    subjectName: 'ភាសាអង់គ្លេស',
-    teacherName: 'អ្នកគ្រូ មាលា សុវណ្ណ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 104',
-    day: 'Friday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#8B5CF6',
-  },
-  {
-    id: 10,
-    subjectName: 'ព័ត៌មានវិទ្យា',
-    teacherName: 'លោក ដារា សុភាព',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Lab 01',
-    day: 'Friday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#06B6D4',
-  },
-]);
+// Schedule data from API
+const schedules = ref([]);
 
-// Filter schedules for student's department, year, and group
+// Fetch schedule data from API
+const fetchSchedule = async () => {
+  try {
+    loading.value = true
+    const data = await studentDashboardApi.getMySchedule()
+    
+    // Set student info
+    if (data.student) {
+      currentDepartment.value = data.student.departmentCode || data.student.department || 'N/A'
+      currentYear.value = data.student.year || 'N/A'
+      currentGroup.value = data.student.group || 'A'
+    }
+    
+    // Set schedules
+    schedules.value = data.schedules || []
+  } catch (error) {
+    console.error('Failed to fetch schedule:', error)
+    schedules.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Filter schedules for student's group (already filtered by department and year from API)
 const filteredSchedules = computed(() => {
   return schedules.value.filter(
-    (s) => s.department === studentDepartmentId.value && 
-           s.year === currentYear.value && 
-           s.group === currentGroup.value
+    (s) => !s.group || s.group === currentGroup.value || s.group === 'ALL'
   );
 });
 
@@ -331,7 +234,7 @@ const uniqueSubjects = computed(() => {
   const seen = new Map();
   filteredSchedules.value.forEach((s) => {
     if (!seen.has(s.subjectName)) {
-      seen.set(s.subjectName, { name: s.subjectName, color: s.color });
+      seen.set(s.subjectName, { name: s.subjectName, color: s.color || '#5B55F3' });
     }
   });
   return Array.from(seen.values());
@@ -357,6 +260,24 @@ const getScheduleForCell = (day, slot) => {
     (s) => s.day === day && s.startTime === slot.start && s.endTime === slot.end
   );
 };
+
+// Get type label (LECTURE, LAB, PRACTICE)
+const getTypeLabel = (type) => {
+  if (!type) return 'LECTURE';
+  const typeMap = {
+    'Lecture': 'LECTURE',
+    'Lab': 'LAB',
+    'Practice': 'PRACTICE',
+    'Tutorial': 'TUTORIAL',
+    'Seminar': 'SEMINAR',
+  };
+  return typeMap[type] || type.toUpperCase();
+};
+
+// Initialize on mount
+onMounted(() => {
+  fetchSchedule()
+})
 </script>
 
 <style scoped>
@@ -532,6 +453,14 @@ const getScheduleForCell = (day, slot) => {
   border-radius: 8px;
   border-left: 3px solid;
   height: 100%;
+}
+
+.card-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
 .card-header {

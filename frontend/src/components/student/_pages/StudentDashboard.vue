@@ -13,36 +13,36 @@
       </template>
 
       <template v-else>
-        <!-- My Present Days -->
+        <!-- My Present Courses -->
         <div class="stat-card">
           <div class="icon-box green">
             <CheckCircle :size="24" />
           </div>
           <div class="stat-info">
             <p>{{ t('stats.myPresence') }}</p>
-            <h3>{{ stats.presentDays || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
+            <h3>{{ stats.presentCourses || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
           </div>
         </div>
 
-        <!-- My Late Days -->
+        <!-- My Late Courses -->
         <div class="stat-card">
           <div class="icon-box orange">
             <Clock :size="24" />
           </div>
           <div class="stat-info">
             <p>{{ t('stats.lateDays') }}</p>
-            <h3>{{ stats.lateDays || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
+            <h3>{{ stats.lateCourses || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
           </div>
         </div>
 
-        <!-- My Absent Days -->
+        <!-- My Absent Courses -->
         <div class="stat-card">
           <div class="icon-box red">
             <XCircle :size="24" />
           </div>
           <div class="stat-info">
             <p>{{ t('stats.absentDays') }}</p>
-            <h3>{{ stats.absentDays || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
+            <h3>{{ stats.absentCourses || 0 }} <span class="unit">{{ t('stats.days') }}</span></h3>
           </div>
         </div>
 
@@ -177,18 +177,19 @@ import {
 } from 'lucide-vue-next'
 import AttendanceChart from '../_components/AttendanceChart.vue'
 import { useTranslation } from '@/composables/useTranslation'
+import * as studentDashboardApi from '@/services/student-dashboard.api'
 
 // Translation
 const { t } = useTranslation()
 
 // ========== State ==========
 
-// Stats - Student's personal stats
+// Stats - Student's personal stats (tracking by courses)
 const loadingStats = ref(true)
 const stats = ref({
-  presentDays: 0,
-  absentDays: 0,
-  lateDays: 0,
+  presentCourses: 0,
+  absentCourses: 0,
+  lateCourses: 0,
   attendanceRate: 0
 })
 
@@ -202,25 +203,23 @@ const attendanceData = ref([])
 const loadingClasses = ref(true)
 const todayClasses = ref([])
 
-// ========== Mock Data Functions ==========
-// These will be replaced with real API calls when backend is ready
+// ========== API Functions ==========
 
-const fetchStats = async () => {
+const fetchStats = async (days = null) => {
   try {
     loadingStats.value = true
-    // Simulate API call - replace with real API later
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Mock data for student's personal attendance
+    // Use the same time range as the chart
+    const daysToFetch = days ?? parseInt(selectedRange.value)
+    const data = await studentDashboardApi.getDashboardStats(daysToFetch)
     stats.value = {
-      presentDays: 45,
-      absentDays: 3,
-      lateDays: 2,
-      attendanceRate: 90
+      presentCourses: data.presentCourses || 0,
+      absentCourses: data.absentCourses || 0,
+      lateCourses: data.lateCourses || 0,
+      attendanceRate: data.attendanceRate || 0
     }
   } catch (error) {
     console.error('Failed to fetch stats:', error)
-    stats.value = { presentDays: 0, absentDays: 0, lateDays: 0, attendanceRate: 0 }
+    stats.value = { presentCourses: 0, absentCourses: 0, lateCourses: 0, attendanceRate: 0 }
   } finally {
     loadingStats.value = false
   }
@@ -230,31 +229,12 @@ const fetchAttendanceHistory = async () => {
   try {
     loadingChart.value = true
     chartError.value = ''
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 600))
-    
-    // Generate mock attendance data based on selected range
+    // Fetch real attendance trend from backend API
     const days = parseInt(selectedRange.value)
-    const data = []
-    const today = new Date()
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      
-      // Random attendance percentage between 85-100%
-      const percentage = Math.floor(Math.random() * 16) + 85
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        percentage: percentage,
-        present: percentage >= 90 ? 1 : 0,
-        absent: percentage < 90 ? 1 : 0,
-        total: 1
-      })
-    }
-    
-    attendanceData.value = data
+    const data = await studentDashboardApi.getAttendanceTrend(days)
+    attendanceData.value = data || []
+    // Also refresh stats to match the same time range
+    fetchStats(days)
   } catch (error) {
     console.error('Failed to fetch attendance history:', error)
     chartError.value = 'មិនអាចទាញយកទិន្នន័យបានទេ។'
@@ -267,36 +247,9 @@ const fetchAttendanceHistory = async () => {
 const fetchTodayClasses = async () => {
   try {
     loadingClasses.value = true
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 400))
-    
-    // Mock today's classes
-    todayClasses.value = [
-      {
-        id: 1,
-        courseName: 'គណិតវិទ្យា',
-        teacherName: 'លោកគ្រូ សុខា',
-        room: 'បន្ទប់ A101',
-        startTime: '08:00',
-        endTime: '09:30'
-      },
-      {
-        id: 2,
-        courseName: 'ភាសាអង់គ្លេស',
-        teacherName: 'អ្នកគ្រូ មល្លិកា',
-        room: 'បន្ទប់ B205',
-        startTime: '10:00',
-        endTime: '11:30'
-      },
-      {
-        id: 3,
-        courseName: 'វិទ្យាសាស្ត្រកុំព្យូទ័រ',
-        teacherName: 'លោកគ្រូ វិចិត្រ',
-        room: 'បន្ទប់ Lab C',
-        startTime: '14:00',
-        endTime: '16:00'
-      }
-    ]
+    // Fetch real today's classes from backend API
+    const data = await studentDashboardApi.getTodayClasses()
+    todayClasses.value = data || []
   } catch (error) {
     console.error('Failed to fetch classes:', error)
     todayClasses.value = []
@@ -335,7 +288,7 @@ const getClassStatusLabel = (classItem) => {
 // ========== Init ==========
 
 onMounted(() => {
-  fetchStats()
+  // Fetch attendance history first, which will also fetch stats with matching time range
   fetchAttendanceHistory()
   fetchTodayClasses()
 })

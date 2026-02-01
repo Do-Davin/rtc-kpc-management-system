@@ -11,7 +11,10 @@ import {
   Student,
   StudentStatus,
 } from './modules/students/entities/student.entity';
+import { AttendanceSession } from './modules/attendance/entities/attendance-session.entity';
+import { AttendanceRecord } from './modules/attendance/entities/attendance-record.entity';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -141,6 +144,101 @@ async function seed() {
       );
     } else {
       console.log('Student profile already exists');
+    }
+
+    // ========== Create Dummy Attendance Data for Last 3 Days ==========
+    console.log('\nCreating dummy attendance data for last 3 days...');
+
+    const sessionRepo = dataSource.getRepository(AttendanceSession);
+    const recordRepo = dataSource.getRepository(AttendanceRecord);
+
+    // Get student and teacher users
+    const student = await studentRepo.findOne({
+      where: { user: { id: studentUser.id } },
+    });
+    const teacher = await teacherRepo.findOne({
+      where: { user: { id: teacherUser.id } },
+    });
+
+    if (student && teacher) {
+      // Course schedule: 7:00-17:00, each course 2 hours = 5 courses per day
+      const courseSlots = [
+        { name: 'Programming', start: '07:00', end: '09:00' },
+        { name: 'Database', start: '09:00', end: '11:00' },
+        { name: 'Networking', start: '11:00', end: '13:00' },
+        { name: 'Web Development', start: '14:00', end: '16:00' },
+        { name: 'Software Engineering', start: '16:00', end: '18:00' },
+      ];
+
+      // Attendance statuses for variety
+      const attendancePatterns = [
+        // Day 1 (3 days ago): 4 present, 1 late
+        ['PRESENT', 'PRESENT', 'LATE', 'PRESENT', 'PRESENT'],
+        // Day 2 (2 days ago): 3 present, 1 late, 1 absent
+        ['PRESENT', 'ABSENT', 'PRESENT', 'LATE', 'PRESENT'],
+        // Day 3 (yesterday): 5 present
+        ['PRESENT', 'PRESENT', 'PRESENT', 'PRESENT', 'PRESENT'],
+      ];
+
+      for (let dayOffset = 2; dayOffset >= 0; dayOffset--) {
+        const sessionDate = new Date();
+        sessionDate.setDate(sessionDate.getDate() - dayOffset);
+        sessionDate.setHours(8, 0, 0, 0);
+
+        const patternIndex = 2 - dayOffset; // 0, 1, 2
+        const pattern = attendancePatterns[patternIndex];
+
+        for (let i = 0; i < courseSlots.length; i++) {
+          const course = courseSlots[i];
+          const status = pattern[i] as 'PRESENT' | 'ABSENT' | 'LATE';
+
+          // Check if session already exists for this course/date
+          const existingSession = await sessionRepo.findOne({
+            where: {
+              teacherId: teacherUser.id,
+              courseName: course.name,
+              sessionDate: sessionDate,
+            },
+          });
+
+          if (!existingSession) {
+            // Create attendance session
+            const session = sessionRepo.create({
+              teacherId: teacherUser.id,
+              courseId: uuidv4(),
+              courseName: course.name,
+              department: department.name,
+              year: '1',
+              sessionName: `${course.name} - ${sessionDate.toDateString()}`,
+              sessionPassword: await bcrypt.hash('test123', 10),
+              qrToken: uuidv4(),
+              sessionDate: sessionDate,
+              expiryTime: new Date(sessionDate.getTime() + 2 * 60 * 60 * 1000), // 2 hours later
+              status: 'STOPPED',
+            });
+            const savedSession = await sessionRepo.save(session);
+
+            // Create attendance record for the student
+            await recordRepo.insert({
+              sessionId: savedSession.id,
+              studentId: studentUser.id,
+              status: status,
+              markedAt: new Date(sessionDate.getTime() + (status === 'LATE' ? 20 * 60 * 1000 : 5 * 60 * 1000)),
+              markedBy: status === 'ABSENT' ? undefined : teacherUser.id,
+              remarks: status === 'LATE' ? 'Arrived 20 minutes late' : undefined,
+            });
+
+            console.log(`  Created: ${course.name} on ${sessionDate.toDateString()} - ${status}`);
+          }
+        }
+      }
+
+      console.log('\nDummy attendance data created!');
+      console.log('Summary for student@rtc.com (last 3 days):');
+      console.log('  Day 1: 4 Present, 1 Late');
+      console.log('  Day 2: 3 Present, 1 Late, 1 Absent');
+      console.log('  Day 3: 5 Present');
+      console.log('  Total: 12 Present, 2 Late, 1 Absent (15 courses)');
     }
 
     console.log('\nSeed completed successfully!');

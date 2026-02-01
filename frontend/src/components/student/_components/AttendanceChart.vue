@@ -226,17 +226,17 @@ const getSeriesConfig = () => [
     key: 'present',
     label: t('attendancePage.present'),
     color: '#10b981',
-    unit: ` ${t('chart.people')}`,
-    dataKey: 'present',
-    isPercentage: false
+    unit: '%',
+    dataKey: 'presentPercent',
+    isPercentage: true
   },
   {
     key: 'absent',
     label: t('attendancePage.absent'),
     color: '#ef4444',
-    unit: ` ${t('chart.people')}`,
-    dataKey: 'absent',
-    isPercentage: false
+    unit: '%',
+    dataKey: 'absentPercent',
+    isPercentage: true
   },
   {
     key: 'attendancePercent',
@@ -346,8 +346,10 @@ const getChartPoints = (seriesKey) => {
       value: value,
       present: item.present,
       absent: item.absent,
+      late: item.late,
       total: item.total,
-      courseCompletion: item.courseCompletion
+      courseCompletion: item.courseCompletion,
+      coursesAttended: item.coursesAttended
     }
   })
 }
@@ -456,11 +458,13 @@ const showTooltip = (event, point, series) => {
   tooltip.seriesLabel = series.label
   tooltip.color = series.color
 
-  // Build detail string
-  if (series.key === 'present' || series.key === 'absent') {
-    tooltip.detail = `សរុប: ${point.total} សិស្ស`
+  // Build detail string - show actual counts
+  if (series.key === 'present') {
+    tooltip.detail = `${point.present}/${point.total} ${t('stats.days')}`
+  } else if (series.key === 'absent') {
+    tooltip.detail = `${point.absent}/${point.total} ${t('stats.days')}`
   } else if (series.key === 'attendancePercent') {
-    tooltip.detail = `${point.present}/${point.total} សិស្ស`
+    tooltip.detail = `${point.present + (point.late || 0)}/${point.total} ${t('stats.days')}`
   } else {
     tooltip.detail = ''
   }
