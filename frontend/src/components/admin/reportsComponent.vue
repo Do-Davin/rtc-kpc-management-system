@@ -1,3 +1,4 @@
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import adminService from '@/services/admin.service'
@@ -26,7 +27,7 @@ const totalDepartments = computed(() => departments.value.length)
 // 2. Student Distribution by Department
 const studentDistribution = computed(() => {
   if (!students.value.length) return []
-  
+
   const dist = {}
   // Count students per department
   students.value.forEach(s => {
@@ -57,7 +58,7 @@ const fetchData = async () => {
       adminService.getTeachers(),
       adminService.getDepartments()
     ])
-    
+
     students.value = stuRes.data
     teachers.value = teachRes.data
     departments.value = deptRes.data
@@ -77,29 +78,29 @@ onMounted(() => {
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Institutional Reports</h2>
-        <p class="page-subtitle">Overview of school performance and demographics</p>
+        <h2 class="page-title">របាយការណ៍ស្ថាប័ន</h2>
+        <p class="page-subtitle">ទិដ្ឋភាពទូទៅនៃការអនុវត្តសាលា និងប្រជាសាស្រ្ត</p>
       </div>
       <div class="header-actions">
         <button @click="fetchData" class="btn-secondary">
-          Refresh Data
+          ផ្ទុកទិន្នន័យឡើងវិញ
         </button>
       </div>
     </div>
 
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Generating reports...</p>
+      <p>កំពុងបង្កើតរបាយការណ៍...</p>
     </div>
 
     <div v-else class="reports-grid">
-      
+
       <div class="metric-card purple">
         <div class="metric-icon">
           <GraduationCap size="24" />
         </div>
         <div class="metric-info">
-          <span class="metric-label">Total Students</span>
+          <span class="metric-label">ចំនួនសិស្សសរុប</span>
           <span class="metric-value">{{ totalStudents }}</span>
         </div>
       </div>
@@ -109,7 +110,7 @@ onMounted(() => {
           <Users size="24" />
         </div>
         <div class="metric-info">
-          <span class="metric-label">Total Teachers</span>
+          <span class="metric-label">ចំនួនគ្រូបង្រៀនសរុប</span>
           <span class="metric-value">{{ totalTeachers }}</span>
         </div>
       </div>
@@ -119,7 +120,7 @@ onMounted(() => {
           <Building2 size="24" />
         </div>
         <div class="metric-info">
-          <span class="metric-label">Departments</span>
+          <span class="metric-label">ចំនួនដេប៉ាដឺម៉ង់</span>
           <span class="metric-value">{{ totalDepartments }}</span>
         </div>
       </div>
@@ -129,22 +130,22 @@ onMounted(() => {
           <TrendingUp size="24" />
         </div>
         <div class="metric-info">
-          <span class="metric-label">Student/Teacher Ratio</span>
+          <span class="metric-label">ប្រភាគ សិស្ស/គ្រូបង្រៀន</span>
           <span class="metric-value">{{ teacherStudentRatio }} : 1</span>
         </div>
       </div>
 
       <div class="report-panel large">
         <div class="panel-header">
-          <h3><PieChart size="20" /> Student Enrollment by Department</h3>
+          <h3><PieChart size="20" /> ចំនួនសិស្សតាមដេប៉ាដឺម៉ង់</h3>
         </div>
         <div class="panel-body">
-          <div v-if="studentDistribution.length === 0" class="empty-chart">No data available</div>
+          <div v-if="studentDistribution.length === 0" class="empty-chart">គ្មានទិន្នន័យ</div>
           <div v-else class="distribution-list">
             <div v-for="item in studentDistribution" :key="item.name" class="dist-item">
               <div class="dist-info">
                 <span class="dist-name">{{ item.name }}</span>
-                <span class="dist-count">{{ item.count }} Students ({{ item.percentage }}%)</span>
+                <span class="dist-count">{{ item.count }} នាក់ ({{ item.percentage }}%)</span>
               </div>
               <div class="progress-track">
                 <div class="progress-fill" :style="{ width: item.percentage + '%' }"></div>
@@ -156,22 +157,22 @@ onMounted(() => {
 
       <div class="report-panel">
         <div class="panel-header">
-          <h3><BarChart2 size="20" /> Operational Health</h3>
+          <h3><BarChart2 size="20" /> ស្ថានភាពសាលា</h3>
         </div>
         <div class="panel-body stats-list">
           <div class="stat-row">
-            <span class="stat-label">Active Departments</span>
+            <span class="stat-label">ដេប៉ាដឺម៉ង់ដែលដំណើរការ</span>
             <span class="stat-val">{{ departments.length }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Avg. Students per Dept</span>
+            <span class="stat-label">មធ្យមភាគនៃនិស្សិតក្នុងដេប៉ាដឺម៉ង់</span>
             <span class="stat-val">
               {{ totalDepartments ? Math.round(totalStudents / totalDepartments) : 0 }}
             </span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Faculty Size</span>
-            <span class="stat-val">{{ teachers.length }} Members</span>
+            <span class="stat-label">ចំនួនគ្រូបង្រៀនសរុប</span>
+            <span class="stat-val">{{ teachers.length }} នាក់</span>
           </div>
         </div>
       </div>

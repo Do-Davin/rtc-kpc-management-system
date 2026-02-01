@@ -9,7 +9,7 @@ const showModal = ref(false)
 const isEditing = ref(false)
 const editId = ref(null)
 const searchQuery = ref('')
-const form = ref({ name: '', code: '', description: '', status: 'ACTIVE' })
+const form = ref({ name: '', code: '', description: '', status: 'សកម្ម' })
 const loading = ref(false)
 const submitting = ref(false)
 
@@ -35,7 +35,7 @@ const filteredDepartments = computed(() => {
 
 const openCreate = () => {
   isEditing.value = false
-  form.value = { name: '', code: '', description: '', status: 'ACTIVE' }
+  form.value = { name: '', code: '', description: '', status: 'សកម្ម' }
   showModal.value = true
 }
 
@@ -46,7 +46,7 @@ const openEdit = (dept) => {
     name: dept.name,
     code: dept.code,
     description: dept.description || '',
-    status: dept.status || 'ACTIVE',
+    status: dept.status || 'សកម្ម',
   }
   showModal.value = true
 }
@@ -85,32 +85,32 @@ onMounted(fetchDepartments)
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Departments</h2>
-        <p class="page-subtitle">Manage faculties and majors</p>
+        <h2 class="page-title">ដេប៉ាដឺម៉ង់</h2>
+        <p class="page-subtitle">គ្រប់គ្រងដេប៉ាដឺម៉ង់ និងវិជ្ជាជីវៈ</p>
       </div>
       <div class="header-actions">
-        <span class="badge">{{ departments.length }} Total</span>
-        <button @click="openCreate" class="btn-primary"><Plus size="18" /> Add New</button>
+        <span class="badge">{{ departments.length }} សរុប</span>
+        <button @click="openCreate" class="btn-primary"><Plus size="18" /> បន្ថែមថ្មី</button>
       </div>
     </div>
 
     <div class="controls-bar">
       <div class="search-box">
         <Search size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" placeholder="Search departments..." />
+        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកដេប៉ាដឺម៉ង់..." />
       </div>
     </div>
 
     <div class="table-card">
-      <div v-if="loading" class="loading-state">Loading...</div>
+      <div v-if="loading" class="loading-state">កំពុងផ្ទៀងផ្ទាត់ដេប៉ាដឺម៉ង់...</div>
       <table v-else-if="filteredDepartments.length > 0" class="custom-table">
         <thead>
           <tr>
-            <th>Department Name</th>
-            <th>Code</th>
-            <th>Teachers</th>
-            <th>Status</th>
-            <th class="actions-col">Actions</th>
+            <th>ឈ្មោះដេប៉ាដឺម៉ង់</th>
+            <th>លេខកូដ</th>
+            <th>គ្រូបង្រៀន</th>
+            <th>ស្ថានភាព</th>
+            <th class="actions-col">សកម្មភាពផ្លាស់ប្ដូរ</th>
           </tr>
         </thead>
         <tbody>
@@ -133,11 +133,11 @@ onMounted(fetchDepartments)
                   <Users size="12" /> {{ teacher.fullName }}
                 </div>
               </div>
-              <span v-else class="text-gray-400 text-sm">No teachers assigned</span>
+              <span v-else class="text-gray-400 text-sm">មិនមានគ្រូបង្រៀន</span>
             </td>
             <td>
               <span :class="['status-badge', dept.status === 'ACTIVE' ? 'active' : 'inactive']">
-                {{ dept.status || 'ACTIVE' }}
+                {{ dept.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
               </span>
             </td>
             <td class="actions-cell">
@@ -153,30 +153,30 @@ onMounted(fetchDepartments)
           </tr>
         </tbody>
       </table>
-      <div v-else class="empty-state">No departments found.</div>
+      <div v-else class="empty-state">គ្មានដេប៉ាដឺម៉ង់ទេ</div>
     </div>
 
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
-        <h3>{{ isEditing ? 'Edit Department' : 'Add Department' }}</h3>
+        <h3>{{ isEditing ? 'កែប្រែដេប៉ាដឺម៉ង់' : 'បន្ថែមដេប៉ាដឺម៉ង់ថ្មី' }}</h3>
         <form @submit.prevent="handleSubmit">
-          <div class="form-group"><label>Name</label><input v-model="form.name" required /></div>
-          <div class="form-group"><label>Code</label><input v-model="form.code" required /></div>
+          <div class="form-group"><label>ឈ្មោះដេប៉ាដឺម៉ង់</label><input v-model="form.name" required /></div>
+          <div class="form-group"><label>លេខកូដ</label><input v-model="form.code" required /></div>
            <div class="form-group">
-            <label>Description</label>
+            <label>ការពិពណ៌នា</label>
             <textarea v-model="form.description" rows="3" class="w-full p-2 border rounded-md"></textarea>
           </div>
           <div class="form-group">
-            <label>Status</label>
+            <label>ស្ថានភាព</label>
             <select v-model="form.status">
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="ACTIVE">សកម្ម</option>
+              <option value="INACTIVE">អសកម្ម</option>
             </select>
           </div>
           <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
             <button type="submit" :disabled="submitting" class="btn-primary">
-              {{ submitting ? 'Saving...' : 'Save' }}
+              {{ submitting ? 'កំពុងរក្សាទុក...' : 'រក្សាទុក' }}
             </button>
           </div>
         </form>

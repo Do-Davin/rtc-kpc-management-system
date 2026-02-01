@@ -1,12 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import adminService from '@/services/admin.service';
-import { 
-  Users, 
-  GraduationCap, 
-  Building2, 
-  ArrowRight, 
-  BookOpen, 
+import {
+  Users,
+  GraduationCap,
+  Building2,
+  ArrowRight,
+  BookOpen,
   BarChart2,
   Clock // 1. Added Clock Icon
 } from 'lucide-vue-next';
@@ -54,11 +54,11 @@ onMounted(fetchStats);
   <div class="dashboard-wrapper">
     <header class="dashboard-header">
       <div>
-        <h1>Dashboard Overview</h1>
-        <p class="subtitle">Welcome back, Admin.</p>
+        <h1>ផ្ទាំងទិដ្ឋាភាពទូទៅ</h1>
+        <p class="subtitle">សួស្ដី, សូមស្វាគមន៍សារជាថ្មី 🙏</p>
       </div>
       <button class="refresh-btn" @click="fetchStats" :disabled="loading">
-        {{ loading ? 'Refreshing...' : 'Refresh Data' }}
+        {{ loading ? 'Refreshing...' : 'ផ្ទុកទិន្នន័យឡើងវិញ' }}
       </button>
     </header>
 
@@ -68,11 +68,11 @@ onMounted(fetchStats);
           <Building2 :size="32" />
         </div>
         <div class="card-info">
-          <h3>Departments</h3>
+          <h3>ដេប៉ាដឺម៉ង់</h3>
           <p class="count">{{ stats.departments }}</p>
         </div>
         <router-link to="/admin/departments" class="card-link">
-          Manage Departments <ArrowRight :size="16" />
+          គ្រប់គ្រងដេប៉ាដឺម៉ង់ <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -81,11 +81,11 @@ onMounted(fetchStats);
           <GraduationCap :size="32" />
         </div>
         <div class="card-info">
-          <h3>Total Students</h3>
+          <h3>ចំនួនសិស្សសរុប</h3>
           <p class="count">{{ stats.students }}</p>
         </div>
         <router-link to="/admin/students" class="card-link">
-          Manage Students <ArrowRight :size="16" />
+          គ្រប់គ្រងសិស្ស <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -94,11 +94,11 @@ onMounted(fetchStats);
           <Users :size="32" />
         </div>
         <div class="card-info">
-          <h3>Total Staff</h3>
+          <h3>ចំនួនបុគ្គលិកសរុប</h3>
           <p class="count">{{ stats.teachers }}</p>
         </div>
         <router-link to="/admin/staff" class="card-link">
-          Manage Staff <ArrowRight :size="16" />
+          គ្រប់គ្រងបុគ្គលិក <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -107,11 +107,11 @@ onMounted(fetchStats);
           <BookOpen :size="32" />
         </div>
         <div class="card-info">
-          <h3>Active Courses</h3>
+          <h3>ចំនួនវគ្គសិក្សាដែលដំណើរការ</h3>
           <p class="count">{{ stats.courses }}</p>
         </div>
         <router-link to="/admin/courses" class="card-link">
-          Manage Courses <ArrowRight :size="16" />
+          គ្រប់គ្រងវគ្គសិក្សា <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -120,7 +120,7 @@ onMounted(fetchStats);
           <Clock :size="32" />
         </div>
         <div class="card-info">
-          <h3>Live Classes</h3>
+          <h3>ថ្នាក់ដែលកំពុងដំណើរការ</h3>
           <div class="count-row">
             <p class="count">{{ stats.activeSessions }}</p>
             <span v-if="stats.activeSessions > 0" class="live-badge">
@@ -129,7 +129,7 @@ onMounted(fetchStats);
           </div>
         </div>
         <router-link to="/admin/attendance" class="card-link">
-          Monitor Attendance <ArrowRight :size="16" />
+          ចូលមើលថ្នាក់ដែលកំពុងដំណើរការ <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -138,11 +138,11 @@ onMounted(fetchStats);
           <BarChart2 :size="32" />
         </div>
         <div class="card-info">
-          <h3>Analytics</h3>
-          <p class="count-text">View Reports</p>
+          <h3>ការវិភាគទិន្នន័យ</h3>
+          <p class="count-text">ចូលមើលរបាយការណ៍</p>
         </div>
         <router-link to="/admin/reports" class="card-link">
-          Open Analytics <ArrowRight :size="16" />
+          បើកការវិភាគ <ArrowRight :size="16" />
         </router-link>
       </div>
 
@@ -298,7 +298,7 @@ h1 {
   text-decoration: none;
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid #f1f5f9; 
+  border-top: 1px solid #f1f5f9;
 }
 
 /* Colors */

@@ -1,3 +1,4 @@
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import adminService from '@/services/admin.service'
@@ -22,7 +23,7 @@ const form = ref({
   enrollmentYear: new Date().getFullYear(),
   phoneNumber: '',
   departmentId: '',
-  status: 'ACTIVE',
+  status: 'សកម្ម',
   password: '',
 })
 const createdAccount = ref({ email: '', password: '' })
@@ -77,7 +78,7 @@ const openCreate = () => {
     enrollmentYear: new Date().getFullYear(),
     phoneNumber: '',
     departmentId: '',
-    status: 'ACTIVE',
+    status: 'សកម្ម',
     password: 'STU@123',
   }
   showModal.value = true
@@ -94,7 +95,7 @@ const openEdit = (stu) => {
     enrollmentYear: stu.enrollmentYear,
     phoneNumber: stu.phoneNumber,
     departmentId: stu.department?.id || '',
-    status: stu.status || 'ACTIVE',
+    status: stu.status || 'សកម្ម',
     password: '',
   }
   showModal.value = true
@@ -115,8 +116,8 @@ const handleSubmit = async () => {
       })
       showModal.value = false
     } else {
-      
-      const payload = { 
+
+      const payload = {
         ...form.value,
         year: parseInt(form.value.year),
         enrollmentYear: parseInt(form.value.enrollmentYear)
@@ -154,13 +155,13 @@ onMounted(loadData)
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Students</h2>
-        <p class="page-subtitle">Manage student accounts</p>
+        <h2 class="page-title">សិស្សានុសិស្ស</h2>
+        <p class="page-subtitle">គ្រប់គ្រងគណនីសិស្ស</p>
       </div>
       <div class="header-actions">
-        <span class="badge">{{ students.length }} Total</span>
+        <span class="badge">{{ students.length }} សរុប</span>
         <button @click="openCreate" class="btn-primary green">
-          <Plus size="18" /> Register Student
+          <Plus size="18" /> បង្កើតសិស្សថ្មី
         </button>
       </div>
     </div>
@@ -168,11 +169,11 @@ onMounted(loadData)
     <div class="controls-bar flex-row">
       <div class="search-box">
         <Search size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" placeholder="Search Name, ID or Email..." />
+        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកដោយ: ឈ្មោះ, ID, អ៊ីមែល..." />
       </div>
       <div class="filter-box">
         <select v-model="filterDept">
-          <option value="">All Departments</option>
+          <option value="">ដេប៉ាដឺម៉ង់</option>
           <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
         </select>
       </div>
@@ -183,19 +184,21 @@ onMounted(loadData)
       <table v-else-if="filteredStudents.length > 0" class="custom-table">
         <thead>
           <tr>
-            <th>Student Profile</th>
-            <th>ID Card</th>
-            <th>Year</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th class="actions-col">Actions</th>
+            <th>ប្រវត្តិរូបសិស្ស</th>
+            <th>លេខកូដសិស្ស (ID)</th>
+            <th>ឆ្នាំសិក្សា</th>
+            <th>ដេប៉ាដឺម៉ង់</th>
+            <th>ស្ថានភាព</th>
+            <th class="actions-col">សកម្មភាពផ្លាស់ប្ដូរ</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="stu in filteredStudents" :key="stu.id">
             <td>
               <div class="user-cell">
-                <div class="icon-box green"><GraduationCap size="16" /></div>
+                <div class="icon-box green">
+                  <GraduationCap size="16" />
+                </div>
                 <div class="user-info">
                   <span class="name">{{ stu.fullName }}</span>
                   <span class="email">{{ stu.user?.email }}</span>
@@ -206,20 +209,22 @@ onMounted(loadData)
             <td>
               <span class="font-mono">{{ stu.studentIdCard }}</span>
             </td>
-             <td>
-              <span>Year {{ stu.year }}</span>
+            <td>
+              <span>ឆ្នាំទី {{ stu.year }}</span>
             </td>
             <td>
               <span v-if="stu.department" class="dept-badge blue">{{ stu.department.code }}</span>
             </td>
             <td>
               <span :class="['status-badge', stu.status === 'ACTIVE' ? 'active' : 'inactive']">
-                {{ stu.status || 'ACTIVE' }}
+                {{ stu.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
               </span>
             </td>
             <td class="actions-cell">
               <div class="action-buttons">
-                <button @click="openEdit(stu)" class="btn-icon edit"><Edit2 size="18" /></button>
+                <button @click="openEdit(stu)" class="btn-icon edit">
+                  <Edit2 size="18" />
+                </button>
                 <button @click="handleDelete(stu.id)" class="btn-icon delete">
                   <Trash2 size="18" />
                 </button>
@@ -228,7 +233,7 @@ onMounted(loadData)
           </tr>
         </tbody>
       </table>
-      <div v-else class="empty-state">No students found.</div>
+      <div v-else class="empty-state">គ្មានសិស្សទេ</div>
     </div>
 
     <div v-if="showModal" class="modal-overlay">
@@ -236,64 +241,64 @@ onMounted(loadData)
         <h3>{{ isEditing ? 'Edit Student' : 'Register New Student' }}</h3>
         <form @submit.prevent="handleSubmit">
           <div class="form-row">
-             <div class="form-group half">
-              <label>Full Name</label>
+            <div class="form-group half">
+              <label>ឈ្មោះពេញ</label>
               <input v-model="form.fullName" type="text" required />
             </div>
-             <div class="form-group half">
-              <label>Phone Number</label>
+            <div class="form-group half">
+              <label>លេខទូរសព្ទ</label>
               <input v-model="form.phoneNumber" type="text" placeholder="012..." />
             </div>
           </div>
-         
+
           <div class="form-group">
-            <label>Email Address</label>
+            <label>អ៊ីមែល</label>
             <input v-model="form.email" type="email" :disabled="isEditing" required />
           </div>
 
           <div class="form-row">
             <div class="form-group half">
-              <label>Student ID Card</label>
+              <label>លេខកូដសិស្ស (ID)</label>
               <input v-model="form.studentIdCard" type="text" required />
             </div>
-             <div class="form-group half">
-              <label>Department</label>
+            <div class="form-group half">
+              <label>ដេប៉ាដឺម៉ង់</label>
               <select v-model="form.departmentId" required>
-                <option value="" disabled>Select Department</option>
+                <option value="" disabled>ជ្រើសរើសដេប៉ាដឺម៉ង់</option>
                 <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
               </select>
             </div>
           </div>
 
           <div class="form-row">
-             <div class="form-group half">
-              <label>Year (1-4)</label>
+            <div class="form-group half">
+              <label>ឆ្នាំទី (1-4)</label>
               <input v-model="form.year" type="number" min="1" max="8" required />
             </div>
-             <div class="form-group half">
-              <label>Enrollment Year</label>
+            <div class="form-group half">
+              <label>ឆ្នាំចូលរៀន</label>
               <input v-model="form.enrollmentYear" type="number" required />
             </div>
           </div>
 
           <div class="form-group" v-if="!isEditing">
-            <label>Default Password (STU@123)</label>
-            <input v-model="form.password" type="password" placeholder="Default: STU@123" />
+            <label>លេខសម្ងាត់លំនាំដើម (STU@123)</label>
+            <input v-model="form.password" type="password" placeholder="លំនាំដើម: STU@123" />
           </div>
 
           <div class="form-group">
-            <label>Status</label>
+            <label>ស្ថានភាព</label>
             <select v-model="form.status">
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              <option value="GRADUATED">Graduated</option>
+              <option value="ACTIVE">សកម្ម</option>
+              <option value="INACTIVE">អសកម្ម</option>
+              <option value="GRADUATED">បានបញ្ចប់ការសិក្សា</option>
             </select>
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
             <button type="submit" :disabled="submitting" class="btn-primary green">
-              {{ submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Register' }}
+              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'ចុះឈ្មោះ' }}
             </button>
           </div>
         </form>
@@ -302,31 +307,32 @@ onMounted(loadData)
 
     <div v-if="showSuccessModal" class="modal-overlay">
       <div class="modal-content success-content">
-        <div class="success-icon"><Check size="32" /></div>
-        <h3>Account Created!</h3>
+        <div class="success-icon">
+          <Check size="32" />
+        </div>
+        <h3>គណនីបានបង្កើត!</h3>
         <div class="credential-box">
           <div class="cred-row">
-            <span class="label">Email:</span><span class="value">{{ createdAccount.email }}</span>
+            <span class="label">អ៊ីមែល:</span><span class="value">{{ createdAccount.email }}</span>
           </div>
           <div class="cred-row">
-            <span class="label">Password:</span
-            ><span class="value font-mono font-bold text-blue-600">{{
+            <span class="label">លេខសម្ងាត់:</span><span class="value font-mono font-bold text-blue-600">{{
               createdAccount.password
-            }}</span>
+              }}</span>
           </div>
         </div>
-        <button @click="showSuccessModal = false" class="btn-primary w-full mt-4">Done</button>
+        <button @click="showSuccessModal = false" class="btn-primary w-full mt-4">រួចរាល់</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-
 .form-row {
   display: flex;
   gap: 1rem;
 }
+
 .form-group.half {
   flex: 1;
 }
@@ -338,27 +344,32 @@ onMounted(loadData)
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
 }
+
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 2rem;
 }
+
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
+
 .page-subtitle {
   color: #64748b;
   margin-top: 0.25rem;
 }
+
 .header-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+
 .badge {
   background: #e2e8f0;
   color: #475569;
@@ -367,6 +378,7 @@ onMounted(loadData)
   font-size: 0.85rem;
   font-weight: 600;
 }
+
 .btn-primary {
   background: #2563eb;
   color: white;
@@ -380,21 +392,26 @@ onMounted(loadData)
   justify-content: center;
   gap: 0.5rem;
 }
+
 .btn-primary.green {
   background: #16a34a;
 }
+
 .btn-primary.green:hover {
   background: #15803d;
 }
+
 .controls-bar {
   margin-bottom: 1.5rem;
   display: flex;
   gap: 1rem;
 }
+
 .search-box,
 .filter-box {
   position: relative;
 }
+
 .search-icon {
   position: absolute;
   left: 12px;
@@ -402,6 +419,7 @@ onMounted(loadData)
   transform: translateY(-50%);
   color: #94a3b8;
 }
+
 .search-box input,
 .filter-box select {
   padding: 0.6rem 1rem 0.6rem 2.5rem;
@@ -411,6 +429,7 @@ onMounted(loadData)
   min-width: 200px;
   background: white;
 }
+
 .table-card {
   background: white;
   border-radius: 12px;
@@ -418,10 +437,12 @@ onMounted(loadData)
   overflow: hidden;
   border: 1px solid #e2e8f0;
 }
+
 .custom-table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .custom-table th {
   background: #f8fafc;
   text-align: left;
@@ -430,17 +451,20 @@ onMounted(loadData)
   color: #475569;
   border-bottom: 1px solid #e2e8f0;
 }
+
 .custom-table td {
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
   vertical-align: middle;
 }
+
 .user-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
+
 .icon-box {
   width: 32px;
   height: 32px;
@@ -451,23 +475,28 @@ onMounted(loadData)
   align-items: center;
   justify-content: center;
 }
+
 .icon-box.green {
   background: #f0fdf4;
   color: #16a34a;
 }
+
 .user-info {
   display: flex;
   flex-direction: column;
 }
+
 .user-info .name {
   font-weight: 600;
   color: #1e293b;
   font-size: 0.95rem;
 }
+
 .user-info .email {
   font-size: 0.85rem;
   color: #64748b;
 }
+
 .dept-badge {
   background: #eff6ff;
   color: #1d4ed8;
@@ -476,16 +505,19 @@ onMounted(loadData)
   font-size: 0.8rem;
   font-weight: 600;
 }
+
 .status-badge {
   padding: 4px 10px;
   border-radius: 99px;
   font-size: 0.8rem;
   font-weight: 600;
 }
+
 .status-badge.active {
   background: #dcfce7;
   color: #15803d;
 }
+
 .status-badge.inactive {
   background: #f1f5f9;
   color: #64748b;
@@ -496,20 +528,24 @@ onMounted(loadData)
   text-align: center;
   width: 100px;
 }
+
 .actions-cell {
   text-align: center;
 }
+
 .action-buttons {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
 }
+
 .btn-icon.edit {
   color: #2563eb;
   background: none;
   border: none;
   cursor: pointer;
 }
+
 .btn-icon.delete {
   color: #ef4444;
   background: none;
@@ -526,16 +562,20 @@ onMounted(loadData)
   align-items: center;
   z-index: 50;
 }
+
 .modal-content {
   background: white;
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
-  max-width: 500px; /* Increased width slightly for form rows */
+  max-width: 500px;
+  /* Increased width slightly for form rows */
 }
+
 .form-group {
   margin-bottom: 1rem;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 0.4rem;
@@ -543,6 +583,7 @@ onMounted(loadData)
   font-weight: 500;
   color: #475569;
 }
+
 .form-group input,
 .form-group select {
   width: 100%;
@@ -551,12 +592,14 @@ onMounted(loadData)
   border-radius: 6px;
   outline: none;
 }
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1.5rem;
 }
+
 .btn-text {
   background: none;
   border: none;
@@ -564,15 +607,18 @@ onMounted(loadData)
   cursor: pointer;
   font-weight: 500;
 }
+
 .loading-state,
 .empty-state {
   padding: 3rem;
   text-align: center;
   color: #94a3b8;
 }
+
 .success-content {
   text-align: center;
 }
+
 .success-icon {
   width: 64px;
   height: 64px;
@@ -584,6 +630,7 @@ onMounted(loadData)
   justify-content: center;
   margin: 0 auto 1.5rem auto;
 }
+
 .credential-box {
   background: #f8fafc;
   border: 1px dashed #cbd5e1;
@@ -591,19 +638,23 @@ onMounted(loadData)
   border-radius: 8px;
   text-align: left;
 }
+
 .cred-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
 }
+
 .label {
   color: #64748b;
   font-size: 0.9rem;
 }
+
 .value {
   color: #1e293b;
   font-weight: 500;
 }
+
 .w-full {
   width: 100%;
 }

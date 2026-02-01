@@ -1,3 +1,4 @@
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import adminService from '@/services/admin.service'
@@ -17,7 +18,7 @@ import {
 
 const courses = ref([])
 const departments = ref([])
-const teachers = ref([]) 
+const teachers = ref([])
 const showModal = ref(false)
 const showSuccessModal = ref(false)
 const isEditing = ref(false)
@@ -53,7 +54,7 @@ const fetchData = async () => {
     ])
     courses.value = coursesRes.data
     departments.value = deptsRes.data
-    teachers.value = teachersRes.data 
+    teachers.value = teachersRes.data
   } catch (err) {
     console.error(err)
   } finally {
@@ -102,7 +103,7 @@ const openCreate = () => {
     year: 1,
     status: true,
     departmentId: '',
-    professorName: '', 
+    professorName: '',
     image: null,
   }
   showModal.value = true
@@ -201,13 +202,13 @@ onMounted(fetchData)
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Courses</h2>
-        <p class="page-subtitle">Manage academic courses and programs</p>
+        <h2 class="page-title">វគ្គសិក្សា</h2>
+        <p class="page-subtitle">គ្រប់គ្រងវគ្គសិក្សានិងកម្រិតសិក្សា</p>
       </div>
       <div class="header-actions">
-        <span class="badge">{{ courses.length }} Total</span>
+        <span class="badge">{{ courses.length }} សរុប</span>
         <button @click="openCreate" class="btn-primary purple">
-          <Plus size="18" /> Add Course
+          <Plus size="18" /> បន្ថែមវគ្គសិក្សាថ្មី
         </button>
       </div>
     </div>
@@ -215,24 +216,24 @@ onMounted(fetchData)
     <div class="controls-bar">
       <div class="search-box">
         <Search size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" placeholder="Search courses..." />
+        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកវគ្គសិក្សា..." />
       </div>
       <div class="filter-box">
         <select v-model="filterDept">
-          <option value="">All Departments</option>
+          <option value="">ដេប៉ាដឺម៉ង់ទាំងអស់</option>
           <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
         </select>
       </div>
       <div class="filter-box">
         <select v-model="filterStatus">
-          <option value="">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="">ស្ថានភាពទាំងអស់</option>
+          <option value="true">សកម្ម</option>
+          <option value="false">អសកម្ម</option>
         </select>
       </div>
     </div>
 
-    <div v-if="loading" class="loading-state">Loading courses...</div>
+    <div v-if="loading" class="loading-state">កំពុងផ្ទុកវគ្គសិក្សា...</div>
 
     <div v-else-if="filteredCourses.length > 0" class="courses-grid">
       <div v-for="course in filteredCourses" :key="course.id" class="course-card">
@@ -245,7 +246,7 @@ onMounted(fetchData)
 
           <div class="status-overlay">
             <span :class="['status-badge-small', course.status ? 'active' : 'inactive']">
-              {{ course.status ? 'Active' : 'Inactive' }}
+              {{ course.status ? 'សកម្ម' : 'អសកម្ម' }}
             </span>
           </div>
         </div>
@@ -256,7 +257,7 @@ onMounted(fetchData)
             <span class="course-code">{{ course.courseCode }}</span>
           </div>
 
-          <p class="course-subtitle">{{ course.subtitle || 'No description available' }}</p>
+          <p class="course-subtitle">{{ course.subtitle || 'គ្មានការពិពណ៌នា' }}</p>
 
           <div class="course-meta">
             <div class="meta-item">
@@ -277,7 +278,7 @@ onMounted(fetchData)
             <button @click="toggleStatus(course.id)" class="btn-toggle" :class="{ active: course.status }">
               <Check v-if="course.status" size="14" />
               <X v-else size="14" />
-              {{ course.status ? 'Active' : 'Inactive' }}
+              {{ course.status ? 'សកម្ម' : 'អសកម្ម' }}
             </button>
             <div class="action-buttons">
               <button @click="openEdit(course)" class="btn-icon-card edit" title="Edit">
@@ -294,7 +295,7 @@ onMounted(fetchData)
 
     <div v-else class="empty-state">
       <BookOpen size="48" />
-      <p>No courses found</p>
+      <p>គ្មានរគវ្គសិក្សាថ្មី</p>
     </div>
 
     <div v-if="showModal" class="modal-overlay">
@@ -302,7 +303,7 @@ onMounted(fetchData)
         <h3>{{ isEditing ? 'Edit Course' : 'Add New Course' }}</h3>
         <form @submit.prevent="handleSubmit">
           <div class="form-group">
-            <label>Course Image</label>
+            <label>រូបភាពនៃវគ្គសិក្សា</label>
             <div class="image-upload-area">
               <div v-if="imagePreview" class="image-preview">
                 <img :src="imagePreview" alt="Preview" />
@@ -312,7 +313,7 @@ onMounted(fetchData)
               </div>
               <label v-else for="image-input" class="upload-placeholder">
                 <ImageIcon size="32" />
-                <span>Click to upload image</span>
+                <span>ចុចដើម្បីផ្ទុករូបភាព</span>
                 <span class="upload-hint">PNG, JPG, WEBP, AVIF (max 5MB)</span>
               </label>
               <input id="image-input" type="file" accept="image/*" @change="handleImageSelect" style="display: none" />
@@ -321,37 +322,37 @@ onMounted(fetchData)
 
           <div class="form-row">
             <div class="form-group half">
-              <label>Course Title *</label>
+              <label>ចំណងជើងវគ្គសិក្សា *</label>
               <input v-model="form.title" type="text" required />
             </div>
             <div class="form-group half">
-              <label>Course Code *</label>
+              <label>លេខកូដវគ្គសិក្សា *</label>
               <input v-model="form.courseCode" type="text" :disabled="isEditing" required placeholder="e.g., PHY101" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>Subtitle</label>
+            <label>ការពិពណ៌នា</label>
             <textarea v-model="form.subtitle" rows="2" placeholder="Short description of the course"></textarea>
           </div>
 
           <div class="form-row">
             <div class="form-group half">
-              <label>Department *</label>
+              <label>ដេប៉ាដឺម៉ង់ *</label>
               <select v-model="form.departmentId" required>
-                <option value="" disabled>Select Department</option>
+                <option value="" disabled>ជ្រើសរើសដេប៉ាដឺម៉ង់</option>
                 <option v-for="d in departments" :key="d.id" :value="d.id">
                   {{ d.name }}
                 </option>
               </select>
             </div>
-            
+
             <div class="form-group half">
-              <label>Professor Name</label>
+              <label>ឈ្មោះគ្រូបង្រៀន</label>
               <select v-model="form.professorName">
-                <option value="">Select Professor</option>
+                <option value="">ជ្រើសរើសគ្រូបង្រៀន</option>
                 <option v-for="t in teachers" :key="t.id" :value="t.fullName">
-                  {{ t.fullName }} ({{ t.user?.email || 'No Email' }})
+                  {{ t.fullName }} ({{ t.user?.email || 'គ្មានអ៊ីមែល' }})
                 </option>
               </select>
             </div>
@@ -359,28 +360,28 @@ onMounted(fetchData)
 
           <div class="form-row">
             <div class="form-group half">
-              <label>Year *</label>
+              <label>ឆ្នាំ *</label>
               <select v-model="form.year" required>
-                <option :value="1">Year 1</option>
-                <option :value="2">Year 2</option>
-                <option :value="3">Year 3</option>
-                <option :value="4">Year 4</option>
-                <option :value="5">Year 5</option>
+                <option :value="1">ឆ្នាំទី 1</option>
+                <option :value="2">ឆ្នាំទី 2</option>
+                <option :value="3">ឆ្នាំទី 3</option>
+                <option :value="4">ឆ្នាំទី 4</option>
+                <option :value="5">ឆ្នាំទី 5</option>
               </select>
             </div>
             <div class="form-group half">
-              <label>Status</label>
+              <label>ស្ថានភាព</label>
               <select v-model="form.status">
-                <option :value="true">Active</option>
-                <option :value="false">Inactive</option>
+                <option :value="true">សកម្ម</option>
+                <option :value="false">អសកម្ម</option>
               </select>
             </div>
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
             <button type="submit" :disabled="submitting" class="btn-primary purple">
-              {{ submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Course' }}
+              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'បង្កើតវគ្គសិក្សា' }}
             </button>
           </div>
         </form>
@@ -392,21 +393,21 @@ onMounted(fetchData)
         <div class="success-icon purple">
           <Check size="32" />
         </div>
-        <h3>Course Created!</h3>
+        <h3>វគ្គសិក្សាត្រូវបានបង្កើត!</h3>
         <div class="credential-box">
           <div class="cred-row">
-            <span class="label">Title:</span>
+            <span class="label">ចំណងជើង:</span>
             <span class="value">{{ createdCourse.title }}</span>
           </div>
           <div class="cred-row">
-            <span class="label">Code:</span>
+            <span class="label">លេខកូដ:</span>
             <span class="value font-mono font-bold text-purple-600">
               {{ createdCourse.courseCode }}
             </span>
           </div>
         </div>
         <button @click="showSuccessModal = false" class="btn-primary purple w-full mt-4">
-          Done
+          រួចរាល់
         </button>
       </div>
     </div>

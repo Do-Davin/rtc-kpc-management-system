@@ -1,10 +1,11 @@
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, onMounted } from 'vue';
 import adminService from '@/services/admin.service';
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
+import {
+  Calendar,
+  Clock,
+  Users,
   RefreshCw,
   Search
 } from 'lucide-vue-next';
@@ -55,11 +56,11 @@ onMounted(fetchData);
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Attendance Monitoring</h2>
-        <p class="page-subtitle">Track teacher activity and classroom sessions</p>
+        <h2 class="page-title">ផ្ទាំងត្រួតពិនិត្យវត្តមាន</h2>
+        <p class="page-subtitle">តាមដានសកម្មភាពគ្រូ និងវគ្គក្នុងថ្នាក់</p>
       </div>
       <button @click="fetchData" class="btn-refresh" :disabled="loading">
-        <RefreshCw size="18" :class="{ 'spin': loading }" /> Refresh
+        <RefreshCw size="18" :class="{ 'spin': loading }" /> ផ្ទុកឡើងវិញ
       </button>
     </div>
 
@@ -67,7 +68,7 @@ onMounted(fetchData);
       <div class="stat-card blue">
         <div class="icon-box"><Calendar size="24" /></div>
         <div class="stat-info">
-          <span class="label">Total Sessions</span>
+          <span class="label">ចំនួនសរុបវគ្គ</span>
           <span class="value">{{ stats.totalSessions }}</span>
         </div>
       </div>
@@ -75,7 +76,7 @@ onMounted(fetchData);
       <div class="stat-card green">
         <div class="icon-box"><Clock size="24" /></div>
         <div class="stat-info">
-          <span class="label">Active Now</span>
+          <span class="label">កំពុងមានសកម្មភាព</span>
           <span class="value">{{ stats.activeSessions }}</span>
         </div>
       </div>
@@ -83,7 +84,7 @@ onMounted(fetchData);
       <div class="stat-card purple">
         <div class="icon-box"><Users size="24" /></div>
         <div class="stat-info">
-          <span class="label">Teachers Active</span>
+          <span class="label">គ្រូដែលមានសកម្មភាព</span>
           <span class="value">{{ stats.activeTeachers }}</span>
         </div>
       </div>
@@ -91,19 +92,19 @@ onMounted(fetchData);
 
     <div class="content-card">
       <div class="card-header">
-        <h3>Recent Classroom Sessions</h3>
+        <h3>វគ្គថ្នាក់ដែលបានចូលរួមថ្មីៗ</h3>
       </div>
-      
+
       <div class="table-container">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Teacher</th>
-              <th>Course / Class</th>
-              <th>Session Name</th>
-              <th>Start Time</th>
-              <th>Attendance</th>
-              <th>Status</th>
+              <th>គ្រូ</th>
+              <th>វគ្គ / ថ្នាក់</th>
+              <th>ឈ្មោះវគ្គសិក្សា</th>
+              <th>ពេលវេលាចាប់ផ្តើម</th>
+              <th>វត្តមាន</th>
+              <th>ស្ថានភាព</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +112,7 @@ onMounted(fetchData);
               <td colspan="6" class="text-center">Loading data...</td>
             </tr>
             <tr v-else-if="recentSessions.length === 0">
-              <td colspan="6" class="text-center">No sessions found.</td>
+              <td colspan="6" class="text-center">គ្មានវគ្គសិក្សា</td>
             </tr>
             <tr v-for="session in recentSessions" :key="session.id">
               <td>
@@ -123,14 +124,14 @@ onMounted(fetchData);
               <td>
                 <div class="course-info">
                   <span class="course-name">{{ session.courseName }}</span>
-                  <span class="course-year">Year {{ session.year }}</span>
+                  <span class="course-year">ឆ្នាំ {{ session.year }}</span>
                 </div>
               </td>
               <td>{{ session.sessionName }}</td>
               <td>{{ formatDate(session.createdAt || session.sessionDate) }}</td>
               <td>
                 <span class="badge-count">
-                  {{ session.attendanceRecords?.length || 0 }} Students
+                  {{ session.attendanceRecords?.length || 0 }} សិស្ស
                 </span>
               </td>
               <td>

@@ -22,7 +22,7 @@ const form = ref({
   employeeId: '',
   phoneNumber: '',
   departmentId: '',
-  status: 'ACTIVE',
+  status: 'សកម្ម',
   password: '',
 })
 const createdAccount = ref({ email: '', password: '' })
@@ -76,7 +76,7 @@ const openCreate = () => {
     employeeId: '',
     phoneNumber: '',
     departmentId: '',
-    status: 'ACTIVE',
+    status: 'សកម្ម',
     password: 'TCH@123',
   }
   showModal.value = true
@@ -92,7 +92,7 @@ const openEdit = (tea) => {
     employeeId: tea.employeeId,
     phoneNumber: tea.phoneNumber,
     departmentId: tea.department?.id || '',
-    status: tea.status || 'ACTIVE',
+    status: tea.status || 'សកម្ម',
     password: '',
   }
   showModal.value = true
@@ -151,13 +151,13 @@ onMounted(loadData)
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Teaching staff</h2>
-        <p class="page-subtitle">Manage faculty members</p>
+        <h2 class="page-title">គ្រូបង្រៀន</h2>
+        <p class="page-subtitle">គ្រប់គ្រងគណនីគ្រូបង្រៀន</p>
       </div>
       <div class="header-actions">
-        <span class="badge">{{ teachers.length }} Total</span>
+        <span class="badge">{{ teachers.length }} សរុប</span>
         <button @click="openCreate" class="btn-primary purple">
-          <Plus size="18" /> Add Teacher
+          <Plus size="18" /> បង្កើតគ្រូថ្មី
         </button>
       </div>
     </div>
@@ -165,27 +165,27 @@ onMounted(loadData)
     <div class="controls-bar flex-row">
       <div class="search-box">
         <Search size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" placeholder="Search name or email..." />
+        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកដោយ: ឈ្មោះ, អ៊ីមែល..." />
       </div>
       <div class="filter-box">
         <select v-model="filterDept">
-          <option value="">All Departments</option>
+          <option value="">ដេប៉ាដឺម៉ង់</option>
           <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
         </select>
       </div>
     </div>
 
     <div class="table-card">
-      <div v-if="loading" class="loading-state">Loading staff...</div>
+      <div v-if="loading" class="loading-state">កំពុងផ្ទៀងផ្ទាត់គ្រូបង្រៀន...</div>
       <table v-else-if="filteredTeachers.length > 0" class="custom-table">
         <thead>
           <tr>
-            <th>Staff Info</th>
-            <th>ID</th>
-            <th>Specialization</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th class="actions-col">Actions</th>
+            <th>ព័ត៌មានគ្រូបង្រៀន</th>
+            <th>លេខកូដ</th>
+            <th>វិជ្ជាជីវៈ</th>
+            <th>ដេប៉ាដឺម៉ង់</th>
+            <th>ស្ថានភាព</th>
+            <th class="actions-col">សកម្មភាពផ្លាស់ប្ដូរ</th>
           </tr>
         </thead>
         <tbody>
@@ -207,7 +207,7 @@ onMounted(loadData)
             </td>
             <td>
               <span :class="['status-badge', tea.status === 'ACTIVE' ? 'active' : 'inactive']">
-                {{ tea.status || 'ACTIVE' }}
+                {{ tea.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
               </span>
             </td>
             <td class="actions-cell">
@@ -221,66 +221,66 @@ onMounted(loadData)
           </tr>
         </tbody>
       </table>
-      <div v-else class="empty-state">No teachers found.</div>
+      <div v-else class="empty-state">គ្មានគ្រូបង្រៀនទេ</div>
     </div>
 
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
-        <h3>{{ isEditing ? 'Edit Teacher' : 'Add New Teacher' }}</h3>
+        <h3>{{ isEditing ? 'កែប្រែគ្រូបង្រៀន' : 'បង្កើតគ្រូថ្មី' }}</h3>
         <form @submit.prevent="handleSubmit">
            <div class="form-row">
               <div class="form-group half">
-                <label>Full Name</label>
+                <label>ឈ្មោះពេញ</label>
                 <input v-model="form.fullName" type="text" required />
               </div>
               <div class="form-group half">
-                 <label>Employee ID</label>
+                 <label>លេខកូដគ្រូបង្រៀន</label>
                  <input v-model="form.employeeId" type="text" required />
               </div>
            </div>
 
            <div class="form-row">
              <div class="form-group half">
-                 <label>Email Address</label>
+                 <label>អ៊ីមែល</label>
                  <input v-model="form.email" type="email" :disabled="isEditing" required />
              </div>
              <div class="form-group half">
-                 <label>Phone Number</label>
+                 <label>លេខទូរសព្ទ</label>
                  <input v-model="form.phoneNumber" type="text" />
              </div>
            </div>
 
           <div class="form-row">
             <div class="form-group half">
-               <label>Specialization</label>
+               <label>វិជ្ជាជីវៈ</label>
                 <input v-model="form.specialization" type="text" required />
             </div>
             <div class="form-group half">
-                <label>Department</label>
+                <label>ដេប៉ាដឺម៉ង់</label>
                 <select v-model="form.departmentId" required>
-                  <option value="" disabled>Select Department</option>
+                  <option value="" disabled>ជ្រើសរើសដេប៉ាដឺម៉ង់</option>
                   <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
                 </select>
             </div>
           </div>
 
           <div class="form-group" v-if="!isEditing">
-            <label>Default Password (TCH@123)</label>
+            <label>លេខកូដដើម (TCH@123)</label>
             <input v-model="form.password" type="password" placeholder="Default: TCH@123" />
           </div>
 
           <div class="form-group">
-            <label>Status</label>
+            <label>ស្ថានភាព</label>
             <select v-model="form.status">
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="ACTIVE">សកម្ម</option>
+              <option value="INACTIVE">អសកម្ម</option>
             </select>
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-text">Cancel</button>
+            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
             <button type="submit" :disabled="submitting" class="btn-primary purple">
-              {{ submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Account' }}
+              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'បង្កើតគណនី' }}
             </button>
           </div>
         </form>
@@ -290,20 +290,20 @@ onMounted(loadData)
     <div v-if="showSuccessModal" class="modal-overlay">
       <div class="modal-content success-content">
         <div class="success-icon purple"><Check size="32" /></div>
-        <h3>Teacher Added!</h3>
+        <h3>គ្រូបង្រៀនត្រូវបានបញ្ចូល!</h3>
         <div class="credential-box">
           <div class="cred-row">
-            <span class="label">Email:</span><span class="value">{{ createdAccount.email }}</span>
+            <span class="label">អ៊ីមែល:</span><span class="value">{{ createdAccount.email }}</span>
           </div>
           <div class="cred-row">
-            <span class="label">Password:</span
+            <span class="label">លេខកូដ:</span
             ><span class="value font-mono font-bold text-purple-600">{{
               createdAccount.password
             }}</span>
           </div>
         </div>
         <button @click="showSuccessModal = false" class="btn-primary purple w-full mt-4">
-          Done
+          បានធ្វើរួច
         </button>
       </div>
     </div>
