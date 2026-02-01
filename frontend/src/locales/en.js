@@ -13,7 +13,7 @@ export default {
 
   // Dashboard Page
   dashboard: {
-    title: 'Overview',
+    title: 'Dashboard Overview',
     welcome: 'Hello, Welcome to your dashboard 🙏'
   },
 
@@ -145,6 +145,18 @@ export default {
     noCoursesMatch: 'No courses match your search criteria'
   },
 
+  // Course Detail Modal
+  courseModal: {
+    title: 'Course Information',
+    courseCode: 'Course Code',
+    academicYear: 'Academic Year',
+    year: 'Year',
+    professor: 'Professor',
+    department: 'Department',
+    status: 'Status',
+    createdAt: 'Created At'
+  },
+
   // Library Page
   libraryPage: {
     title: 'E-Library',
@@ -181,7 +193,26 @@ export default {
     department: 'Department',
     attendanceRate: 'Attendance Rate',
     enrolledCourses: 'Enrolled Courses',
-    joinDate: 'Join Date'
+    joinDate: 'Join Date',
+    // Additional profile related strings
+    personalInfoTitle: 'Personal Information',
+    personalInfoSubtitle: 'Manage your personal information',
+    academicInfoTitle: 'Academic Information',
+    academicInfoSubtitle: 'Information managed by administrators',
+    readOnly: 'Read only',
+    uploadImage: 'Choose Image',
+    enterFullName: 'Enter full name',
+    studentId: 'Student ID',
+    statusActive: 'Active',
+    statusCompleted: 'Completed',
+    discardConfirm: 'Are you sure you want to discard changes?',
+    saveSuccess: 'Profile saved successfully!',
+    removeImage: 'Remove image'
+    ,
+    noPhone: 'No phone number',
+    imageTooLarge: 'Image is too large. Please choose an image smaller than 5MB.'
+    ,
+    invalidImageType: 'Please select an image file only.'
   },
 
   // Common

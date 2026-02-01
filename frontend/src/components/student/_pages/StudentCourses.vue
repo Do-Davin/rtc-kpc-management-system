@@ -34,9 +34,9 @@
         <label class="filter-label">{{ t('coursesPage.level') }}</label>
         <select v-model="selectedLevel" class="filter-select">
           <option value="">{{ t('coursesPage.all') }}</option>
-          <option value="Beginner">{{ t('coursesPage.beginner') }}</option>
-          <option value="Intermediate">{{ t('coursesPage.intermediate') }}</option>
-          <option value="Advanced">{{ t('coursesPage.advanced') }}</option>
+          <option value="beginner">{{ t('coursesPage.beginner') }}</option>
+          <option value="intermediate">{{ t('coursesPage.intermediate') }}</option>
+          <option value="advanced">{{ t('coursesPage.advanced') }}</option>
         </select>
       </div>
       <div class="filter-group">
@@ -127,7 +127,7 @@
                   <rect x="15" y="8" width="4" height="13"></rect>
                   <rect x="11" y="13" width="4" height="8"></rect>
                 </svg>
-                <span class="meta-text">{{ course.level }}</span>
+                <span class="meta-text">{{ t(`coursesPage.${course.level}`) }}</span>
               </div>
             </div>
 
@@ -149,6 +149,85 @@
         <p class="empty-subtitle">{{ t('coursesPage.noCoursesMatch') }}</p>
       </div>
     </div>
+
+    <!-- Course Detail Modal -->
+    <Teleport to="body">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-container">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h2 class="modal-title">{{ t('courseModal.title') }}</h2>
+            <button class="modal-close" @click="closeModal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body" v-if="selectedCourse">
+            <!-- Course Image -->
+            <div class="modal-image-wrapper">
+              <img :src="selectedCourse.image" :alt="selectedCourse.title" class="modal-image" @error="handleImageError"/>
+              <div class="modal-status-badge" :class="selectedCourse.status">
+                {{ selectedCourse.status === 'active' ? t('coursesPage.active') : t('coursesPage.inactive') }}
+              </div>
+            </div>
+
+            <!-- Course Info -->
+            <div class="modal-info">
+              <div class="modal-tags">
+                <span class="tag tag-code">{{ selectedCourse.courseCode || 'N/A' }}</span>
+                <span class="tag tag-year">{{ t('courseModal.year') + ' ' + (selectedCourse.year || 1) }}</span>
+              </div>
+
+              <h3 class="modal-course-title">{{ selectedCourse.title }}</h3>
+              <p class="modal-course-description">{{ selectedCourse.description }}</p>
+
+              <!-- Course Details Grid -->
+              <div class="modal-details">
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.courseCode') }}</span>
+                    <span class="detail-value">{{ selectedCourse.courseCode || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.academicYear') }}</span>
+                    <span class="detail-value">{{ t('courseModal.year') + ' ' + (selectedCourse.year || 1) }}</span>
+                  </div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.professor') }}</span>
+                    <span class="detail-value">{{ selectedCourse.professorName || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.department') }}</span>
+                    <span class="detail-value">{{ selectedCourse.department || 'N/A' }}</span>
+                  </div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.status') }}</span>
+                    <span class="detail-value status-active">{{ selectedCourse.status === 'active' ? t('coursesPage.active') : t('coursesPage.inactive') }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">{{ t('courseModal.createdAt') }}</span>
+                    <span class="detail-value">{{ formatDate(selectedCourse.createdAt) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button class="btn-close" @click="closeModal">{{ t('common.close') }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -164,6 +243,10 @@ const selectedLevel = ref('')
 const selectedStatus = ref('')
 const loading = ref(true)
 const error = ref(null)
+
+// Modal state
+const showModal = ref(false)
+const selectedCourse = ref(null)
 
 // Courses data from API
 const courses = ref([])
@@ -193,7 +276,8 @@ const fetchCourses = async () => {
       year: course.year,
       courseCode: course.courseCode,
       professorName: course.professorName,
-      department: course.department
+      department: course.department?.name || course.department || 'N/A',
+      createdAt: course.createdAt
     }))
   } catch (err) {
     console.error('Failed to fetch courses:', err)
@@ -204,11 +288,11 @@ const fetchCourses = async () => {
   }
 }
 
-// Map year to level
+// Map year to canonical level keys
 const getYearLevel = (year) => {
-  if (year <= 1) return 'Beginner'
-  if (year <= 3) return 'Intermediate'
-  return 'Advanced'
+  if (year <= 1) return 'beginner'
+  if (year <= 3) return 'intermediate'
+  return 'advanced'
 }
 
 // Calculate progress from progress1, progress2, progress3
@@ -235,9 +319,19 @@ const totalStudents = computed(() => {
 })
 
 const viewCourse = (course) => {
-  // TODO: Navigate to course detail page
-  console.log('View course:', course)
-  alert(`Viewing course: ${course.title}`)
+  selectedCourse.value = course
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  selectedCourse.value = null
+}
+
+// Format date for display
+const formatDate = (dateString) => {
+  if (!dateString) return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 // Handle image loading error - fallback to default
@@ -856,6 +950,237 @@ onMounted(() => {
 
   .filter-select {
     min-width: 100%;
+  }
+}
+
+/* Course Detail Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-status-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+}
+
+.modal-status-badge.active {
+  background: #10b981;
+}
+
+.modal-status-badge.inactive {
+  background: #ef4444;
+}
+
+.modal-info {
+  padding: 20px 24px;
+}
+
+.modal-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tag {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.tag-code {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.tag-year {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.modal-course-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.modal-course-description {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.modal-details {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.detail-row:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.detail-value.status-active {
+  color: #10b981;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-footer .btn-close {
+  padding: 10px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-footer .btn-close:hover {
+  background: #e5e7eb;
+}
+
+@media (max-width: 520px) {
+  .modal-container {
+    max-width: 100%;
+    margin: 10px;
+    max-height: 95vh;
+  }
+
+  .modal-image-wrapper {
+    height: 180px;
+  }
+
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 </style>

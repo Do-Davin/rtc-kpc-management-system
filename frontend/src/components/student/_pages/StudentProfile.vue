@@ -6,7 +6,7 @@
           <!-- Loading State -->
           <div v-if="isLoading" class="loading-container">
             <div class="loading-spinner"></div>
-            <p>កំពុងផ្ទុក...</p>
+            <p>{{ t('common.loading') }}</p>
           </div>
 
           <template v-else>
@@ -40,7 +40,7 @@
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                       <circle cx="12" cy="13" r="4"></circle>
                     </svg>
-                    <span class="upload-text">ជ្រើសរើសរូបភាព</span>
+                    <span class="upload-text">{{ t('profile.uploadImage') }}</span>
                   </div>
                 </label>
               </div>
@@ -61,7 +61,7 @@
                   <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                   <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                 </svg>
-                សិស្ស
+                {{ t('profile.student') }}
               </span>
               <span class="badge badge-class">{{ profileData.className }}</span>
               <span class="badge badge-department">{{ profileData.department }}</span>
@@ -80,7 +80,7 @@
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ profileData.attendanceRate }}%</span>
-                  <span class="stat-label">វត្តមាន</span>
+                  <span class="stat-label">{{ t('profile.attendanceRate') }}</span>
                 </div>
               </div>
               <div class="stat-card">
@@ -92,7 +92,7 @@
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ profileData.totalCourses }}</span>
-                  <span class="stat-label">វគ្គសិក្សា</span>
+                  <span class="stat-label">{{ t('sidebar.courses') }}</span>
                 </div>
               </div>
               <div class="stat-card">
@@ -104,8 +104,8 @@
                   </svg>
                 </div>
                 <div class="stat-info">
-                  <span class="stat-value">{{ profileData.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}</span>
-                  <span class="stat-label">ស្ថានភាព</span>
+                  <span class="stat-value">{{ profileData.status === 'ACTIVE' ? t('profile.statusActive') : t('coursesPage.inactive') }}</span>
+                  <span class="stat-label">{{ t('coursesPage.status') }}</span>
                 </div>
               </div>
             </div>
@@ -121,8 +121,8 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="card-title">ព័ត៌មានផ្ទាល់ខ្លួន</h3>
-                    <p class="card-subtitle">គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នក</p>
+                    <h3 class="card-title">{{ t('profile.personalInfoTitle') }}</h3>
+                    <p class="card-subtitle">{{ t('profile.personalInfoSubtitle') }}</p>
                   </div>
                 </div>
                 <button v-if="!isEditing" class="edit-btn" @click="startEdit">
@@ -130,15 +130,15 @@
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
-                  កែសម្រួល
+                  {{ t('profile.editProfile') }}
                 </button>
                 <div v-else class="edit-actions">
-                  <button class="cancel-btn" @click="cancelEdit">បោះបង់</button>
+                  <button class="cancel-btn" @click="cancelEdit">{{ t('common.cancel') }}</button>
                   <button class="save-btn" @click="saveChanges">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    រក្សាទុក
+                    {{ t('common.save') }}
                   </button>
                 </div>
               </div>
@@ -150,14 +150,14 @@
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    ឈ្មោះពេញ
+                    {{ t('profile.fullName') }}
                   </label>
                   <input
                     v-if="isEditing"
                     v-model="editData.fullName"
                     type="text"
                     class="form-input editable"
-                    placeholder="បញ្ចូលឈ្មោះពេញ"
+                    :placeholder="t('profile.enterFullName')"
                   />
                   <input
                     v-else
@@ -176,7 +176,7 @@
                       <line x1="8" y1="2" x2="8" y2="6"></line>
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    ថ្ងៃខែឆ្នាំកំណើត
+                    {{ t('profile.dateOfBirth') }}
                   </label>
                   <input
                     v-if="isEditing"
@@ -198,7 +198,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
-                    លេខទូរស័ព្ទ
+                    {{ t('profile.phone') }}
                   </label>
                   <input
                     v-if="isEditing"
@@ -213,7 +213,7 @@
                     type="tel"
                     class="form-input"
                     disabled
-                    placeholder="មិនមានលេខទូរស័ព្ទ"
+                    :placeholder="t('profile.noPhone')"
                   />
                 </div>
 
@@ -223,7 +223,7 @@
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                       <polyline points="22,6 12,13 2,6"></polyline>
                     </svg>
-                    អ៊ីមែល
+                    {{ t('profile.email') }}
                     <span class="field-locked">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -252,8 +252,8 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="card-title">ព័ត៌មានសិក្សា</h3>
-                    <p class="card-subtitle">ព័ត៌មានដែលគ្រប់គ្រងដោយអ្នកគ្រប់គ្រង</p>
+                    <h3 class="card-title">{{ t('profile.academicInfoTitle') }}</h3>
+                    <p class="card-subtitle">{{ t('profile.academicInfoSubtitle') }}</p>
                   </div>
                 </div>
                 <span class="readonly-badge">
@@ -261,7 +261,7 @@
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
-                  មិនអាចកែប្រែ
+                  {{ t('profile.readOnly') }}
                 </span>
               </div>
 
@@ -274,7 +274,7 @@
                       <line x1="9" y1="13" x2="15" y2="13"></line>
                       <line x1="9" y1="17" x2="11" y2="17"></line>
                     </svg>
-                    លេខសម្គាល់សិស្ស
+                    {{ t('profile.studentId') }}
                   </label>
                   <input
                     :value="profileData.studentId"
@@ -292,7 +292,7 @@
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    ថ្នាក់រៀន
+                    {{ t('profile.class') }}
                   </label>
                   <input
                     :value="profileData.className"
@@ -308,7 +308,7 @@
                       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                       <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
-                    នាយកដ្ឋាន
+                    {{ t('profile.department') }}
                   </label>
                   <input
                     :value="profileData.department"
@@ -326,7 +326,7 @@
                       <line x1="8" y1="2" x2="8" y2="6"></line>
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    ឆ្នាំសិក្សា
+                    {{ t('schedulePage.academicYear') }}
                   </label>
                   <input
                     :value="profileData.academicYear"
@@ -344,11 +344,11 @@
                       <line x1="20" y1="8" x2="20" y2="14"></line>
                       <line x1="23" y1="11" x2="17" y2="11"></line>
                     </svg>
-                    ស្ថានភាព
+                    {{ t('coursesPage.status') }}
                   </label>
                   <div class="status-badge" :class="profileData.status">
                     <span class="status-dot"></span>
-                    {{ profileData.status === 'ACTIVE' ? 'កំពុងសិក្សា' : 'បានបញ្ចប់' }}
+                    {{ profileData.status === 'ACTIVE' ? t('profile.statusActive') : t('profile.statusCompleted') }}
                   </div>
                 </div>
               </div>
@@ -364,6 +364,9 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { getStudentProfile, updateStudentProfile } from '@/services/student-dashboard.api'
+import { useTranslation } from '@/composables/useTranslation'
+
+const { t } = useTranslation()
 
 const props = defineProps({
   isOpen: {
@@ -427,7 +430,7 @@ const fetchProfile = async () => {
       email: profile.email || '',
       phoneNumber: profile.phoneNumber || '',
       studentId: profile.studentIdCard || '',
-      className: `Year ${profile.year}`,
+      className: `${t('courseModal.year')} ${profile.year}`,
       department: profile.department?.name || '',
       academicYear: profile.enrollmentYear ? `${profile.enrollmentYear}-${profile.enrollmentYear + 1}` : '',
       status: profile.status || '',
@@ -453,7 +456,7 @@ const getInitials = computed(() => {
 
 const close = () => {
   if (isEditing.value) {
-    if (confirm('តើអ្នកចង់បោះបង់ការផ្លាស់ប្តូរដែរឬទេ?')) {
+    if (confirm(t('profile.discardConfirm'))) {
       isEditing.value = false
       emit('close')
     }
@@ -477,7 +480,7 @@ const cancelEdit = () => {
 const saveChanges = async () => {
   // Validate
   if (!editData.fullName.trim()) {
-    alert('សូមបញ្ចូលឈ្មោះពេញ')
+    alert(t('profile.enterFullName'))
     return
   }
 
@@ -502,7 +505,7 @@ const saveChanges = async () => {
 
     emit('update', updatedProfile)
     isEditing.value = false
-    alert('រក្សាទុកព័ត៌មានបានជោគជ័យ!')
+    alert(t('profile.saveSuccess'))
   } catch (err) {
     console.error('Failed to save profile:', err)
     error.value = err.response?.data?.message || 'Failed to save profile'
@@ -517,13 +520,13 @@ const handleImageUpload = (event) => {
   if (file) {
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('ទំហំរូបភាពធំពេក! សូមជ្រើសរើសរូបភាពតូចជាង 5MB')
+      alert(t('profile.imageTooLarge'))
       return
     }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('សូមជ្រើសរើសឯកសាររូបភាពប៉ុណ្ណោះ')
+      alert(t('profile.invalidImageType'))
       return
     }
 

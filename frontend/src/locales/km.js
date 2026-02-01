@@ -145,6 +145,18 @@ export default {
     noCoursesMatch: 'គ្មានវគ្គសិក្សាត្រូវនឹងការស្វែងរករបស់អ្នកទេ'
   },
 
+  // Course Detail Modal
+  courseModal: {
+    title: 'ព័ត៌មានវគ្គសិក្សា',
+    courseCode: 'លេខកូដ',
+    academicYear: 'ឆ្នាំសិក្សា',
+    year: 'ឆ្នាំទី',
+    professor: 'គ្រូបង្រៀន',
+    department: 'ផ្នែក',
+    status: 'ស្ថានភាព',
+    createdAt: 'បានបង្កើតនៅ'
+  },
+
   // Library Page
   libraryPage: {
     title: 'បណ្ណាល័យអេឡិចត្រូនិក',
@@ -181,7 +193,26 @@ export default {
     department: 'ដេប៉ាតឺម៉ង់',
     attendanceRate: 'អត្រាវត្តមាន',
     enrolledCourses: 'វគ្គសិក្សាបានចុះឈ្មោះ',
-    joinDate: 'ថ្ងៃចូលរៀន'
+    joinDate: 'ថ្ងៃចូលរៀន',
+    // Additional profile related strings
+    personalInfoTitle: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+    personalInfoSubtitle: 'គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នក',
+    academicInfoTitle: 'ព័ត៌មានសិក្សា',
+    academicInfoSubtitle: 'ព័ត៌មានដែលគ្រប់គ្រងដោយអ្នកគ្រប់គ្រង',
+    readOnly: 'មិនអាចកែប្រែ',
+    uploadImage: 'ជ្រើសរើសរូបភាព',
+    enterFullName: 'បញ្ចូលឈ្មោះពេញ',
+    studentId: 'លេខសម្គាល់សិស្ស',
+    statusActive: 'កំពុងសិក្សា',
+    statusCompleted: 'បានបញ្ចប់',
+    discardConfirm: 'តើអ្នកចង់បោះបង់ការផ្លាស់ប្តូរដែរឬទេ?',
+    saveSuccess: 'រក្សាទុកព័ត៌មានបានជោគជ័យ!',
+    removeImage: 'យករូបភាពចេញ'
+    ,
+    noPhone: 'មិនមានលេខទូរស័ព្ទ',
+    imageTooLarge: 'ទំហំរូបភាពធំពេក! សូមជ្រើសរើសរូបភាពតូចជាង 5MB'
+    ,
+    invalidImageType: 'សូមជ្រើសរើសឯកសាររូបភាពប៉ុណ្ណោះ'
   },
 
   // Common
