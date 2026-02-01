@@ -101,6 +101,10 @@ export default {
     minutesRemaining: 'minutes remaining',
     loadMore: 'Load More',
     loading: 'Loading...',
+    manualPresent: 'Marked Present',
+    alreadySubmitted: 'You have already submitted attendance for this session',
+    invalidQRCode: 'Invalid QR code',
+    sessionExpired: 'Session has expired. Please get a new QR code from your teacher.',
   },
 
   // Schedule/Timetable Page
@@ -231,5 +235,21 @@ export default {
     confirm: 'Confirm',
     yes: 'Yes',
     no: 'No'
+  },
+
+  // Months
+  months: {
+    january: 'January',
+    february: 'February',
+    march: 'March',
+    april: 'April',
+    may: 'May',
+    june: 'June',
+    july: 'July',
+    august: 'August',
+    september: 'September',
+    october: 'October',
+    november: 'November',
+    december: 'December'
   }
 }

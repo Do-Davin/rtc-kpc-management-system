@@ -101,6 +101,10 @@ export default {
     minutesRemaining: 'នាទីដែលនៅសល់',
     loadMore: 'ទាញយកបន្ថែម',
     loading: 'កំពុងទាញ...',
+    manualPresent: 'បានកត់ស្លាបដោយគ្រូ',
+    alreadySubmitted: 'អ្នកបានកត់វត្តមានសម្រាប់សម័យនេះរួចហើយ',
+    invalidQRCode: 'លេខ QR មិនត្រឹមត្រូវ',
+    sessionExpired: 'សម័យបានផុតកំណត់។ សូមទទួល QR ថ្មីពីគ្រូរបស់អ្នក។',
   },
 
   // Schedule/Timetable Page
@@ -231,5 +235,21 @@ export default {
     confirm: 'បញ្ជាក់',
     yes: 'បាទ/ចាស',
     no: 'ទេ'
+  }
+,
+  // Months
+  months: {
+    january: 'មករា',
+    february: 'កុម្ភៈ',
+    march: 'មីនា',
+    april: 'មេសា',
+    may: 'ឧសភា',
+    june: 'មិថុនា',
+    july: 'កក្កដា',
+    august: 'សីហា',
+    september: 'កញ្ញា',
+    october: 'តុលា',
+    november: 'វិច្ឆិកា',
+    december: 'ធ្នូ'
   }
 }

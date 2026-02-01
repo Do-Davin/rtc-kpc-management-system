@@ -119,11 +119,11 @@
             <h4>{{ classItem.courseName }}</h4>
             <p class="teacher-name">
               <User :size="14" />
-              {{ classItem.teacherName || 'គ្រូ' }}
+              {{ classItem.teacherName || t('classes.teacher') }}
             </p>
             <p class="room">
               <MapPin :size="14" />
-              {{ classItem.room || 'បន្ទប់' }}
+              {{ classItem.room || t('classes.room') }}
             </p>
           </div>
           <div class="class-status-badge" :class="getClassStatus(classItem)">
@@ -237,7 +237,7 @@ const fetchAttendanceHistory = async () => {
     fetchStats(days)
   } catch (error) {
     console.error('Failed to fetch attendance history:', error)
-    chartError.value = 'មិនអាចទាញយកទិន្នន័យបានទេ។'
+    chartError.value = t('chart.errorMessage')
     attendanceData.value = []
   } finally {
     loadingChart.value = false

@@ -439,8 +439,11 @@ const xLabels = computed(() => {
 // Format date for tooltip
 const formatDate = (dateStr) => {
   const date = new Date(dateStr)
-  const months = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា',
-                  'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ']
+  const months = [
+    t('months.january'), t('months.february'), t('months.march'), t('months.april'),
+    t('months.may'), t('months.june'), t('months.july'), t('months.august'),
+    t('months.september'), t('months.october'), t('months.november'), t('months.december')
+  ]
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
 }
 

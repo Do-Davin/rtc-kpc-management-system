@@ -464,9 +464,9 @@ const validateQr = async () => {
 
     if (!response.valid) {
       if (response.alreadySubmitted) {
-        error.value = 'You have already submitted attendance for this session'
+        error.value = t('attendancePage.alreadySubmitted')
       } else {
-        error.value = response.error || 'Invalid QR code'
+        error.value = response.error || t('attendancePage.invalidQRCode')
       }
       return
     }
@@ -493,7 +493,7 @@ const startCountdown = () => {
       remainingSeconds.value--
     } else {
       clearInterval(countdownInterval)
-      error.value = 'Session has expired. Please get a new QR code from your teacher.'
+      error.value = t('attendancePage.sessionExpired')
       currentStep.value = 1
       clearFile()
     }
@@ -514,7 +514,7 @@ const submitAttendance = async () => {
 
     submissionSuccess.value = true
     currentStep.value = 3
-    success.value = 'Attendance marked successfully!'
+    success.value = t('attendancePage.attendanceRecorded')
 
     // Refresh history
     await loadAttendanceHistory()
@@ -617,13 +617,11 @@ const formatTime24 = (date) => {
 }
 
 const formatStatus = (status) => {
-  const statusMap = {
-    'PRESENT': 'មានវត្តមាន',
-    'MANUAL_PRESENT': 'ដៃគ្រូ',
-    'ABSENT': 'គ្មានវត្តមាន',
-    'LATE': 'ចូលយឺត'
-  }
-  return statusMap[status] || status
+  if (status === 'PRESENT') return t('attendancePage.present')
+  if (status === 'MANUAL_PRESENT') return t('attendancePage.manualPresent')
+  if (status === 'ABSENT') return t('attendancePage.absent')
+  if (status === 'LATE') return t('attendancePage.late')
+  return status
 }
 
 const getStatusClass = (status) => {
