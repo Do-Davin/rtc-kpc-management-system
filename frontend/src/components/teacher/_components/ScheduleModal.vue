@@ -51,17 +51,6 @@
             />
           </div>
 
-          <div class="form-group">
-            <label for="teacherName">ឈ្មោះគ្រូ <span class="required">*</span></label>
-            <input
-              id="teacherName"
-              v-model="form.teacherName"
-              type="text"
-              placeholder="បញ្ចូលឈ្មោះគ្រូ (ឧ. លោក ដូ ដាវីន)"
-              required
-            />
-          </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="group">ក្រុម <span class="required">*</span></label>
@@ -204,7 +193,6 @@ const colors = [
 
 const defaultForm = {
   subjectName: '',
-  teacherName: '',
   group: '',
   room: '',
   day: '',
@@ -221,12 +209,12 @@ const form = ref({ ...defaultForm });
 
 const getDepartmentName = (dept) => {
   // Handle different formats: object with name/code, or just an ID string
-  if (!dept) return '';
+  if (!dept) return 'មិនបានជ្រើសរើស';
   if (typeof dept === 'object') {
-    return dept.name || dept.code || '';
+    return dept.name || dept.code || 'មិនបានជ្រើសរើស';
   }
-  // If it's just an ID string, return it as is
-  return dept;
+  // If it's just an ID string, show a placeholder
+  return 'កំពុងផ្ទុក...';
 };
 
 // Auto-set end time to 1 hour after start time
@@ -258,7 +246,7 @@ watch(
 
 const handleSubmit = () => {
   // Validate that all required fields are filled
-  if (!form.value.subjectName || !form.value.teacherName || !form.value.group || !form.value.room || !form.value.day || !form.value.startTime || !form.value.endTime) {
+  if (!form.value.subjectName || !form.value.group || !form.value.room || !form.value.day || !form.value.startTime || !form.value.endTime) {
     alert('សូមបំពេញឯកសារទាំងអស់');
     return;
   }
@@ -268,8 +256,9 @@ const handleSubmit = () => {
     form.value.disabledYears = [...(form.value.disabledYears || []), 'Year 5'];
   }
 
+  // Don't reset the form here - let the parent handle it
+  // The form will be reset when the modal is reopened (via the watch)
   emit('submit', { ...form.value });
-  form.value = { ...defaultForm };
 };
 </script>
 

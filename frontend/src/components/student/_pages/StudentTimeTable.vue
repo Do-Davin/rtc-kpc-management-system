@@ -3,8 +3,8 @@
     <!-- Header Section -->
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">កាលវិភាគសិក្សា</h1>
-        <p class="page-subtitle">មើលកាលវិភាគថ្នាក់រៀនរបស់អ្នក</p>
+        <h1 class="page-title">{{ t('schedulePage.title') }}</h1>
+        <p class="page-subtitle">{{ t('schedulePage.subtitle') }}</p>
       </div>
     </div>
 
@@ -15,7 +15,7 @@
           <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
           <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
         </svg>
-        <span>ដេប៉ាតឺម៉ង់: <strong>{{ currentDepartment }}</strong></span>
+        <span>{{ t('schedulePage.department') }}: <strong>{{ currentDepartment }}</strong></span>
       </div>
       <div class="info-item">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -24,7 +24,7 @@
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span>ឆ្នាំសិក្សា: <strong>{{ currentYear }}</strong></span>
+        <span>{{ t('schedulePage.academicYear') }}: <strong>{{ currentYear }}</strong></span>
       </div>
       <div class="info-item">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,7 +33,7 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        <span>ក្រុម: <strong>{{ currentGroup }}</strong></span>
+        <span>{{ t('schedulePage.group') }}: <strong>{{ currentGroup }}</strong></span>
       </div>
     </div>
 
@@ -77,8 +77,15 @@
               v-for="schedule in getScheduleForCell(day, slot)"
               :key="schedule.id"
               class="schedule-card"
-              :style="{ backgroundColor: schedule.color + '15', borderColor: schedule.color }"
+              :style="{ 
+                backgroundColor: schedule.color + '15', 
+                borderColor: schedule.color
+              }"
             >
+              <!-- Type Badge -->
+              <div class="card-type" :style="{ color: schedule.color }">
+                {{ getTypeLabel(schedule.type) }}
+              </div>
               <div class="card-header">
                 <span class="subject-name" :style="{ color: schedule.color }">{{ schedule.subjectName }}</span>
               </div>
@@ -90,10 +97,10 @@
                   </svg>
                   <span>{{ schedule.teacherName }}</span>
                 </div>
-                <div class="card-info">
+                <div class="card-info" v-if="schedule.room">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
                   </svg>
                   <span>{{ schedule.room }}</span>
                 </div>
@@ -106,63 +113,23 @@
         </div>
       </div>
     </div>
-
-    <!-- Today's Classes Section -->
-    <div class="today-section">
-      <h2 class="section-title">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        {{ t('schedulePage.todayClasses') }}
-      </h2>
-      <div v-if="todayClasses.length > 0" class="today-classes">
-        <div
-          v-for="schedule in todayClasses"
-          :key="schedule.id"
-          class="today-card"
-          :style="{ borderLeftColor: schedule.color }"
-        >
-          <div class="today-time">
-            <span class="time-badge">{{ schedule.startTime }} - {{ schedule.endTime }}</span>
-          </div>
-          <div class="today-info">
-            <h3 class="today-subject" :style="{ color: schedule.color }">{{ schedule.subjectName }}</h3>
-            <p class="today-teacher">{{ schedule.teacherName }}</p>
-            <p class="today-room">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              {{ schedule.room }}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div v-else class="no-classes">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-          <line x1="9" y1="9" x2="9.01" y2="9"></line>
-          <line x1="15" y1="9" x2="15.01" y2="9"></line>
-        </svg>
-        <p>{{ t('schedulePage.noTodayClasses') }}</p>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useTranslation } from '@/composables/useTranslation'
+import * as studentDashboardApi from '@/services/student-dashboard.api'
 
 const { t, currentLanguage } = useTranslation()
 
-// Student's current info (will come from auth/API later)
-const currentDepartment = ref('GIC');
-const currentYear = ref('Year 1');
-const currentGroup = ref('A');
-const studentDepartmentId = ref(1);
+// Loading state
+const loading = ref(true)
+
+// Student's current info (fetched from API)
+const currentDepartment = ref('');
+const currentYear = ref('');
+const currentGroup = ref('');
 
 // Schedule Data
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -176,153 +143,48 @@ const dayLabels = computed(() => ({
   Saturday: t('schedulePage.saturday'),
 }));
 
+// 1-hour time slots from 7:00 to 5:00 PM (matching teacher schedule)
 const timeSlots = [
-  { start: '07:00', end: '09:00' },
-  { start: '09:00', end: '11:00' },
-  { start: '13:00', end: '15:00' },
-  { start: '15:00', end: '17:00' },
+  { start: '07:00', end: '08:00' },
+  { start: '08:00', end: '09:00' },
+  { start: '09:00', end: '10:00' },
+  { start: '10:00', end: '11:00' },
+  { start: '13:00', end: '14:00' },
+  { start: '14:00', end: '15:00' },
+  { start: '15:00', end: '16:00' },
+  { start: '16:00', end: '17:00' },
 ];
 
-// Sample schedule data (will come from API later)
-const schedules = ref([
-  {
-    id: 1,
-    subjectName: 'គណិតវិទ្យា',
-    teacherName: 'លោក សុខ វិសាល',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 101',
-    day: 'Monday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#5B55F3',
-  },
-  {
-    id: 2,
-    subjectName: 'រូបវិទ្យា',
-    teacherName: 'លោកស្រី ចាន់ សុភា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 102',
-    day: 'Monday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#10B981',
-  },
-  {
-    id: 3,
-    subjectName: 'គីមីវិទ្យា',
-    teacherName: 'លោក រស្មី ពេជ្រ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 103',
-    day: 'Tuesday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#F59E0B',
-  },
-  {
-    id: 4,
-    subjectName: 'ភាសាអង់គ្លេស',
-    teacherName: 'អ្នកគ្រូ មាលា សុវណ្ណ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 104',
-    day: 'Tuesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#8B5CF6',
-  },
-  {
-    id: 5,
-    subjectName: 'ព័ត៌មានវិទ្យា',
-    teacherName: 'លោក ដារា សុភាព',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Lab 01',
-    day: 'Wednesday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#06B6D4',
-  },
-  {
-    id: 6,
-    subjectName: 'ជីវវិទ្យា',
-    teacherName: 'លោកស្រី សុខ លក្ខណា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 105',
-    day: 'Wednesday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#EF4444',
-  },
-  {
-    id: 7,
-    subjectName: 'គណិតវិទ្យា',
-    teacherName: 'លោក សុខ វិសាល',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 101',
-    day: 'Thursday',
-    startTime: '13:00',
-    endTime: '15:00',
-    color: '#5B55F3',
-  },
-  {
-    id: 8,
-    subjectName: 'រូបវិទ្យា',
-    teacherName: 'លោកស្រី ចាន់ សុភា',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 102',
-    day: 'Thursday',
-    startTime: '15:00',
-    endTime: '17:00',
-    color: '#10B981',
-  },
-  {
-    id: 9,
-    subjectName: 'ភាសាអង់គ្លេស',
-    teacherName: 'អ្នកគ្រូ មាលា សុវណ្ណ',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Room 104',
-    day: 'Friday',
-    startTime: '07:00',
-    endTime: '09:00',
-    color: '#8B5CF6',
-  },
-  {
-    id: 10,
-    subjectName: 'ព័ត៌មានវិទ្យា',
-    teacherName: 'លោក ដារា សុភាព',
-    group: 'A',
-    year: 'Year 1',
-    department: 1,
-    room: 'Lab 01',
-    day: 'Friday',
-    startTime: '09:00',
-    endTime: '11:00',
-    color: '#06B6D4',
-  },
-]);
+// Schedule data from API
+const schedules = ref([]);
 
-// Filter schedules for student's department, year, and group
+// Fetch schedule data from API
+const fetchSchedule = async () => {
+  try {
+    loading.value = true
+    const data = await studentDashboardApi.getMySchedule()
+    
+    // Set student info
+    if (data.student) {
+      currentDepartment.value = data.student.departmentCode || data.student.department || 'N/A'
+      currentYear.value = data.student.year || 'N/A'
+      currentGroup.value = data.student.group || 'A'
+    }
+    
+    // Set schedules
+    schedules.value = data.schedules || []
+  } catch (error) {
+    console.error('Failed to fetch schedule:', error)
+    schedules.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Filter schedules for student's group (already filtered by department and year from API)
 const filteredSchedules = computed(() => {
   return schedules.value.filter(
-    (s) => s.department === studentDepartmentId.value && 
-           s.year === currentYear.value && 
-           s.group === currentGroup.value
+    (s) => !s.group || s.group === currentGroup.value || s.group === 'ALL'
   );
 });
 
@@ -331,32 +193,51 @@ const uniqueSubjects = computed(() => {
   const seen = new Map();
   filteredSchedules.value.forEach((s) => {
     if (!seen.has(s.subjectName)) {
-      seen.set(s.subjectName, { name: s.subjectName, color: s.color });
+      seen.set(s.subjectName, { name: s.subjectName, color: s.color || '#5B55F3' });
     }
   });
   return Array.from(seen.values());
 });
 
-// Get today's day name
-const getTodayName = () => {
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return dayNames[new Date().getDay()];
+// Convert time string to minutes for comparison
+const timeToMinutes = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
 };
 
-// Get today's classes
-const todayClasses = computed(() => {
-  const today = getTodayName();
-  return filteredSchedules.value
-    .filter((s) => s.day === today)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-});
-
-// Get schedule for a specific cell
+// Get schedule for a specific cell - show in ALL slots that the schedule covers
 const getScheduleForCell = (day, slot) => {
-  return filteredSchedules.value.filter(
-    (s) => s.day === day && s.startTime === slot.start && s.endTime === slot.end
-  );
+  const slotStartMinutes = timeToMinutes(slot.start);
+  const slotEndMinutes = timeToMinutes(slot.end);
+  
+  return filteredSchedules.value.filter((s) => {
+    if (s.day !== day) return false;
+    
+    const scheduleStartMinutes = timeToMinutes(s.startTime);
+    const scheduleEndMinutes = timeToMinutes(s.endTime);
+    
+    // Check if this slot overlaps with the schedule
+    return slotStartMinutes >= scheduleStartMinutes && slotEndMinutes <= scheduleEndMinutes;
+  });
 };
+
+// Get type label (LECTURE, LAB, PRACTICE)
+const getTypeLabel = (type) => {
+  if (!type) return 'LECTURE';
+  const typeMap = {
+    'Lecture': 'LECTURE',
+    'Lab': 'LAB',
+    'Practice': 'PRACTICE',
+    'Tutorial': 'TUTORIAL',
+    'Seminar': 'SEMINAR',
+  };
+  return typeMap[type] || type.toUpperCase();
+};
+
+// Initialize on mount
+onMounted(() => {
+  fetchSchedule()
+})
 </script>
 
 <style scoped>
@@ -532,6 +413,14 @@ const getScheduleForCell = (day, slot) => {
   border-radius: 8px;
   border-left: 3px solid;
   height: 100%;
+}
+
+.card-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
 .card-header {

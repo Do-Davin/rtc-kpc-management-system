@@ -3,6 +3,13 @@
     <Transition name="modal">
       <div v-if="isOpen" class="modal-overlay" @click.self="close">
         <div class="modal-container">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>{{ t('common.loading') }}</p>
+          </div>
+
+          <template v-else>
           <!-- Hero Header with Gradient -->
           <div class="profile-hero">
             <button class="close-btn" @click="close">
@@ -27,14 +34,23 @@
                   <span class="placeholder-initials">{{ getInitials }}</span>
                 </div>
                 <label v-if="isEditing" class="image-upload-overlay">
-                  <input type="file" accept="image/*" @change="handleImageUpload" hidden />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
+                  <input type="file" accept="image/*" @change="handleImageUpload" hidden ref="fileInput" />
+                  <div class="upload-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                      <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span class="upload-text">{{ t('profile.uploadImage') }}</span>
+                  </div>
                 </label>
               </div>
               <div class="online-status"></div>
+              <button v-if="isEditing && editData.imageUrl" class="remove-image-btn" @click="removeImage" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
 
             <!-- Name & Role -->
@@ -45,7 +61,7 @@
                   <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                   <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                 </svg>
-                សិស្ស
+                {{ t('profile.student') }}
               </span>
               <span class="badge badge-class">{{ profileData.className }}</span>
               <span class="badge badge-department">{{ profileData.department }}</span>
@@ -64,7 +80,7 @@
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ profileData.attendanceRate }}%</span>
-                  <span class="stat-label">វត្តមាន</span>
+                  <span class="stat-label">{{ t('profile.attendanceRate') }}</span>
                 </div>
               </div>
               <div class="stat-card">
@@ -76,18 +92,20 @@
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ profileData.totalCourses }}</span>
-                  <span class="stat-label">វគ្គសិក្សា</span>
+                  <span class="stat-label">{{ t('sidebar.courses') }}</span>
                 </div>
               </div>
               <div class="stat-card">
-                <div class="stat-icon grade">
+                <div class="stat-icon" :class="profileData.status === 'ACTIVE' ? 'status-active' : 'status-inactive'">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path v-if="profileData.status === 'ACTIVE'" d="M9 12l2 2 4-4"></path>
+                    <path v-else d="M15 9l-6 6M9 9l6 6"></path>
                   </svg>
                 </div>
                 <div class="stat-info">
-                  <span class="stat-value">{{ profileData.gpa }}</span>
-                  <span class="stat-label">មធ្យមភាគ</span>
+                  <span class="stat-value">{{ profileData.status === 'ACTIVE' ? t('profile.statusActive') : t('coursesPage.inactive') }}</span>
+                  <span class="stat-label">{{ t('coursesPage.status') }}</span>
                 </div>
               </div>
             </div>
@@ -103,8 +121,8 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="card-title">ព័ត៌មានផ្ទាល់ខ្លួន</h3>
-                    <p class="card-subtitle">គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នក</p>
+                    <h3 class="card-title">{{ t('profile.personalInfoTitle') }}</h3>
+                    <p class="card-subtitle">{{ t('profile.personalInfoSubtitle') }}</p>
                   </div>
                 </div>
                 <button v-if="!isEditing" class="edit-btn" @click="startEdit">
@@ -112,15 +130,15 @@
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
-                  កែសម្រួល
+                  {{ t('profile.editProfile') }}
                 </button>
                 <div v-else class="edit-actions">
-                  <button class="cancel-btn" @click="cancelEdit">បោះបង់</button>
+                  <button class="cancel-btn" @click="cancelEdit">{{ t('common.cancel') }}</button>
                   <button class="save-btn" @click="saveChanges">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    រក្សាទុក
+                    {{ t('common.save') }}
                   </button>
                 </div>
               </div>
@@ -132,15 +150,21 @@
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    ឈ្មោះពេញ
+                    {{ t('profile.fullName') }}
                   </label>
                   <input
+                    v-if="isEditing"
                     v-model="editData.fullName"
                     type="text"
+                    class="form-input editable"
+                    :placeholder="t('profile.enterFullName')"
+                  />
+                  <input
+                    v-else
+                    :value="profileData.fullName"
+                    type="text"
                     class="form-input"
-                    :class="{ 'editable': isEditing }"
-                    :disabled="!isEditing"
-                    placeholder="បញ្ចូលឈ្មោះពេញ"
+                    disabled
                   />
                 </div>
 
@@ -152,14 +176,20 @@
                       <line x1="8" y1="2" x2="8" y2="6"></line>
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    ថ្ងៃខែឆ្នាំកំណើត
+                    {{ t('profile.dateOfBirth') }}
                   </label>
                   <input
+                    v-if="isEditing"
                     v-model="editData.dateOfBirth"
                     type="date"
+                    class="form-input editable"
+                  />
+                  <input
+                    v-else
+                    :value="profileData.dateOfBirth"
+                    type="date"
                     class="form-input"
-                    :class="{ 'editable': isEditing }"
-                    :disabled="!isEditing"
+                    disabled
                   />
                 </div>
 
@@ -168,15 +198,22 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
-                    លេខទូរស័ព្ទ
+                    {{ t('profile.phone') }}
                   </label>
                   <input
-                    v-model="editData.phone"
+                    v-if="isEditing"
+                    v-model="editData.phoneNumber"
+                    type="tel"
+                    class="form-input editable"
+                    placeholder="012 345 678"
+                  />
+                  <input
+                    v-else
+                    :value="profileData.phoneNumber"
                     type="tel"
                     class="form-input"
-                    :class="{ 'editable': isEditing }"
-                    :disabled="!isEditing"
-                    placeholder="012 345 678"
+                    disabled
+                    :placeholder="t('profile.noPhone')"
                   />
                 </div>
 
@@ -186,7 +223,7 @@
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                       <polyline points="22,6 12,13 2,6"></polyline>
                     </svg>
-                    អ៊ីមែល
+                    {{ t('profile.email') }}
                     <span class="field-locked">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -200,24 +237,6 @@
                     class="form-input"
                     disabled
                   />
-                </div>
-
-                <div class="form-group full-width">
-                  <label class="form-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    អាសយដ្ឋាន
-                  </label>
-                  <textarea
-                    v-model="editData.address"
-                    class="form-input form-textarea"
-                    :class="{ 'editable': isEditing }"
-                    :disabled="!isEditing"
-                    placeholder="បញ្ចូលអាសយដ្ឋាន"
-                    rows="2"
-                  ></textarea>
                 </div>
               </div>
             </div>
@@ -233,8 +252,8 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="card-title">ព័ត៌មានសិក្សា</h3>
-                    <p class="card-subtitle">ព័ត៌មានដែលគ្រប់គ្រងដោយអ្នកគ្រប់គ្រង</p>
+                    <h3 class="card-title">{{ t('profile.academicInfoTitle') }}</h3>
+                    <p class="card-subtitle">{{ t('profile.academicInfoSubtitle') }}</p>
                   </div>
                 </div>
                 <span class="readonly-badge">
@@ -242,7 +261,7 @@
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
-                  មិនអាចកែប្រែ
+                  {{ t('profile.readOnly') }}
                 </span>
               </div>
 
@@ -255,7 +274,7 @@
                       <line x1="9" y1="13" x2="15" y2="13"></line>
                       <line x1="9" y1="17" x2="11" y2="17"></line>
                     </svg>
-                    លេខសម្គាល់សិស្ស
+                    {{ t('profile.studentId') }}
                   </label>
                   <input
                     :value="profileData.studentId"
@@ -273,7 +292,7 @@
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    ថ្នាក់រៀន
+                    {{ t('profile.class') }}
                   </label>
                   <input
                     :value="profileData.className"
@@ -289,7 +308,7 @@
                       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                       <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
-                    នាយកដ្ឋាន
+                    {{ t('profile.department') }}
                   </label>
                   <input
                     :value="profileData.department"
@@ -307,26 +326,10 @@
                       <line x1="8" y1="2" x2="8" y2="6"></line>
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    ឆ្នាំសិក្សា
+                    {{ t('schedulePage.academicYear') }}
                   </label>
                   <input
                     :value="profileData.academicYear"
-                    type="text"
-                    class="form-input"
-                    disabled
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    វេនសិក្សា
-                  </label>
-                  <input
-                    :value="profileData.shift"
                     type="text"
                     class="form-input"
                     disabled
@@ -341,93 +344,17 @@
                       <line x1="20" y1="8" x2="20" y2="14"></line>
                       <line x1="23" y1="11" x2="17" y2="11"></line>
                     </svg>
-                    ស្ថានភាព
+                    {{ t('coursesPage.status') }}
                   </label>
                   <div class="status-badge" :class="profileData.status">
                     <span class="status-dot"></span>
-                    {{ profileData.status === 'active' ? 'កំពុងសិក្សា' : 'បានបញ្ចប់' }}
+                    {{ profileData.status === 'ACTIVE' ? t('profile.statusActive') : t('profile.statusCompleted') }}
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Guardian Information Section -->
-            <div class="info-card guardian">
-              <div class="card-header">
-                <div class="header-left">
-                  <div class="header-icon guardian">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="card-title">ព័ត៌មានអាណាព្យាបាល</h3>
-                    <p class="card-subtitle">ព័ត៌មានទំនាក់ទំនងអាណាព្យាបាល</p>
-                  </div>
-                </div>
-                <span class="readonly-badge">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                  មិនអាចកែប្រែ
-                </span>
-              </div>
-
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    ឈ្មោះអាណាព្យាបាល
-                  </label>
-                  <input
-                    :value="profileData.guardianName"
-                    type="text"
-                    class="form-input"
-                    disabled
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    លេខទូរស័ព្ទ
-                  </label>
-                  <input
-                    :value="profileData.guardianPhone"
-                    type="text"
-                    class="form-input"
-                    disabled
-                  />
-                </div>
-
-                <div class="form-group full-width">
-                  <label class="form-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="2" y1="12" x2="22" y2="12"></line>
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                    </svg>
-                    ទំនាក់ទំនង
-                  </label>
-                  <input
-                    :value="profileData.guardianRelation"
-                    type="text"
-                    class="form-input"
-                    disabled
-                  />
                 </div>
               </div>
             </div>
           </div>
+          </template>
         </div>
       </div>
     </Transition>
@@ -436,6 +363,10 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
+import { getStudentProfile, updateStudentProfile } from '@/services/student-dashboard.api'
+import { useTranslation } from '@/composables/useTranslation'
+
+const { t } = useTranslation()
 
 const props = defineProps({
   isOpen: {
@@ -447,36 +378,72 @@ const props = defineProps({
 const emit = defineEmits(['close', 'update'])
 
 const isEditing = ref(false)
+const isLoading = ref(false)
+const isSaving = ref(false)
+const error = ref(null)
 
-// Student profile data
+// Student profile data - will be populated from API
 const profileData = reactive({
+  id: '',
   imageUrl: '',
-  fullName: 'តាត ច័ន្ទសិរីវង្ស',
-  dateOfBirth: '2005-06-20',
-  email: 'sereyvongtath@rtc.edu.kh',
-  phone: '012 345 678',
-  address: 'ភូមិទួលគោក សង្កាត់ទួលគោក ខណ្ឌទួលគោក រាជធានីភ្នំពេញ',
-  studentId: 'STU-2023-0156',
-  className: 'Year 3 - Group A',
-  department: 'ផ្នែកបច្ចេកវិទ្យាព័ត៌មាន',
-  academicYear: '២០២៤-២០២៥',
-  shift: 'វេនព្រឹក',
-  status: 'active',
-  attendanceRate: 92,
-  totalCourses: 6,
-  gpa: 'A',
-  guardianName: 'តាត វាសនា',
-  guardianPhone: '012 955 712',
-  guardianRelation: 'ឪពុក'
+  fullName: '',
+  dateOfBirth: '',
+  email: '',
+  phoneNumber: '',
+  studentId: '',
+  className: '',
+  department: '',
+  academicYear: '',
+  status: '',
+  attendanceRate: 0,
+  totalCourses: 0
 })
 
+// Only editable fields
 const editData = reactive({
   fullName: '',
   dateOfBirth: '',
-  phone: '',
-  address: '',
+  phoneNumber: '',
   imageUrl: ''
 })
+
+// Fetch profile when modal opens and handle scroll lock
+watch(() => props.isOpen, async (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+    await fetchProfile()
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+const fetchProfile = async () => {
+  isLoading.value = true
+  error.value = null
+  try {
+    const profile = await getStudentProfile()
+    Object.assign(profileData, {
+      id: profile.id,
+      imageUrl: profile.imageUrl || '',
+      fullName: profile.fullName || '',
+      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
+      email: profile.email || '',
+      phoneNumber: profile.phoneNumber || '',
+      studentId: profile.studentIdCard || '',
+      className: `${t('courseModal.year')} ${profile.year}`,
+      department: profile.department?.name || '',
+      academicYear: profile.enrollmentYear ? `${profile.enrollmentYear}-${profile.enrollmentYear + 1}` : '',
+      status: profile.status || '',
+      attendanceRate: profile.attendanceRate || 0,
+      totalCourses: profile.totalCourses || 0
+    })
+  } catch (err) {
+    console.error('Failed to fetch profile:', err)
+    error.value = err.response?.data?.message || 'Failed to load profile'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const getInitials = computed(() => {
   const name = profileData.fullName || ''
@@ -484,12 +451,12 @@ const getInitials = computed(() => {
   if (words.length >= 2) {
     return (words[0][0] + words[words.length - 1][0]).toUpperCase()
   }
-  return name.substring(0, 2).toUpperCase()
+  return name.substring(0, 2).toUpperCase() || '??'
 })
 
 const close = () => {
   if (isEditing.value) {
-    if (confirm('តើអ្នកចង់បោះបង់ការផ្លាស់ប្តូរដែរឬទេ?')) {
+    if (confirm(t('profile.discardConfirm'))) {
       isEditing.value = false
       emit('close')
     }
@@ -501,8 +468,7 @@ const close = () => {
 const startEdit = () => {
   editData.fullName = profileData.fullName
   editData.dateOfBirth = profileData.dateOfBirth
-  editData.phone = profileData.phone
-  editData.address = profileData.address
+  editData.phoneNumber = profileData.phoneNumber
   editData.imageUrl = profileData.imageUrl
   isEditing.value = true
 }
@@ -511,35 +477,56 @@ const cancelEdit = () => {
   isEditing.value = false
 }
 
-const saveChanges = () => {
+const saveChanges = async () => {
+  // Validate
   if (!editData.fullName.trim()) {
-    alert('សូមបញ្ចូលឈ្មោះពេញ')
+    alert(t('profile.enterFullName'))
     return
   }
 
-  profileData.fullName = editData.fullName
-  profileData.dateOfBirth = editData.dateOfBirth
-  profileData.phone = editData.phone
-  profileData.address = editData.address
-  profileData.imageUrl = editData.imageUrl
+  isSaving.value = true
+  error.value = null
 
-  emit('update', {
-    fullName: profileData.fullName,
-    dateOfBirth: profileData.dateOfBirth,
-    phone: profileData.phone,
-    address: profileData.address,
-    imageUrl: profileData.imageUrl
-  })
+  try {
+    const updatedProfile = await updateStudentProfile({
+      fullName: editData.fullName,
+      dateOfBirth: editData.dateOfBirth || undefined,
+      phoneNumber: editData.phoneNumber || undefined,
+      imageUrl: editData.imageUrl || undefined
+    })
 
-  isEditing.value = false
-  alert('រក្សាទុកព័ត៌មានបានជោគជ័យ!')
+    // Update local profile data
+    Object.assign(profileData, {
+      fullName: updatedProfile.fullName,
+      dateOfBirth: updatedProfile.dateOfBirth ? updatedProfile.dateOfBirth.split('T')[0] : '',
+      phoneNumber: updatedProfile.phoneNumber || '',
+      imageUrl: updatedProfile.imageUrl || ''
+    })
+
+    emit('update', updatedProfile)
+    isEditing.value = false
+    alert(t('profile.saveSuccess'))
+  } catch (err) {
+    console.error('Failed to save profile:', err)
+    error.value = err.response?.data?.message || 'Failed to save profile'
+    alert(error.value)
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const handleImageUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('ទំហំរូបភាពធំពេក! សូមជ្រើសរើសរូបភាពតូចជាង 5MB')
+      alert(t('profile.imageTooLarge'))
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert(t('profile.invalidImageType'))
       return
     }
 
@@ -551,13 +538,9 @@ const handleImageUpload = (event) => {
   }
 }
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-  }
-})
+const removeImage = () => {
+  editData.imageUrl = ''
+}
 </script>
 
 <style scoped>
@@ -589,6 +572,32 @@ watch(() => props.isOpen, (newVal) => {
     0 0 80px rgba(99, 102, 241, 0.15);
   display: flex;
   flex-direction: column;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Hero Section */
@@ -812,8 +821,12 @@ watch(() => props.isOpen, (newVal) => {
   background: linear-gradient(135deg, #f59e0b, #fbbf24);
 }
 
-.stat-icon.grade {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+.stat-icon.status-active {
+  background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.stat-icon.status-inactive {
+  background: linear-gradient(135deg, #ef4444, #f87171);
 }
 
 .stat-info {
@@ -876,10 +889,6 @@ watch(() => props.isOpen, (newVal) => {
 
 .header-icon.academic {
   background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-}
-
-.header-icon.guardian {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
 }
 
 .card-title {

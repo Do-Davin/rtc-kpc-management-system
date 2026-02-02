@@ -13,17 +13,17 @@ export default {
 
   // Dashboard Page
   dashboard: {
-    title: 'Overview',
+    title: 'Dashboard Overview',
     welcome: 'Hello, Welcome to your dashboard 🙏'
   },
 
   // Stats Cards
   stats: {
-    myPresence: 'My Presence',
-    lateDays: 'Late Days',
-    absentDays: 'Absent Days',
+    myPresence: 'Present Courses',
+    lateDays: 'Late Courses',
+    absentDays: 'Absent Courses',
     myAttendanceRate: 'My Attendance Rate',
-    days: 'days'
+    days: 'courses'
   },
 
   // Attendance Chart
@@ -34,6 +34,7 @@ export default {
     last3Months: 'Last 3 months',
     errorMessage: 'Unable to fetch data.',
     people: 'people',
+    total: 'Total',
     attendanceRate: 'Attendance Rate',
     courseCompleted: 'Course Completed',
     loadingTitle: 'Loading data...',
@@ -100,6 +101,10 @@ export default {
     minutesRemaining: 'minutes remaining',
     loadMore: 'Load More',
     loading: 'Loading...',
+    manualPresent: 'Marked Present',
+    alreadySubmitted: 'You have already submitted attendance for this session',
+    invalidQRCode: 'Invalid QR code',
+    sessionExpired: 'Session has expired. Please get a new QR code from your teacher.',
   },
 
   // Schedule/Timetable Page
@@ -144,21 +149,51 @@ export default {
     noCoursesMatch: 'No courses match your search criteria'
   },
 
+  // Course Detail Modal
+  courseModal: {
+    title: 'Course Information',
+    courseCode: 'Course Code',
+    academicYear: 'Academic Year',
+    year: 'Year',
+    professor: 'Professor',
+    department: 'Department',
+    status: 'Status',
+    createdAt: 'Created At'
+  },
+
   // Library Page
   libraryPage: {
     title: 'E-Library',
-    subtitle: 'Electronic Library',
-    searchPlaceholder: 'Search books...',
+    subtitle: 'Browse our collection of educational resources',
+    searchPlaceholder: 'Search books by title or author...',
     all: 'All',
     mathematics: 'Mathematics',
     physics: 'Physics',
     computerScience: 'Computer Science',
     informationTechnology: 'Information Technology',
-    noBooksFound: 'No books found',
+    noBooksFound: 'No Books Found',
     readBook: 'Read Book',
     pages: 'Pages',
     year: 'Year',
-    author: 'Author'
+    author: 'Author',
+    fetchError: 'Failed to load books. Please try again.',
+    totalBooks: 'TOTAL BOOKS',
+    categories: 'CATEGORIES',
+    categoriesLabel: 'Categories',
+    showing: 'Showing',
+    of: 'of',
+    books: 'books',
+    viewDetails: 'View Details',
+    view: 'View',
+    by: 'By',
+    tryAdjusting: 'Try adjusting your search or filter to find what you\'re looking for',
+    clearFilters: 'Clear Filters',
+    errorTitle: 'Oops! Something went wrong',
+    aboutThisBook: 'About this book',
+    noDescription: 'No description available for this book.',
+    openBookLink: 'Open Book Link',
+    noLinkAvailable: 'No Link Available',
+    isbn: 'ISBN'
   },
 
   // Profile
@@ -180,7 +215,26 @@ export default {
     department: 'Department',
     attendanceRate: 'Attendance Rate',
     enrolledCourses: 'Enrolled Courses',
-    joinDate: 'Join Date'
+    joinDate: 'Join Date',
+    // Additional profile related strings
+    personalInfoTitle: 'Personal Information',
+    personalInfoSubtitle: 'Manage your personal information',
+    academicInfoTitle: 'Academic Information',
+    academicInfoSubtitle: 'Information managed by administrators',
+    readOnly: 'Read only',
+    uploadImage: 'Choose Image',
+    enterFullName: 'Enter full name',
+    studentId: 'Student ID',
+    statusActive: 'Active',
+    statusCompleted: 'Completed',
+    discardConfirm: 'Are you sure you want to discard changes?',
+    saveSuccess: 'Profile saved successfully!',
+    removeImage: 'Remove image'
+    ,
+    noPhone: 'No phone number',
+    imageTooLarge: 'Image is too large. Please choose an image smaller than 5MB.'
+    ,
+    invalidImageType: 'Please select an image file only.'
   },
 
   // Common
@@ -199,5 +253,21 @@ export default {
     confirm: 'Confirm',
     yes: 'Yes',
     no: 'No'
+  },
+
+  // Months
+  months: {
+    january: 'January',
+    february: 'February',
+    march: 'March',
+    april: 'April',
+    may: 'May',
+    june: 'June',
+    july: 'July',
+    august: 'August',
+    september: 'September',
+    october: 'October',
+    november: 'November',
+    december: 'December'
   }
 }

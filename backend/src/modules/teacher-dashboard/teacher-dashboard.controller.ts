@@ -150,7 +150,7 @@ export class TeacherDashboardController {
 
   @Delete('todos/:id')
   async deleteTodo(@Request() req: AuthRequest, @Param('id') todoId: string) {
-    return this.dashboardService.deleteTodo(req.user.sub, todoId);
+    return await this.dashboardService.deleteTodo(req.user.sub, todoId);
   }
 
   // ========== Student Management ==========
@@ -164,7 +164,10 @@ export class TeacherDashboardController {
     @Request() req: AuthRequest,
     @Query() query: TeacherStudentQueryDto,
   ) {
-    return this.dashboardService.getStudentsInDepartment(req.user.sub, query);
+    return await this.dashboardService.getStudentsInDepartment(
+      req.user.sub,
+      query,
+    );
   }
 
   /**
@@ -226,7 +229,7 @@ export class TeacherDashboardController {
     @Request() req: AuthRequest,
     @Param('id') studentId: string,
   ) {
-    return this.dashboardService.removeStudentFromDepartment(
+    return await this.dashboardService.removeStudentFromDepartment(
       req.user.sub,
       studentId,
     );

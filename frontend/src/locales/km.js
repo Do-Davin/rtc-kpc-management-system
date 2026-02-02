@@ -19,11 +19,11 @@ export default {
 
   // Stats Cards
   stats: {
-    myPresence: 'វត្តមានរបស់ខ្ញុំ',
-    lateDays: 'មកយឺត',
-    absentDays: 'អវត្តមាន',
+    myPresence: 'មុខវិជ្ជាមានវត្តមាន',
+    lateDays: 'មុខវិជ្ជាមកយឺត',
+    absentDays: 'មុខវិជ្ជាអវត្តមាន',
     myAttendanceRate: 'អត្រាវត្តមានរបស់ខ្ញុំ',
-    days: 'ថ្ងៃ'
+    days: 'មុខវិជ្ជា'
   },
 
   // Attendance Chart
@@ -34,6 +34,7 @@ export default {
     last3Months: '3 ខែចុងក្រោយ',
     errorMessage: 'មិនអាចទាញយកទិន្នន័យបានទេ។',
     people: 'នាក់',
+    total: 'សរុប',
     attendanceRate: 'អត្រាវត្តមាន',
     courseCompleted: 'វគ្គសិក្សាបានបញ្ចប់',
     loadingTitle: 'កំពុងផ្ទុកទិន្នន័យ...',
@@ -100,6 +101,10 @@ export default {
     minutesRemaining: 'នាទីដែលនៅសល់',
     loadMore: 'ទាញយកបន្ថែម',
     loading: 'កំពុងទាញ...',
+    manualPresent: 'បានកត់ស្លាបដោយគ្រូ',
+    alreadySubmitted: 'អ្នកបានកត់វត្តមានសម្រាប់សម័យនេះរួចហើយ',
+    invalidQRCode: 'លេខ QR មិនត្រឹមត្រូវ',
+    sessionExpired: 'សម័យបានផុតកំណត់។ សូមទទួល QR ថ្មីពីគ្រូរបស់អ្នក។',
   },
 
   // Schedule/Timetable Page
@@ -144,21 +149,51 @@ export default {
     noCoursesMatch: 'គ្មានវគ្គសិក្សាត្រូវនឹងការស្វែងរករបស់អ្នកទេ'
   },
 
+  // Course Detail Modal
+  courseModal: {
+    title: 'ព័ត៌មានវគ្គសិក្សា',
+    courseCode: 'លេខកូដ',
+    academicYear: 'ឆ្នាំសិក្សា',
+    year: 'ឆ្នាំទី',
+    professor: 'គ្រូបង្រៀន',
+    department: 'ផ្នែក',
+    status: 'ស្ថានភាព',
+    createdAt: 'បានបង្កើតនៅ'
+  },
+
   // Library Page
   libraryPage: {
     title: 'បណ្ណាល័យអេឡិចត្រូនិក',
-    subtitle: 'E-Library',
-    searchPlaceholder: 'ស្វែងរកសៀវភៅ...',
+    subtitle: 'ស្វែងរកជំរើនៃសៀវភៅអប់រំរបស់យើង',
+    searchPlaceholder: 'ស្វែងរកសៀវភៅតាមចំណងជើង ឬអ្នកនិពន្ធ...',
     all: 'ទាំងអស់',
     mathematics: 'គណិតវិទ្យា',
     physics: 'រូបវិទ្យា',
     computerScience: 'វិទ្យាសាស្ត្រកុំព្យូទ័រ',
     informationTechnology: 'បច្ចេកវិទ្យាព័ត៌មាន',
-    noBooksFound: 'គ្មានសៀវភៅត្រូវនឹងការស្វែងរកទេ',
+    noBooksFound: 'គ្មានសៀវភៅត្រូវបានរកឃើញទេ',
     readBook: 'អានសៀវភៅ',
     pages: 'ទំព័រ',
     year: 'ឆ្នាំ',
-    author: 'អ្នកនិពន្ធ'
+    author: 'អ្នកនិពន្ធ',
+    fetchError: 'មិនអាចផ្ទុកសៀវភៅបានទេ។ សូមព្យាយាមម្ដងទៀត។',
+    totalBooks: 'សៀវភៅសរុប',
+    categories: 'ប្រភេទ',
+    categoriesLabel: 'ប្រភេទ',
+    showing: 'បង្ហាញ',
+    of: 'ក្នុងចំណូម',
+    books: 'សៀវភៅ',
+    viewDetails: 'មើលលម្អិត',
+    view: 'មើល',
+    by: 'ដោយ',
+    tryAdjusting: 'សូមព្យាយាមកែប្រែការស្វែងរក ឬតម្រង់របស់អ្នក ដើម្បីរកអ្វីដែលអ្នកកំពុងស្វែងរក',
+    clearFilters: 'សម្អាតតម្រង់',
+    errorTitle: 'អូឡា! មានបញ្ហាកើតឡើង',
+    aboutThisBook: 'អំពីសៀវភៅនេះ',
+    noDescription: 'គ្មានការពិពណ៌នាសម្រាប់សៀវភៅនេះទេ។',
+    openBookLink: 'បើកតំណសៀវភៅ',
+    noLinkAvailable: 'គ្មានតំណសៀវភៅទេ',
+    isbn: 'ISBN'
   },
 
   // Profile
@@ -180,7 +215,26 @@ export default {
     department: 'ដេប៉ាតឺម៉ង់',
     attendanceRate: 'អត្រាវត្តមាន',
     enrolledCourses: 'វគ្គសិក្សាបានចុះឈ្មោះ',
-    joinDate: 'ថ្ងៃចូលរៀន'
+    joinDate: 'ថ្ងៃចូលរៀន',
+    // Additional profile related strings
+    personalInfoTitle: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+    personalInfoSubtitle: 'គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នក',
+    academicInfoTitle: 'ព័ត៌មានសិក្សា',
+    academicInfoSubtitle: 'ព័ត៌មានដែលគ្រប់គ្រងដោយអ្នកគ្រប់គ្រង',
+    readOnly: 'មិនអាចកែប្រែ',
+    uploadImage: 'ជ្រើសរើសរូបភាព',
+    enterFullName: 'បញ្ចូលឈ្មោះពេញ',
+    studentId: 'លេខសម្គាល់សិស្ស',
+    statusActive: 'កំពុងសិក្សា',
+    statusCompleted: 'បានបញ្ចប់',
+    discardConfirm: 'តើអ្នកចង់បោះបង់ការផ្លាស់ប្តូរដែរឬទេ?',
+    saveSuccess: 'រក្សាទុកព័ត៌មានបានជោគជ័យ!',
+    removeImage: 'យករូបភាពចេញ'
+    ,
+    noPhone: 'មិនមានលេខទូរស័ព្ទ',
+    imageTooLarge: 'ទំហំរូបភាពធំពេក! សូមជ្រើសរើសរូបភាពតូចជាង 5MB'
+    ,
+    invalidImageType: 'សូមជ្រើសរើសឯកសាររូបភាពប៉ុណ្ណោះ'
   },
 
   // Common
@@ -199,5 +253,21 @@ export default {
     confirm: 'បញ្ជាក់',
     yes: 'បាទ/ចាស',
     no: 'ទេ'
+  }
+,
+  // Months
+  months: {
+    january: 'មករា',
+    february: 'កុម្ភៈ',
+    march: 'មីនា',
+    april: 'មេសា',
+    may: 'ឧសភា',
+    june: 'មិថុនា',
+    july: 'កក្កដា',
+    august: 'សីហា',
+    september: 'កញ្ញា',
+    october: 'តុលា',
+    november: 'វិច្ឆិកា',
+    december: 'ធ្នូ'
   }
 }
