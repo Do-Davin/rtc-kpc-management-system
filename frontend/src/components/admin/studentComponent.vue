@@ -1,3 +1,179 @@
+<template>
+  <div class="page-container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">សិស្សានុសិស្ស</h2>
+        <p class="page-subtitle">គ្រប់គ្រងគណនីសិស្ស</p>
+      </div>
+      <div class="header-actions">
+        <span class="badge">{{ students.length }} សរុប</span>
+        <button @click="openCreate" class="btn-primary green">
+          <Plus size="18" /> បង្កើតសិស្សថ្មី
+        </button>
+      </div>
+    </div>
+
+    <div class="controls-bar flex-row">
+      <div class="search-box">
+        <Search size="18" class="search-icon" />
+        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកដោយ: ឈ្មោះ, ID, អ៊ីមែល..." />
+      </div>
+      <div class="filter-box">
+        <select v-model="filterDept">
+          <option value="">ដេប៉ាដឺម៉ង់</option>
+          <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div v-if="loading" class="loading-state">Loading students...</div>
+      <table v-else-if="filteredStudents.length > 0" class="custom-table">
+        <thead>
+          <tr class="table-row">
+            <th>ប្រវត្តិរូបសិស្ស</th>
+            <th>លេខកូដសិស្ស (ID)</th>
+            <th>ឆ្នាំសិក្សា</th>
+            <th>ដេប៉ាដឺម៉ង់</th>
+            <th>ស្ថានភាព</th>
+            <th class="actions-col">សកម្មភាពផ្លាស់ប្ដូរ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="stu in filteredStudents" :key="stu.id" class="table-row">
+            <td>
+              <div class="user-cell">
+                <div class="icon-box green">
+                  <GraduationCap size="16" />
+                </div>
+                <div class="user-info">
+                  <span class="name">{{ stu.fullName }}</span>
+                  <span class="email">{{ stu.user?.email }}</span>
+                  <span v-if="stu.phoneNumber" class="text-xs text-gray-500">{{ stu.phoneNumber }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="font-mono">{{ stu.studentIdCard }}</span>
+            </td>
+            <td>
+              <span>ឆ្នាំទី {{ stu.year }}</span>
+            </td>
+            <td>
+              <span v-if="stu.department" class="dept-badge blue">{{ stu.department.code }}</span>
+            </td>
+            <td>
+              <span :class="['status-badge', stu.status === 'ACTIVE' ? 'active' : 'inactive']">
+                {{ stu.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button @click="openEdit(stu)" class="btn-icon edit">
+                  <Edit2 size="18" />
+                </button>
+                <button @click="handleDelete(stu.id)" class="btn-icon delete">
+                  <Trash2 size="18" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">គ្មានសិស្សទេ</div>
+    </div>
+
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ isEditing ? 'Edit Student' : 'Register New Student' }}</h3>
+        <form @submit.prevent="handleSubmit">
+          <div class="form-row">
+            <div class="form-group half">
+              <label>ឈ្មោះពេញ</label>
+              <input v-model="form.fullName" type="text" required />
+            </div>
+            <div class="form-group half">
+              <label>លេខទូរសព្ទ</label>
+              <input v-model="form.phoneNumber" type="text" placeholder="012..." />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>អ៊ីមែល</label>
+            <input v-model="form.email" type="email" :disabled="isEditing" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>លេខកូដសិស្ស (ID)</label>
+              <input v-model="form.studentIdCard" type="text" required />
+            </div>
+            <div class="form-group half">
+              <label>ដេប៉ាដឺម៉ង់</label>
+              <select v-model="form.departmentId" required>
+                <option value="" disabled>ជ្រើសរើសដេប៉ាដឺម៉ង់</option>
+                <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>ឆ្នាំទី (1-4)</label>
+              <input v-model="form.year" type="number" min="1" max="8" required />
+            </div>
+            <div class="form-group half">
+              <label>ឆ្នាំចូលរៀន</label>
+              <input v-model="form.enrollmentYear" type="number" required />
+            </div>
+          </div>
+
+          <div class="form-group" v-if="!isEditing">
+            <label>លេខសម្ងាត់លំនាំដើម (STU@123)</label>
+            <input v-model="form.password" type="password" placeholder="លំនាំដើម: STU@123" />
+          </div>
+
+          <div class="form-group">
+            <label>ស្ថានភាព</label>
+            <select v-model="form.status">
+              <option value="ACTIVE">សកម្ម</option>
+              <option value="INACTIVE">អសកម្ម</option>
+              <option value="GRADUATED">បានបញ្ចប់ការសិក្សា</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
+            <button type="submit" :disabled="submitting" class="btn-primary green">
+              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'ចុះឈ្មោះ' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content success-content">
+        <div class="success-icon">
+          <Check size="32" />
+        </div>
+        <h3>គណនីបានបង្កើត!</h3>
+        <div class="credential-box">
+          <div class="cred-row">
+            <span class="label">អ៊ីមែល:</span><span class="value">{{ createdAccount.email }}</span>
+          </div>
+          <div class="cred-row">
+            <span class="label">លេខសម្ងាត់:</span><span class="value font-mono font-bold text-blue-600">{{
+              createdAccount.password
+              }}</span>
+          </div>
+        </div>
+        <button @click="showSuccessModal = false" class="btn-primary w-full mt-4">រួចរាល់</button>
+      </div>
+    </div>
+  </div>
+</template>
+
 <!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
@@ -151,182 +327,6 @@ const handleDelete = async (id) => {
 onMounted(loadData)
 </script>
 
-<template>
-  <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h2 class="page-title">សិស្សានុសិស្ស</h2>
-        <p class="page-subtitle">គ្រប់គ្រងគណនីសិស្ស</p>
-      </div>
-      <div class="header-actions">
-        <span class="badge">{{ students.length }} សរុប</span>
-        <button @click="openCreate" class="btn-primary green">
-          <Plus size="18" /> បង្កើតសិស្សថ្មី
-        </button>
-      </div>
-    </div>
-
-    <div class="controls-bar flex-row">
-      <div class="search-box">
-        <Search size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" placeholder="ស្វែងរកដោយ: ឈ្មោះ, ID, អ៊ីមែល..." />
-      </div>
-      <div class="filter-box">
-        <select v-model="filterDept">
-          <option value="">ដេប៉ាដឺម៉ង់</option>
-          <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="table-card">
-      <div v-if="loading" class="loading-state">Loading students...</div>
-      <table v-else-if="filteredStudents.length > 0" class="custom-table">
-        <thead>
-          <tr>
-            <th>ប្រវត្តិរូបសិស្ស</th>
-            <th>លេខកូដសិស្ស (ID)</th>
-            <th>ឆ្នាំសិក្សា</th>
-            <th>ដេប៉ាដឺម៉ង់</th>
-            <th>ស្ថានភាព</th>
-            <th class="actions-col">សកម្មភាពផ្លាស់ប្ដូរ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="stu in filteredStudents" :key="stu.id">
-            <td>
-              <div class="user-cell">
-                <div class="icon-box green">
-                  <GraduationCap size="16" />
-                </div>
-                <div class="user-info">
-                  <span class="name">{{ stu.fullName }}</span>
-                  <span class="email">{{ stu.user?.email }}</span>
-                  <span v-if="stu.phoneNumber" class="text-xs text-gray-500">{{ stu.phoneNumber }}</span>
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="font-mono">{{ stu.studentIdCard }}</span>
-            </td>
-            <td>
-              <span>ឆ្នាំទី {{ stu.year }}</span>
-            </td>
-            <td>
-              <span v-if="stu.department" class="dept-badge blue">{{ stu.department.code }}</span>
-            </td>
-            <td>
-              <span :class="['status-badge', stu.status === 'ACTIVE' ? 'active' : 'inactive']">
-                {{ stu.status === 'ACTIVE' ? 'សកម្ម' : 'អសកម្ម' }}
-              </span>
-            </td>
-            <td class="actions-cell">
-              <div class="action-buttons">
-                <button @click="openEdit(stu)" class="btn-icon edit">
-                  <Edit2 size="18" />
-                </button>
-                <button @click="handleDelete(stu.id)" class="btn-icon delete">
-                  <Trash2 size="18" />
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else class="empty-state">គ្មានសិស្សទេ</div>
-    </div>
-
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3>{{ isEditing ? 'Edit Student' : 'Register New Student' }}</h3>
-        <form @submit.prevent="handleSubmit">
-          <div class="form-row">
-            <div class="form-group half">
-              <label>ឈ្មោះពេញ</label>
-              <input v-model="form.fullName" type="text" required />
-            </div>
-            <div class="form-group half">
-              <label>លេខទូរសព្ទ</label>
-              <input v-model="form.phoneNumber" type="text" placeholder="012..." />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>អ៊ីមែល</label>
-            <input v-model="form.email" type="email" :disabled="isEditing" required />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group half">
-              <label>លេខកូដសិស្ស (ID)</label>
-              <input v-model="form.studentIdCard" type="text" required />
-            </div>
-            <div class="form-group half">
-              <label>ដេប៉ាដឺម៉ង់</label>
-              <select v-model="form.departmentId" required>
-                <option value="" disabled>ជ្រើសរើសដេប៉ាដឺម៉ង់</option>
-                <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group half">
-              <label>ឆ្នាំទី (1-4)</label>
-              <input v-model="form.year" type="number" min="1" max="8" required />
-            </div>
-            <div class="form-group half">
-              <label>ឆ្នាំចូលរៀន</label>
-              <input v-model="form.enrollmentYear" type="number" required />
-            </div>
-          </div>
-
-          <div class="form-group" v-if="!isEditing">
-            <label>លេខសម្ងាត់លំនាំដើម (STU@123)</label>
-            <input v-model="form.password" type="password" placeholder="លំនាំដើម: STU@123" />
-          </div>
-
-          <div class="form-group">
-            <label>ស្ថានភាព</label>
-            <select v-model="form.status">
-              <option value="ACTIVE">សកម្ម</option>
-              <option value="INACTIVE">អសកម្ម</option>
-              <option value="GRADUATED">បានបញ្ចប់ការសិក្សា</option>
-            </select>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
-            <button type="submit" :disabled="submitting" class="btn-primary green">
-              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'ចុះឈ្មោះ' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div v-if="showSuccessModal" class="modal-overlay">
-      <div class="modal-content success-content">
-        <div class="success-icon">
-          <Check size="32" />
-        </div>
-        <h3>គណនីបានបង្កើត!</h3>
-        <div class="credential-box">
-          <div class="cred-row">
-            <span class="label">អ៊ីមែល:</span><span class="value">{{ createdAccount.email }}</span>
-          </div>
-          <div class="cred-row">
-            <span class="label">លេខសម្ងាត់:</span><span class="value font-mono font-bold text-blue-600">{{
-              createdAccount.password
-              }}</span>
-          </div>
-        </div>
-        <button @click="showSuccessModal = false" class="btn-primary w-full mt-4">រួចរាល់</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
 .form-row {
   display: flex;
@@ -355,12 +355,12 @@ onMounted(loadData)
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 
@@ -371,8 +371,8 @@ onMounted(loadData)
 }
 
 .badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--purple-100);
+  color: var(--purple-500);
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-size: 0.85rem;
@@ -380,7 +380,7 @@ onMounted(loadData)
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: var(--purple-500);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -393,12 +393,8 @@ onMounted(loadData)
   gap: 0.5rem;
 }
 
-.btn-primary.green {
-  background: #16a34a;
-}
-
-.btn-primary.green:hover {
-  background: #15803d;
+.btn-primary:hover {
+  background: var(--purple-600);
 }
 
 .controls-bar {
@@ -410,6 +406,7 @@ onMounted(loadData)
 .search-box,
 .filter-box {
   position: relative;
+  color: var(--purple-500);
 }
 
 .search-icon {
@@ -417,7 +414,7 @@ onMounted(loadData)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--purple-500);
 }
 
 .search-box input,
@@ -427,7 +424,8 @@ onMounted(loadData)
   border-radius: 8px;
   outline: none;
   min-width: 200px;
-  background: white;
+  background: var(--purple-100);
+  color: var(--purple-500);
 }
 
 .table-card {
@@ -448,14 +446,14 @@ onMounted(loadData)
   text-align: left;
   padding: 1rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--purple-500);
   border-bottom: 1px solid #e2e8f0;
 }
 
 .custom-table td {
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  color: var(--purple-700);
   vertical-align: middle;
 }
 
@@ -488,13 +486,13 @@ onMounted(loadData)
 
 .user-info .name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--purple-500);
   font-size: 0.95rem;
 }
 
 .user-info .email {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--purple-300);
 }
 
 .dept-badge {
@@ -612,7 +610,7 @@ onMounted(loadData)
 .empty-state {
   padding: 3rem;
   text-align: center;
-  color: #94a3b8;
+  color: var(--purple-400);
 }
 
 .success-content {
@@ -646,7 +644,7 @@ onMounted(loadData)
 }
 
 .label {
-  color: #64748b;
+  color: var(--purple-400);
   font-size: 0.9rem;
 }
 

@@ -124,7 +124,7 @@ const logout = () => {
 .admin-avatar {
   width: 40px;
   height: 40px;
-  background: #5d5fef;
+  background: var(--purple-500) !important;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -134,8 +134,8 @@ const logout = () => {
 }
 
 .admin-meta p { margin: 0; }
-.admin-meta .name { font-weight: 600; font-size: 0.9rem; }
-.admin-meta .role { font-size: 0.75rem; color: #888; }
+.admin-meta .name { font-weight: 600; font-size: 0.9rem; color: var(--purple-500); }
+.admin-meta .role { font-size: 0.75rem; color: var(--purple-400); }
 
 .main-content {
   flex: 1;
@@ -147,6 +147,7 @@ const logout = () => {
   margin-top: 8px;
   background: none;
   border: none;
+  font-weight: 600;
   color: #ef4444;
   font-size: 0.8rem;
   cursor: pointer;

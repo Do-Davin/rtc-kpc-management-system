@@ -1,86 +1,3 @@
-<!-- eslint-disable no-unused-vars -->
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import adminService from '@/services/admin.service'
-import { Plus, Search, Building2, Users, Edit2, Trash2 } from 'lucide-vue-next'
-
-const departments = ref([])
-const showModal = ref(false)
-const isEditing = ref(false)
-const editId = ref(null)
-const searchQuery = ref('')
-const form = ref({ name: '', code: '', description: '', status: 'សកម្ម' })
-const loading = ref(false)
-const submitting = ref(false)
-
-const fetchDepartments = async () => {
-  loading.value = true
-  try {
-    const res = await adminService.getDepartments()
-    departments.value = res.data
-  } catch (err) {
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-const filteredDepartments = computed(() => {
-  if (!searchQuery.value) return departments.value
-  const lower = searchQuery.value.toLowerCase()
-  return departments.value.filter(
-    (d) => d.name.toLowerCase().includes(lower) || d.code.toLowerCase().includes(lower),
-  )
-})
-
-const openCreate = () => {
-  isEditing.value = false
-  form.value = { name: '', code: '', description: '', status: 'សកម្ម' }
-  showModal.value = true
-}
-
-const openEdit = (dept) => {
-  isEditing.value = true
-  editId.value = dept.id
-  form.value = {
-    name: dept.name,
-    code: dept.code,
-    description: dept.description || '',
-    status: dept.status || 'សកម្ម',
-  }
-  showModal.value = true
-}
-
-const handleSubmit = async () => {
-  submitting.value = true
-  try {
-    if (isEditing.value) {
-      await adminService.updateDepartment(editId.value, form.value)
-    } else {
-      await adminService.createDepartment(form.value)
-    }
-    showModal.value = false
-    await fetchDepartments()
-  } catch (err) {
-    alert(err.response?.data?.message || 'Error saving department')
-  } finally {
-    submitting.value = false
-  }
-}
-
-const handleDelete = async (id) => {
-  if (!confirm('Are you sure? This cannot be undone.')) return
-  try {
-    await adminService.deleteDepartment(id)
-    await fetchDepartments()
-  } catch (err) {
-    alert('Cannot delete: Department in use')
-  }
-}
-
-onMounted(fetchDepartments)
-</script>
-
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -185,6 +102,89 @@ onMounted(fetchDepartments)
   </div>
 </template>
 
+<!-- eslint-disable no-unused-vars -->
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import adminService from '@/services/admin.service'
+import { Plus, Search, Building2, Users, Edit2, Trash2 } from 'lucide-vue-next'
+
+const departments = ref([])
+const showModal = ref(false)
+const isEditing = ref(false)
+const editId = ref(null)
+const searchQuery = ref('')
+const form = ref({ name: '', code: '', description: '', status: 'សកម្ម' })
+const loading = ref(false)
+const submitting = ref(false)
+
+const fetchDepartments = async () => {
+  loading.value = true
+  try {
+    const res = await adminService.getDepartments()
+    departments.value = res.data
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const filteredDepartments = computed(() => {
+  if (!searchQuery.value) return departments.value
+  const lower = searchQuery.value.toLowerCase()
+  return departments.value.filter(
+    (d) => d.name.toLowerCase().includes(lower) || d.code.toLowerCase().includes(lower),
+  )
+})
+
+const openCreate = () => {
+  isEditing.value = false
+  form.value = { name: '', code: '', description: '', status: 'សកម្ម' }
+  showModal.value = true
+}
+
+const openEdit = (dept) => {
+  isEditing.value = true
+  editId.value = dept.id
+  form.value = {
+    name: dept.name,
+    code: dept.code,
+    description: dept.description || '',
+    status: dept.status || 'សកម្ម',
+  }
+  showModal.value = true
+}
+
+const handleSubmit = async () => {
+  submitting.value = true
+  try {
+    if (isEditing.value) {
+      await adminService.updateDepartment(editId.value, form.value)
+    } else {
+      await adminService.createDepartment(form.value)
+    }
+    showModal.value = false
+    await fetchDepartments()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error saving department')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const handleDelete = async (id) => {
+  if (!confirm('Are you sure? This cannot be undone.')) return
+  try {
+    await adminService.deleteDepartment(id)
+    await fetchDepartments()
+  } catch (err) {
+    alert('Cannot delete: Department in use')
+  }
+}
+
+onMounted(fetchDepartments)
+</script>
+
 <style scoped>
 /* Reuse existing styles */
 .w-full { width: 100%; }
@@ -208,11 +208,11 @@ onMounted(fetchDepartments)
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 .header-actions {
@@ -221,15 +221,15 @@ onMounted(fetchDepartments)
   gap: 1rem;
 }
 .badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--purple-100);
+  color: var(--purple-700);
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-size: 0.85rem;
   font-weight: 600;
 }
 .btn-primary {
-  background: #2563eb;
+  background: var(--purple-500);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -252,21 +252,22 @@ onMounted(fetchDepartments)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--purple-400);
 }
 .search-box input {
   width: 100%;
   padding: 0.6rem 1rem 0.6rem 2.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--purple-200);
   border-radius: 8px;
   outline: none;
+  background-color: var(--purple-100);
 }
 .table-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--purple-200);
 }
 .custom-table {
   width: 100%;
@@ -277,13 +278,13 @@ onMounted(fetchDepartments)
   text-align: left;
   padding: 1rem;
   font-weight: 600;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--purple-500);
+  border-bottom: 1px solid var(--purple-200);
 }
 .custom-table td {
   padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  border-bottom: 1px solid var(--purple-200);
+  color: var(--purple-700);
   vertical-align: middle;
 }
 .dept-name {
@@ -295,19 +296,19 @@ onMounted(fetchDepartments)
 .icon-box {
   width: 32px;
   height: 32px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--purple-100);
+  color: var(--purple-600);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .code-badge {
-  background: #f1f5f9;
+  background: var(--purple-100);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-family: monospace;
-  color: #475569;
+  color: var(--purple-500);
   border: 1px solid #e2e8f0;
 }
 .modal-overlay {
@@ -341,7 +342,7 @@ onMounted(fetchDepartments)
 .form-group textarea {
   width: 100%;
   padding: 0.6rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--purple-200);
   border-radius: 6px;
   outline: none;
 }
@@ -362,7 +363,7 @@ onMounted(fetchDepartments)
 .empty-state {
   padding: 3rem;
   text-align: center;
-  color: #94a3b8;
+  color: var(--purple-400);
 }
 .teachers-list {
   display: flex;
@@ -370,8 +371,8 @@ onMounted(fetchDepartments)
   gap: 0.5rem;
 }
 .teacher-pill {
-  background: #f0f9ff;
-  color: #0284c7;
+  background: var(--purple-100);
+  color: var(--purple-600);
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 0.8rem;

@@ -1,152 +1,3 @@
-<!-- eslint-disable no-unused-vars -->
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import adminService from '@/services/admin.service'
-import { Plus, Search, Check, Edit2, Trash2, Briefcase } from 'lucide-vue-next'
-
-const teachers = ref([])
-const departments = ref([])
-const showModal = ref(false)
-const showSuccessModal = ref(false)
-const searchQuery = ref('')
-const filterDept = ref('')
-const loading = ref(false)
-const submitting = ref(false)
-const isEditing = ref(false)
-const editId = ref(null)
-
-const form = ref({
-  fullName: '',
-  email: '',
-  specialization: '',
-  employeeId: '',
-  phoneNumber: '',
-  departmentId: '',
-  status: 'សកម្ម',
-  password: '',
-})
-const createdAccount = ref({ email: '', password: '' })
-
-const loadData = async () => {
-  loading.value = true
-  try {
-    const [teaRes, deptRes] = await Promise.all([
-      adminService.getTeachers(),
-      adminService.getDepartments(),
-    ])
-    teachers.value = teaRes.data
-    departments.value = deptRes.data
-  } catch (err) {
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-const filteredTeachers = computed(() => {
-  let result = teachers.value
-  if (filterDept.value) result = result.filter((t) => t.department?.id === filterDept.value)
-  if (searchQuery.value) {
-    const lower = searchQuery.value.toLowerCase()
-    result = result.filter(
-      (t) =>
-        t.user?.email.toLowerCase().includes(lower) ||
-        t.specialization.toLowerCase().includes(lower) ||
-        t.fullName.toLowerCase().includes(lower),
-    )
-  }
-  return result
-})
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-const openCreate = () => {
-  isEditing.value = false
-  form.value = {
-    fullName: '',
-    email: '',
-    specialization: '',
-    employeeId: '',
-    phoneNumber: '',
-    departmentId: '',
-    status: 'សកម្ម',
-    password: 'TCH@123',
-  }
-  showModal.value = true
-}
-
-const openEdit = (tea) => {
-  isEditing.value = true
-  editId.value = tea.id
-  form.value = {
-    fullName: tea.fullName,
-    email: tea.user?.email,
-    specialization: tea.specialization,
-    employeeId: tea.employeeId,
-    phoneNumber: tea.phoneNumber,
-    departmentId: tea.department?.id || '',
-    status: tea.status || 'សកម្ម',
-    password: '',
-  }
-  showModal.value = true
-}
-
-const handleSubmit = async () => {
-  submitting.value = true
-  try {
-    const payload = {
-        fullName: form.value.fullName,
-        specialization: form.value.specialization,
-        employeeId: form.value.employeeId,
-        phoneNumber: form.value.phoneNumber,
-        departmentId: form.value.departmentId,
-        status: form.value.status,
-    }
-
-    if (isEditing.value) {
-      await adminService.updateTeacher(editId.value, payload)
-      showModal.value = false
-    } else {
-      await adminService.createTeacher({
-        ...payload,
-        email: form.value.email,
-        password: form.value.password || 'TCH@123',
-      })
-      createdAccount.value = {
-        email: form.value.email,
-        password: form.value.password || 'TCH@123',
-      }
-      showModal.value = false
-      showSuccessModal.value = true
-    }
-    await loadData()
-  } catch (err) {
-    alert(err.response?.data?.message || 'Error saving teacher')
-  } finally {
-    submitting.value = false
-  }
-}
-
-const handleDelete = async (id) => {
-  if (!confirm('Are you sure? This deletes the User Account as well.')) return
-  try {
-    await adminService.deleteTeacher(id)
-    await loadData()
-  } catch (err) {
-    alert('Failed to delete')
-  }
-}
-
-onMounted(loadData)
-</script>
-
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -156,7 +7,7 @@ onMounted(loadData)
       </div>
       <div class="header-actions">
         <span class="badge">{{ teachers.length }} សរុប</span>
-        <button @click="openCreate" class="btn-primary purple">
+        <button @click="openCreate" class="btn-primary">
           <Plus size="18" /> បង្កើតគ្រូថ្មី
         </button>
       </div>
@@ -310,6 +161,155 @@ onMounted(loadData)
   </div>
 </template>
 
+<!-- eslint-disable no-unused-vars -->
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import adminService from '@/services/admin.service'
+import { Plus, Search, Check, Edit2, Trash2, Briefcase } from 'lucide-vue-next'
+
+const teachers = ref([])
+const departments = ref([])
+const showModal = ref(false)
+const showSuccessModal = ref(false)
+const searchQuery = ref('')
+const filterDept = ref('')
+const loading = ref(false)
+const submitting = ref(false)
+const isEditing = ref(false)
+const editId = ref(null)
+
+const form = ref({
+  fullName: '',
+  email: '',
+  specialization: '',
+  employeeId: '',
+  phoneNumber: '',
+  departmentId: '',
+  status: 'សកម្ម',
+  password: '',
+})
+const createdAccount = ref({ email: '', password: '' })
+
+const loadData = async () => {
+  loading.value = true
+  try {
+    const [teaRes, deptRes] = await Promise.all([
+      adminService.getTeachers(),
+      adminService.getDepartments(),
+    ])
+    teachers.value = teaRes.data
+    departments.value = deptRes.data
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const filteredTeachers = computed(() => {
+  let result = teachers.value
+  if (filterDept.value) result = result.filter((t) => t.department?.id === filterDept.value)
+  if (searchQuery.value) {
+    const lower = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (t) =>
+        t.user?.email.toLowerCase().includes(lower) ||
+        t.specialization.toLowerCase().includes(lower) ||
+        t.fullName.toLowerCase().includes(lower),
+    )
+  }
+  return result
+})
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const openCreate = () => {
+  isEditing.value = false
+  form.value = {
+    fullName: '',
+    email: '',
+    specialization: '',
+    employeeId: '',
+    phoneNumber: '',
+    departmentId: '',
+    status: 'សកម្ម',
+    password: 'TCH@123',
+  }
+  showModal.value = true
+}
+
+const openEdit = (tea) => {
+  isEditing.value = true
+  editId.value = tea.id
+  form.value = {
+    fullName: tea.fullName,
+    email: tea.user?.email,
+    specialization: tea.specialization,
+    employeeId: tea.employeeId,
+    phoneNumber: tea.phoneNumber,
+    departmentId: tea.department?.id || '',
+    status: tea.status || 'សកម្ម',
+    password: '',
+  }
+  showModal.value = true
+}
+
+const handleSubmit = async () => {
+  submitting.value = true
+  try {
+    const payload = {
+        fullName: form.value.fullName,
+        specialization: form.value.specialization,
+        employeeId: form.value.employeeId,
+        phoneNumber: form.value.phoneNumber,
+        departmentId: form.value.departmentId,
+        status: form.value.status,
+    }
+
+    if (isEditing.value) {
+      await adminService.updateTeacher(editId.value, payload)
+      showModal.value = false
+    } else {
+      await adminService.createTeacher({
+        ...payload,
+        email: form.value.email,
+        password: form.value.password || 'TCH@123',
+      })
+      createdAccount.value = {
+        email: form.value.email,
+        password: form.value.password || 'TCH@123',
+      }
+      showModal.value = false
+      showSuccessModal.value = true
+    }
+    await loadData()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error saving teacher')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const handleDelete = async (id) => {
+  if (!confirm('Are you sure? This deletes the User Account as well.')) return
+  try {
+    await adminService.deleteTeacher(id)
+    await loadData()
+  } catch (err) {
+    alert('Failed to delete')
+  }
+}
+
+onMounted(loadData)
+</script>
+
 <style scoped>
 
 .form-row { display: flex; gap: 1rem; }
@@ -331,11 +331,11 @@ onMounted(loadData)
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 .header-actions {
@@ -344,15 +344,15 @@ onMounted(loadData)
   gap: 1rem;
 }
 .badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--purple-100);
+  color: var(--purple-500);
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-size: 0.85rem;
   font-weight: 600;
 }
 .btn-primary {
-  background: #2563eb;
+  background: var(--purple-500);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -364,11 +364,9 @@ onMounted(loadData)
   justify-content: center;
   gap: 0.5rem;
 }
-.btn-primary.purple {
-  background: #9333ea;
-}
-.btn-primary.purple:hover {
-  background: #7e22ce;
+
+.btn-primary:hover {
+  background: var(--purple-600);
 }
 .controls-bar {
   margin-bottom: 1.5rem;
@@ -393,7 +391,7 @@ onMounted(loadData)
   border-radius: 8px;
   outline: none;
   min-width: 200px;
-  background: white;
+  background: var(--purple-100);
 }
 .table-card {
   background: white;
@@ -411,13 +409,13 @@ onMounted(loadData)
   text-align: left;
   padding: 1rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--purple-500);
   border-bottom: 1px solid #e2e8f0;
 }
 .custom-table td {
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  color: var(--purple-700);
   vertical-align: middle;
 }
 .user-cell {
@@ -445,12 +443,12 @@ onMounted(loadData)
 }
 .user-info .name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--purple-500);
   font-size: 0.95rem;
 }
 .user-info .email {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--purple-300);
 }
 .dept-badge {
   background: #eff6ff;

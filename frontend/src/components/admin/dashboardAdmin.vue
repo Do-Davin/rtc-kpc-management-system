@@ -158,13 +158,6 @@ onMounted(fetchStats);
   font-family: 'Inter', sans-serif;
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
-}
-
 h1 {
   font-size: 1.8rem;
   font-weight: 700;
@@ -172,26 +165,45 @@ h1 {
   margin: 0;
 }
 
+h1, h3 {
+  color: var(--purple-500) !important;
+}
+
+.count {
+  color: var(--purple-400) !important;
+}
+
+.count-text {
+  color: var(--purple-400) !important;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
 .subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.5rem;
   font-size: 0.95rem;
 }
 
 .refresh-btn {
   background-color: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--purple-500);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  color: #475569;
+  font-weight: 600;
+  color: var(--purple-500);
   transition: all 0.2s;
 }
 
 .refresh-btn:hover {
   background-color: #f8fafc;
-  border-color: #cbd5e1;
+  border-color: var(--purple-400);
 }
 
 .stats-grid {
