@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
 import { StudentStatus } from '../entities/student.entity';
 
 export class CreateStudentDto {

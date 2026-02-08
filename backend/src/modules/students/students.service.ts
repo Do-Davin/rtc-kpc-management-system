@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Student, StudentStatus } from './entities/student.entity';
@@ -30,7 +34,7 @@ export class StudentsService {
 
       const newUser = this.userRepo.create({
         email: dto.email,
-        password: hashedPassword, 
+        password: hashedPassword,
         role: 'STUDENT',
       });
       const savedUser = await queryRunner.manager.save(newUser);
@@ -51,7 +55,8 @@ export class StudentsService {
       return savedStudent;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      if (err.code === '23505') throw new ConflictException('Email or ID already exists');
+      if (err.code === '23505')
+        throw new ConflictException('Email or ID already exists');
       throw err;
     } finally {
       await queryRunner.release();
@@ -65,22 +70,25 @@ export class StudentsService {
   async findOneByUserId(userId: string) {
     const student = await this.studentRepo.findOne({
       where: { user: { id: userId } },
-      relations: ['user', 'department']
+      relations: ['user', 'department'],
     });
     if (!student) throw new NotFoundException('Student profile not found');
     return student;
   }
 
-  async update(id: string, attrs: Partial<Student> & { departmentId?: string }) {
+  async update(
+    id: string,
+    attrs: Partial<Student> & { departmentId?: string },
+  ) {
     const student = await this.studentRepo.findOneBy({ id });
     if (!student) throw new NotFoundException('Student not found');
-    
+
     if (attrs.departmentId) {
       const dept = await this.deptRepo.findOneBy({ id: attrs.departmentId });
       if (!dept) throw new NotFoundException('Department not found');
       student.department = dept;
     }
-    
+
     if (attrs.fullName) student.fullName = attrs.fullName;
     if (attrs.studentIdCard) student.studentIdCard = attrs.studentIdCard;
     if (attrs.year) student.year = attrs.year;
@@ -92,12 +100,12 @@ export class StudentsService {
   }
 
   async remove(id: string) {
-    const student = await this.studentRepo.findOne({ 
-      where: { id }, 
-      relations: ['user'] 
+    const student = await this.studentRepo.findOne({
+      where: { id },
+      relations: ['user'],
     });
     if (!student) throw new NotFoundException('Student not found');
-    
+
     return this.userRepo.remove(student.user);
   }
 }
