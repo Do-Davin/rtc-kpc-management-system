@@ -228,11 +228,14 @@ onMounted(fetchData);
 
 .stat-card.blue .icon-box { background: #eff6ff; color: #2563eb; }
 .stat-card.green .icon-box { background: #f0fdf4; color: #16a34a; }
-.stat-card.purple .icon-box { background: #faf5ff; color: #9333ea; }
+.stat-card.purple .icon-box { background: var(--purple-100); color: var(--purple-500); }
 
 .stat-info { display: flex; flex-direction: column; }
 .stat-info .label { font-size: 0.85rem; color: #64748b; }
 .stat-info .value { font-size: 1.5rem; font-weight: 700; color: #1e293b; }
+
+/* Make purple stat card values use the dashboard header color */
+.stat-card.purple .stat-info .value { color: var(--purple-500); }
 
 /* TABLE STYLES */
 .content-card {

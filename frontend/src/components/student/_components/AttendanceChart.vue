@@ -66,12 +66,12 @@
         <!-- Grid Lines -->
         <g class="grid-lines">
           <line
-            v-for="i in 5"
-            :key="'grid-' + i"
+            v-for="(lbl, idx) in yAxisLabels"
+            :key="'grid-' + idx"
             :x1="padding.left"
-            :y1="getY((i - 1) * 25)"
+            :y1="getY(lbl.value, props.showAttendancePercent)"
             :x2="width - padding.right"
-            :y2="getY((i - 1) * 25)"
+            :y2="getY(lbl.value, props.showAttendancePercent)"
             stroke="#e2e8f0"
             stroke-dasharray="4"
           />
@@ -80,14 +80,14 @@
         <!-- Y Axis Labels -->
         <g class="y-labels">
           <text
-            v-for="i in 5"
-            :key="'y-label-' + i"
+            v-for="(lbl, idx) in yAxisLabels"
+            :key="'y-label-' + idx"
             :x="padding.left - 10"
-            :y="getY((i - 1) * 25) + 4"
+            :y="getY(lbl.value, props.showAttendancePercent) + 4"
             text-anchor="end"
             class="axis-label"
           >
-            {{ (i - 1) * 25 }}%
+            {{ lbl.label }}
           </text>
         </g>
 
@@ -221,40 +221,22 @@ const height = 300
 const padding = { top: 30, right: 30, bottom: 50, left: 55 }
 
 // Series configuration with computed labels
-const getSeriesConfig = () => [
-  {
-    key: 'present',
-    label: t('attendancePage.present'),
-    color: '#10b981',
-    unit: '%',
-    dataKey: 'presentPercent',
-    isPercentage: true
-  },
-  {
-    key: 'absent',
-    label: t('attendancePage.absent'),
-    color: '#ef4444',
-    unit: '%',
-    dataKey: 'absentPercent',
-    isPercentage: true
-  },
-  {
-    key: 'attendancePercent',
-    label: t('chart.attendanceRate'),
-    color: '#6366f1',
-    unit: '%',
-    dataKey: 'percentage',
-    isPercentage: true
-  },
-  {
-    key: 'courseCompletion',
-    label: t('chart.courseCompleted'),
-    color: '#f59e0b',
-    unit: '%',
-    dataKey: 'courseCompletion',
-    isPercentage: true
-  }
-]
+const getSeriesConfig = () => {
+  const presentSeries = props.showAttendancePercent
+    ? { key: 'present', label: t('attendancePage.present'), color: '#10b981', unit: '%', dataKey: 'presentPercent', isPercentage: true }
+    : { key: 'present', label: t('attendancePage.present'), color: '#10b981', unit: '', dataKey: 'present', isPercentage: false }
+
+  const absentSeries = props.showAttendancePercent
+    ? { key: 'absent', label: t('attendancePage.absent'), color: '#ef4444', unit: '%', dataKey: 'absentPercent', isPercentage: true }
+    : { key: 'absent', label: t('attendancePage.absent'), color: '#ef4444', unit: '', dataKey: 'absent', isPercentage: false }
+
+  return [
+    presentSeries,
+    absentSeries,
+    { key: 'attendancePercent', label: t('chart.attendanceRate'), color: '#6366f1', unit: '%', dataKey: 'percentage', isPercentage: true },
+    { key: 'courseCompletion', label: t('chart.courseCompleted'), color: '#f59e0b', unit: '%', dataKey: 'courseCompletion', isPercentage: true }
+  ]
+}
 
 const seriesConfig = computed(() => getSeriesConfig())
 
@@ -314,6 +296,22 @@ const maxValue = computed(() => {
 
   // Round up to nearest 10
   return Math.ceil(max / 10) * 10 || 100
+})
+
+// Y axis label values depending on percent vs counts mode
+const yAxisLabels = computed(() => {
+  if (props.showAttendancePercent) {
+    return [0, 25, 50, 75, 100].map(v => ({ value: v, label: `${v}%` }))
+  }
+
+  const max = maxValue.value || 10
+  const step = Math.ceil(max / 4) || 1
+  const labels = []
+  for (let i = 0; i < 5; i++) {
+    const val = i * step
+    labels.push({ value: val, label: String(val) })
+  }
+  return labels
 })
 
 // Calculate Y position based on value

@@ -663,9 +663,7 @@ watch(success, (val) => {
 .header h1 {
   font-size: 32px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--purple-700) 0%, var(--purple-500) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--purple-500);
   background-clip: text;
   margin: 0;
   letter-spacing: -0.5px;

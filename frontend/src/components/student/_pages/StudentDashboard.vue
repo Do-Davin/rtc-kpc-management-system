@@ -76,7 +76,7 @@
             :data="attendanceData"
             :loading="loadingChart"
             :error="chartError"
-            :show-attendance-percent="true"
+            :show-attendance-percent="false"
             @retry="fetchAttendanceHistory"
           />
         </div>
@@ -299,7 +299,7 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-.page-header h1 { color: #5d5fef; margin-bottom: 8px; font-size: 1.5rem; }
+.page-header h1 { color: #5d5fef; margin-bottom: 8px; font-size: 32px; }
 .page-header p { color: #64748b; margin: 0; }
 
 .stats-grid {
