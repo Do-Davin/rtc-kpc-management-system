@@ -245,7 +245,7 @@ onMounted(fetchData)
           <BarChart3 size="18" /> ស្ថិតិ
         </button>
         <span class="badge">{{ books.length }} ក្បាល</span>
-        <button @click="openCreate" class="btn-primary teal">
+        <button @click="openCreate" class="btn-primary purple">
           <Plus size="18" /> បន្ថែមសៀវភៅថ្មី
         </button>
       </div>
@@ -425,8 +425,8 @@ onMounted(fetchData)
 
           <div class="modal-actions">
             <button type="button" @click="showModal = false" class="btn-text">បោះបង់</button>
-            <button type="submit" :disabled="submitting" class="btn-primary teal">
-              {{ submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'បញ្ចូលសៀវភៅ' }}
+            <button type="submit" :disabled="submitting" class="btn-primary purple">
+              {{ submitting ? 'កំពុងរក្សាទុក...' : isEditing ? 'រក្សាទុកការផ្លាស់ប្ដូរ' : 'បញ្ចូលសៀវភៅ' }}
             </button>
           </div>
         </form>
@@ -531,12 +531,12 @@ onMounted(fetchData)
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 
@@ -547,8 +547,8 @@ onMounted(fetchData)
 }
 
 .badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--purple-100);
+  color: var(--purple-700);
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-size: 0.85rem;
@@ -556,7 +556,7 @@ onMounted(fetchData)
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: var(--purple-500);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -567,31 +567,30 @@ onMounted(fetchData)
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background 0.2s;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.btn-primary.teal {
-  background: #5d5fef;
+.btn-primary.purple {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--purple-600) 100%);
 }
 
 .btn-primary:hover {
-  background: #4c4ee0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
 }
 
-.btn-primary.teal:hover {
-  background: #4c4ee0;
+.btn-primary.purple:hover {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--purple-600) 100%);
 }
 
 .btn-stats {
   background: white;
   border: 1px solid #cbd5e1;
-  color: #475569;
   padding: 0.6rem 1.2rem;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
-  align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
 }
@@ -624,7 +623,7 @@ onMounted(fetchData)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--purple-500);
 }
 
 .search-box input {
@@ -633,7 +632,10 @@ onMounted(fetchData)
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   outline: none;
+  color: var(--purple-500);
 }
+
+.search-box input::placeholder { color: var(--purple-500); opacity: 0.7; }
 
 .filter-box select {
   padding: 0.6rem 1rem;
@@ -642,7 +644,10 @@ onMounted(fetchData)
   outline: none;
   background: white;
   cursor: pointer;
+  color: var(--purple-500);
 }
+
+.filter-box select option { color: var(--purple-500); }
 
 /* BOOK GRID LAYOUT */
 .books-grid {
@@ -780,7 +785,7 @@ onMounted(fetchData)
 .book-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0 0 4px 0;
   line-height: 1.2;
   display: -webkit-box;
@@ -795,7 +800,7 @@ onMounted(fetchData)
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8rem;
-  color: #5d5fef;
+  color: var(--purple-500);
   font-weight: 600;
 }
 
@@ -846,7 +851,9 @@ onMounted(fetchData)
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 700;
-  border: none;
+  border: 1px solid #fca5a5;
+  background: rgba(254, 226, 226, 0.95);
+  color: #991b1b;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -857,10 +864,11 @@ onMounted(fetchData)
 .btn-availability.available {
   background: #dcfce7;
   color: #15803d;
+  border: 1px solid #86efac;
 }
 
 .btn-availability:hover {
-  opacity: 0.8;
+  opacity: 0.95;
 }
 
 .action-buttons {

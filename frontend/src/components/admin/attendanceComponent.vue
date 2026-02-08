@@ -104,7 +104,7 @@ onMounted(fetchData);
               <th>ឈ្មោះវគ្គសិក្សា</th>
               <th>ពេលវេលាចាប់ផ្តើម</th>
               <th>វត្តមាន</th>
-              <th>ស្ថានភាព</th>
+              <th class="status-header">ស្ថានភាព</th>
             </tr>
           </thead>
           <tbody>
@@ -165,12 +165,12 @@ onMounted(fetchData);
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 
@@ -178,19 +178,18 @@ onMounted(fetchData);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--purple-500);
+  border: none;
   padding: 0.6rem 1rem;
   border-radius: 8px;
   cursor: pointer;
-  color: #475569;
+  color: white;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: background 0.2s, transform 0.12s ease;
 }
 
 .btn-refresh:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--color-primary-hover);
 }
 
 .spin {
@@ -249,6 +248,8 @@ onMounted(fetchData);
 }
 
 .card-header h3 { margin: 0; color: #334155; font-size: 1.1rem; }
+/* Make card header title use the page header color */
+.card-header h3 { color: var(--purple-500); }
 
 .table-container { overflow-x: auto; }
 
@@ -260,11 +261,19 @@ onMounted(fetchData);
 
 .data-table th {
   background: #f8fafc;
-  color: #475569;
+  color: var(--purple-500);
   font-weight: 600;
   text-align: left;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
+}
+
+/* Keep the status column header color unchanged */
+.data-table th.status-header { color: var(--purple-500); }
+
+/* Apply header color to all table body text except the status column */
+.data-table td:not(:last-child), .data-table td:not(:last-child) * {
+  color: var(--purple-500);
 }
 
 .data-table td {

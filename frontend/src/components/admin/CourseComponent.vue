@@ -432,12 +432,12 @@ onMounted(fetchData)
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 
@@ -448,8 +448,8 @@ onMounted(fetchData)
 }
 
 .badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--purple-100);
+  color: var(--purple-700);
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-size: 0.85rem;
@@ -457,7 +457,7 @@ onMounted(fetchData)
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: var(--purple-500);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -468,15 +468,15 @@ onMounted(fetchData)
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background 0.2s;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .btn-primary.purple {
-  background: #7c3aed;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--purple-600) 100%);
 }
 
 .btn-primary.purple:hover {
-  background: #6d28d9;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--purple-600) 100%);
 }
 
 .btn-primary:disabled {
@@ -501,7 +501,7 @@ onMounted(fetchData)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--purple-500);
 }
 
 .search-box input {
@@ -510,7 +510,10 @@ onMounted(fetchData)
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   outline: none;
+  color: var(--purple-500);
 }
+
+.search-box input::placeholder { color: var(--purple-500); opacity: 0.7; }
 
 .filter-box select {
   padding: 0.6rem 1rem;
@@ -519,7 +522,10 @@ onMounted(fetchData)
   outline: none;
   background: white;
   cursor: pointer;
+  color: var(--purple-500);
 }
+
+.filter-box select option { color: var(--purple-500); }
 
 /* CARD GRID LAYOUT */
 .courses-grid {
@@ -613,7 +619,7 @@ onMounted(fetchData)
 .course-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
   line-height: 1.2;
   flex: 1;
@@ -621,7 +627,7 @@ onMounted(fetchData)
 
 .course-code {
   background: #f5f3ff;
-  color: #7c3aed;
+  color: var(--purple-500);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.75rem;

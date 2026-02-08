@@ -199,29 +199,29 @@ onMounted(() => {
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--purple-500);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #64748b;
+  color: var(--purple-400);
   margin-top: 0.25rem;
 }
 
 .btn-secondary {
-  background: white;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  background: var(--purple-500);
+  border: none;
+  color: white;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: background 0.12s ease, transform 0.12s ease;
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
 }
 
 /* GRID LAYOUT */
@@ -296,7 +296,7 @@ onMounted(() => {
 .panel-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #334155;
+  color: var(--purple-500);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -319,8 +319,8 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.dist-name { color: #334155; }
-.dist-count { color: #64748b; }
+.dist-name { color: var(--purple-500); }
+.dist-count { color: var(--purple-500); }
 
 .progress-track {
   width: 100%;
@@ -347,8 +347,8 @@ onMounted(() => {
 
 .stat-row:last-child { border-bottom: none; }
 
-.stat-label { color: #64748b; }
-.stat-val { font-weight: 600; color: #1e293b; }
+.stat-label { color: var(--purple-500); }
+.stat-val { font-weight: 600; color: var(--purple-500); }
 
 .loading-state {
   text-align: center;
