@@ -382,7 +382,7 @@ onMounted(loadData)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--purple-500);
 }
 .search-box input,
 .filter-box select {
@@ -391,8 +391,12 @@ onMounted(loadData)
   border-radius: 8px;
   outline: none;
   min-width: 200px;
-  background: var(--purple-100);
+  background: white;
+  color: var(--purple-500);
 }
+
+.search-box input::placeholder { color: var(--purple-500); opacity: 0.7; }
+.filter-box select option { color: var(--purple-500); }
 .table-card {
   background: white;
   border-radius: 12px;

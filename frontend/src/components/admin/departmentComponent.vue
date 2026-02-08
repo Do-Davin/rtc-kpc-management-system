@@ -252,16 +252,19 @@ onMounted(fetchDepartments)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--purple-400);
+  color: var(--purple-500);
 }
-.search-box input {
-  width: 100%;
-  padding: 0.6rem 1rem 0.6rem 2.5rem;
-  border: 1px solid var(--purple-200);
-  border-radius: 8px;
-  outline: none;
-  background-color: var(--purple-100);
+  .search-box input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    background-color: white;
+    color: var(--purple-500);
 }
+
+.search-box input::placeholder { color: var(--purple-500); opacity: 0.7; }
 .table-card {
   background: white;
   border-radius: 12px;

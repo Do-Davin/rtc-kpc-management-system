@@ -424,9 +424,12 @@ onMounted(loadData)
   border-radius: 8px;
   outline: none;
   min-width: 200px;
-  background: var(--purple-100);
+  background: white;
   color: var(--purple-500);
 }
+
+.search-box input::placeholder { color: var(--purple-500); opacity: 0.7; }
+.filter-box select option { color: var(--purple-500); }
 
 .table-card {
   background: white;
